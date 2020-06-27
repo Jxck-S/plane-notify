@@ -10,14 +10,14 @@ from colorama import Fore, Back, Style
 #Setup PushBullet
 from pushbullet import Pushbullet
 pb = Pushbullet("*")
-elon_jet_channel = pb.get_channel('<channel tag here>')
+elon_jet_channel = pb.get_channel('<channeltaghere>')
 
 #Setup OpenSKy
 from opensky_api import OpenSkyApi
 opens_api = OpenSkyApi("*", "*")
 
 #Set Plane ICAO
-TRACK_PLANE = 'A5B1A8' 
+TRACK_PLANE = '<planeicaohere>' 
 #Pre Set Variables
 geo_altitude = None
 geo_alt_ft = None
@@ -61,9 +61,7 @@ while True:
             latitude = (dataStates.latitude)
             on_ground = (dataStates.on_ground)           
             geo_alt_m = (dataStates.geo_altitude)
-        if geo_alt_m == None and on_ground:
-	        geo_alt_ft = 0 
-        elif geo_alt_m != None :
+        if geo_alt_m != None :
 	        geo_alt_ft = geo_alt_m  * 3.281
         print (Fore.CYAN)
         print ("ICAO: ", icao)
@@ -112,6 +110,8 @@ while True:
                 state = address.get('state', '')
                 county = address.get('county', '')
                 city = address.get('city', '')
+                town = address.get('town', '')
+                hamlet = address.get('hamlet', '')
                 
                 
     #           print (Fore.YELLOW)
@@ -123,6 +123,8 @@ while True:
                 print ("Country: ", country)
                 print ("State: ", state)
                 print ("City: ", city)
+                print ("Town: ", town)
+                print ("Hamlet: ", hamlet)
                 print ("County: ", county)
                 print(Style.RESET_ALL)
 
@@ -144,12 +146,12 @@ while True:
         if tookoff:
             tookoff_message = ("Just took off from" + " " + (city or county) + ", " + state + ", " + country)
             print (tookoff_message)
-            push = elon_jet_channel.push_note("*", tookoff_message)
+            push = elon_jet_channel.push_note("title", tookoff_message)
 
         if landed:
             landed_message = ("Landed just now at" + " " + (city or county) + ", " + state + ", " + country)
             print (landed_message)
-            push = elon_jet_channel.push_note("*", landed_message)
+            push = elon_jet_channel.push_note("title", landed_message)
             
 
    

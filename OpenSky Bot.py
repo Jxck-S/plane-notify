@@ -11,7 +11,7 @@ from OpenSkySetup import pullplane
 
 #Setup PushBullet
 from pushbullet import Pushbullet
-pb = Pushbullet("<pushbulletapikey>")
+pb = Pushbullet("<pushbulletapikey")
 elon_jet_channel = pb.get_channel('<channeltaghere>')
 
 #Set Plane ICAO
@@ -47,7 +47,10 @@ while True:
     geo_alt_m = None
 #Get API States for Plane
     planeData = None
-    planeData = pullplane(TRACK_PLANE)
+    try:
+        planeData = pullplane(TRACK_PLANE)
+    except:
+        print ("Opensky Error")
     print (Fore.YELLOW)
     print ("OpenSky Debug", planeData)
     print(Style.RESET_ALL) 
@@ -77,7 +80,10 @@ while True:
         if longitude != None and latitude != None:
 
             combined = f"{latitude}, {longitude}"
-            location = geolocator.reverse(combined)
+            try:
+                location = geolocator.reverse(combined)
+            except:
+                print ("Geopy API Error")
             print (Fore.YELLOW)
             print ("Geopy debug: ", location.raw)
             print(Style.RESET_ALL) 

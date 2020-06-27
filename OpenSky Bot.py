@@ -6,13 +6,13 @@ import time
 from colorama import Fore, Back, Style 
 #Various imports for output
 from pushbullet import Pushbullet
-pb = Pushbullet("*********************")
+pb = Pushbullet("*")
 
-geolocator = Nominatim(user_agent="***********", timeout=5)
-api = OpenSkyApi(**********************)
+geolocator = Nominatim(user_agent="*", timeout=5)
+api = OpenSkyApi("*", "*")
 
 #Set Plane ICAO
-TRACK_PLANE = 'icao********' 
+TRACK_PLANE = '*' 
 #Pre Set Variables
 geo_altitude = None
 geo_alt_ft = None
@@ -24,6 +24,8 @@ invalid_Location = None
 longitude = None
 latitude = None
 geo_alt_m = None
+icao = None
+callsign = None
 running_Count = 0
 #Begin Looping program
 while True:
@@ -45,23 +47,23 @@ while True:
 #Pull Variables from planeData
     if planeData != None:
         for dataStates in planeData.states:
+            icao = (dataStates.icao24)
+            callsign = (dataStates.callsign)
             longitude = (dataStates.longitude)
             latitude = (dataStates.latitude)
             on_ground = (dataStates.on_ground)           
             geo_alt_m = (dataStates.geo_altitude)
-	    callsign = (datStates.callsign)
-	    icao = (dataStates.icao24)
         if geo_alt_m == None and on_ground:
 	        geo_alt_ft = 0 
         elif type(geo_alt_m) is float:
 	        geo_alt_ft = geo_alt_m  * 3.281
-	print (Fore.CYAN)
-	print ("ICAO24: ", icao)
-	print ("Callsign:  ", callsign)
-	print ("On Ground: ", on_ground)
-	print ("Latitude: ", latitude)
-	print ("Longitude: ", longitude)
-	print ("GEO Alitude: ", geo_alt_ft)
+        print (Fore.CYAN)
+        print ("ICAO: ", icao)
+        print ("Callsign: ", callsign)
+        print ("On Ground: ", on_ground)
+        print ("Latitude: ", latitude)
+        print ("Longitude: ", longitude)
+        print ("GEO Alitude: ", geo_alt_ft)
     #Lookup Location of coordinates 
         if longitude != None and latitude != None:
 
@@ -147,10 +149,10 @@ while True:
     else:
         print ("Rechecking OpenSky")
         planeDataMSG = str(planeData)
-#        push = pb.push_note("Rechecking OpenSky, OpenSky Debug->", planeDataMSG)
+        push = pb.push_note("Rechecking OpenSky, OpenSky Debug->", planeDataMSG)
 
     print (Back.MAGENTA, "--------", running_Count, "-------------------------------------------------------------", Style.RESET_ALL)
     print ("")
-    time.sleep(25)
+    time.sleep(15)
 
 

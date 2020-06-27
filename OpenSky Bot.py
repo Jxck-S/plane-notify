@@ -10,18 +10,20 @@ from colorama import Fore, Back, Style
 #Setup PushBullet
 from pushbullet import Pushbullet
 pb = Pushbullet("*")
-elon_jet_channel = pb.get_channel('<channeltaghere>')
+elon_jet_channel = pb.get_channel('<channel tag here>')
 
 #Setup OpenSKy
 from opensky_api import OpenSkyApi
 opens_api = OpenSkyApi("*", "*")
 
 #Set Plane ICAO
-TRACK_PLANE = '*' 
+TRACK_PLANE = 'A5B1A8' 
 #Pre Set Variables
 geo_altitude = None
 geo_alt_ft = None
 last_geo_alt_ft = None
+last_below_10k_ft = None
+below_10k_ft = None
 feeding = None
 last_feeding = None   
 last_on_ground = None
@@ -59,9 +61,9 @@ while True:
             latitude = (dataStates.latitude)
             on_ground = (dataStates.on_ground)           
             geo_alt_m = (dataStates.geo_altitude)
-        if geo_alt_m == None:
+        if geo_alt_m == None and on_ground:
 	        geo_alt_ft = 0 
-        elif type(geo_alt_m) is float:
+        elif geo_alt_m != None :
 	        geo_alt_ft = geo_alt_m  * 3.281
         print (Fore.CYAN)
         print ("ICAO: ", icao)
@@ -69,7 +71,7 @@ while True:
         print ("On Ground: ", on_ground)
         print ("Latitude: ", latitude)
         print ("Longitude: ", longitude)
-        print ("GEO Alitude: ", geo_alt_ft)
+        print ("GEO Alitude Ft: ", geo_alt_ft)
     #Lookup Location of coordinates 
         if longitude != None and latitude != None:
 
@@ -124,14 +126,17 @@ while True:
                 print ("County: ", county)
                 print(Style.RESET_ALL)
 
-
-
+#Check if below 10k ft
+        if geo_alt_ft is None:
+            below_10k_ft = False
+        elif geo_alt_ft < 10000:
+            below_10k_ft = True
 #Check if tookoff
-        tookoff = bool(last_feeding is False and feeding and on_ground is False and invalid_Location is False and geo_alt_ft < 10000)
+        tookoff = bool(last_feeding is False and feeding and on_ground is False and invalid_Location is False and below_10k_ft)
         print ("Tookoff Just Now:", tookoff)
 
 #Check if Landed
-        landed = bool((last_feeding and feeding is False and invalid_Location is False and (on_ground or last_geo_alt_ft < 10000)) or (on_ground and last_on_ground is False))
+        landed = bool((last_feeding and feeding is False and invalid_Location is False and (on_ground or last_below_10k_ft)) or (on_ground and last_on_ground is False))
         print ("Landed Just Now:", landed)
         
 
@@ -152,6 +157,7 @@ while True:
         last_feeding = feeding
         last_geo_alt_ft = geo_alt_ft
         last_on_ground = on_ground
+        last_below_10k_ft = below_10k_ft
 
     else:
         print ("Rechecking OpenSky")

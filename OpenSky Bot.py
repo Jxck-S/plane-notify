@@ -7,13 +7,16 @@ import json
 import time
 from colorama import Fore, Back, Style 
 import datetime
-from OpenSkySetup import pullplane
+from defOpenSky import pullplane
 
 #Setup PushBullet
 from pushbullet import Pushbullet
-pb = Pushbullet("<pushbulletapikey")
+pb = Pushbullet("<pushbulletapikey>")
 elon_jet_channel = pb.get_channel('<channeltaghere>')
 
+#Setup Tweepy
+from defTweet import tweepysetup
+tweet_api = tweepysetup()
 #Set Plane ICAO
 TRACK_PLANE = '<planeicaohere>' 
 #Pre Set Variables
@@ -160,6 +163,7 @@ while True:
             tookoff_message = ("Just took off from" + " " + aera_hierarchy + ", " + state + ", " + country_code)
             print (tookoff_message)
             push = elon_jet_channel.push_note("title", tookoff_message)
+            tweet_api.update_status(tookoff_message)
             takeoff_time = time.time()
 
 
@@ -168,6 +172,7 @@ while True:
             landed_message = ("Landed just now in" + " " + aera_hierarchy + ", " + state + ", " + country_code)
             print (landed_message)
             push = elon_jet_channel.push_note("title", landed_message)
+            tweet_api.update_status(landed_message)
             takeoff_time = None
             
 

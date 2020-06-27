@@ -6,16 +6,16 @@ import time
 from colorama import Fore, Back, Style 
 #Various imports for output
 from pushbullet import Pushbullet
-pb = Pushbullet("")
+pb = Pushbullet("***************")
 
-geolocator = Nominatim(user_agent="OpenSkyBot", timeout=5)
-api = OpenSkyApi("", "")
+geolocator = Nominatim(user_agent="************", timeout=5)
+api = OpenSkyApi(*********)
 
 #Set Plane ICAO
-TRACK_PLANE = 'A833535AF'
-
+TRACK_PLANE = 'A095B4' 
 #Pre Set Variables
 geo_altitude = None
+geo_alt_ft = None
 feeding = None
 last_feeding = None   
 last_on_ground = None
@@ -29,7 +29,7 @@ while True:
     running_Count += 1
     print (Back.MAGENTA, "--------", running_Count, "-------------------------------------------------------------", Style.RESET_ALL)
 #Get API States for Plane
-    planeData = api.get_states(icao24=TRACK_PLANE)
+    planeData = api.get_states(icao24=TRACK_PLANE.lower())
     print (Fore.YELLOW)
     print ("OpenSky Debug", planeData)
     print(Style.RESET_ALL) 
@@ -39,16 +39,18 @@ while True:
         for dataStates in planeData.states:
             longitude = (dataStates.longitude)
             latitude = (dataStates.latitude)
-            on_ground = (dataStates.on_ground)
-            geo_altitude = (dataStates.geo_altitude)
-            
-            print (Fore.BLUE)
-            print ("On Ground: ", on_ground)
-            print ("Latitude: ", latitude)
-            print ("Longitude: ", longitude)
-            print ("GEO Alitude: ", geo_altitude)
-        
-            
+            on_ground = (dataStates.on_ground)           
+            geo_alt_m = (dataStates.geo_altitude)
+	print (Fore.CYAN)
+	print ("On Ground: ", on_ground)
+	print ("Latitude: ", latitude)
+	print ("Longitude: ", longitude)
+	print ("GEO Alitude: ", geo_alt_ft)
+ 
+	if geo_alt_m is None:
+	    geo_alt_ft = 0 
+        else:
+	    geo_alt_ft = geo_alt_m  * 3.281
     #Lookup Location of coordinates 
         if longitude != None and latitude != None:
 
@@ -83,7 +85,7 @@ while True:
             
 
         #Convert Full address to sep variables only if Valid Location
-            elif invalid_location is False:
+            elif invalid_Location is False:
                 address = location.raw['address']
                 country = address.get('country', '')
                 state = address.get('state', '')
@@ -106,11 +108,11 @@ while True:
 
 
 #Check if tookoff
-        tookoff = bool(last_feeding is False and feeding and on_ground is False and invalid_Location is False and geo_altitude < 10000)
+        tookoff = bool(last_feeding is False and feeding and on_ground is False and invalid_Location is False and geo_alt_ft < 10000)
         print ("Tookoff Just Now:", tookoff)
 
 #Check if Landed
-        landed = bool((last_feeding and feeding is False and invalid_Location is False and last_geo_altitude < 10000) or (on_ground and last_on_ground is False))
+        landed = bool((last_feeding and feeding is False and invalid_Location is False and (on_ground or last_geo_alt_ft < 10000)) or (on_ground and last_on_ground is False))
         print ("Landed Just Now:", landed)
         
 
@@ -118,16 +120,18 @@ while True:
         if tookoff:
             tookoff_message = ("Just took off from" + " " + (city or county) + ", " + state + ", " + country)
             print (tookoff_message)
-            push = pb.push_note("Elon's Jet", tookoff_message)
+            push = pb.push_note("title", tookoff_message)
 
         if landed:
             landed_message = ("Landed just now at" + " " + (city or county) + ", " + state + ", " + country)
             print (landed_message)
-            push = pb.push_note("Elon's Jet", landed_message)
+            push = pb.push_note("title", landed_message)
+            from playsound import playsound
+            playsound('callouts.mp3')
    
 #Set Variables to compare to next check
         last_feeding = feeding
-        last_geo_altitude = geo_altitude
+        last_geo_alt_ft = geo_alt_ft
         last_on_ground = on_ground
 
     else:
@@ -138,3 +142,5 @@ while True:
     print (Back.MAGENTA, "--------", running_Count, "-------------------------------------------------------------", Style.RESET_ALL)
     print ("")
     time.sleep(15)
+
+

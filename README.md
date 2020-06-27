@@ -22,3 +22,5 @@ pip install geopy
 pip install tweepy
 pip install pushbullet.py
 ```
+### Install Screen to run in background
+apt install screen

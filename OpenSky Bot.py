@@ -1,21 +1,27 @@
 #Import Modules
-from opensky_api import OpenSkyApi
+#Setup Geopy
 from geopy.geocoders import Nominatim
+geolocator = Nominatim(user_agent="*", timeout=5)
+
 import json
 import time
 from colorama import Fore, Back, Style 
-#Various imports for output
+
+#Setup PushBullet
 from pushbullet import Pushbullet
 pb = Pushbullet("*")
+elon_jet_channel = pb.get_channel('<channeltaghere>')
 
-geolocator = Nominatim(user_agent="*", timeout=5)
-api = OpenSkyApi("*", "*")
+#Setup OpenSKy
+from opensky_api import OpenSkyApi
+opens_api = OpenSkyApi("*", "*")
 
 #Set Plane ICAO
 TRACK_PLANE = '*' 
 #Pre Set Variables
 geo_altitude = None
 geo_alt_ft = None
+last_geo_alt_ft = None
 feeding = None
 last_feeding = None   
 last_on_ground = None
@@ -24,9 +30,9 @@ invalid_Location = None
 longitude = None
 latitude = None
 geo_alt_m = None
+running_Count = 0
 icao = None
 callsign = None
-running_Count = 0
 #Begin Looping program
 while True:
     running_Count += 1
@@ -39,7 +45,7 @@ while True:
     geo_alt_m = None
 #Get API States for Plane
     planeData = None
-    planeData = api.get_states(time_secs=0, icao24=TRACK_PLANE.lower())
+    planeData = opens_api.get_states(time_secs=0, icao24=TRACK_PLANE.lower())
     print (Fore.YELLOW)
     print ("OpenSky Debug", planeData)
     print(Style.RESET_ALL) 
@@ -53,7 +59,7 @@ while True:
             latitude = (dataStates.latitude)
             on_ground = (dataStates.on_ground)           
             geo_alt_m = (dataStates.geo_altitude)
-        if geo_alt_m == None and on_ground:
+        if geo_alt_m == None:
 	        geo_alt_ft = 0 
         elif type(geo_alt_m) is float:
 	        geo_alt_ft = geo_alt_m  * 3.281
@@ -133,12 +139,13 @@ while True:
         if tookoff:
             tookoff_message = ("Just took off from" + " " + (city or county) + ", " + state + ", " + country)
             print (tookoff_message)
-            push = pb.push_note("title", tookoff_message)
+            push = elon_jet_channel.push_note("*", tookoff_message)
 
         if landed:
             landed_message = ("Landed just now at" + " " + (city or county) + ", " + state + ", " + country)
             print (landed_message)
-            push = pb.push_note("title", landed_message)
+            push = elon_jet_channel.push_note("*", landed_message)
+            
 
    
 #Set Variables to compare to next check
@@ -149,7 +156,7 @@ while True:
     else:
         print ("Rechecking OpenSky")
         planeDataMSG = str(planeData)
-        push = pb.push_note("Rechecking OpenSky, OpenSky Debug->", planeDataMSG)
+
 
     print (Back.MAGENTA, "--------", running_Count, "-------------------------------------------------------------", Style.RESET_ALL)
     print ("")

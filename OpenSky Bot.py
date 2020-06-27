@@ -6,13 +6,13 @@ import time
 from colorama import Fore, Back, Style 
 #Various imports for output
 from pushbullet import Pushbullet
-pb = Pushbullet("***************")
+pb = Pushbullet("*********************")
 
-geolocator = Nominatim(user_agent="************", timeout=5)
-api = OpenSkyApi(*********)
+geolocator = Nominatim(user_agent="***********", timeout=5)
+api = OpenSkyApi(**********************)
 
 #Set Plane ICAO
-TRACK_PLANE = 'A095B4' 
+TRACK_PLANE = 'icao********' 
 #Pre Set Variables
 geo_altitude = None
 geo_alt_ft = None
@@ -23,13 +23,21 @@ on_ground = None
 invalid_Location = None
 longitude = None
 latitude = None
+geo_alt_m = None
 running_Count = 0
 #Begin Looping program
 while True:
     running_Count += 1
     print (Back.MAGENTA, "--------", running_Count, "-------------------------------------------------------------", Style.RESET_ALL)
+#Reset Variables
+    geo_alt_ft = None
+    longitude = None
+    latitude = None
+    on_ground = None
+    geo_alt_m = None
 #Get API States for Plane
-    planeData = api.get_states(icao24=TRACK_PLANE.lower())
+    planeData = None
+    planeData = api.get_states(time_secs=0, icao24=TRACK_PLANE.lower())
     print (Fore.YELLOW)
     print ("OpenSky Debug", planeData)
     print(Style.RESET_ALL) 
@@ -41,16 +49,19 @@ while True:
             latitude = (dataStates.latitude)
             on_ground = (dataStates.on_ground)           
             geo_alt_m = (dataStates.geo_altitude)
+	    callsign = (datStates.callsign)
+	    icao = (dataStates.icao24)
+        if geo_alt_m == None and on_ground:
+	        geo_alt_ft = 0 
+        elif type(geo_alt_m) is float:
+	        geo_alt_ft = geo_alt_m  * 3.281
 	print (Fore.CYAN)
+	print ("ICAO24: ", icao)
+	print ("Callsign:  ", callsign)
 	print ("On Ground: ", on_ground)
 	print ("Latitude: ", latitude)
 	print ("Longitude: ", longitude)
 	print ("GEO Alitude: ", geo_alt_ft)
- 
-	if geo_alt_m is None:
-	    geo_alt_ft = 0 
-        else:
-	    geo_alt_ft = geo_alt_m  * 3.281
     #Lookup Location of coordinates 
         if longitude != None and latitude != None:
 
@@ -126,8 +137,7 @@ while True:
             landed_message = ("Landed just now at" + " " + (city or county) + ", " + state + ", " + country)
             print (landed_message)
             push = pb.push_note("title", landed_message)
-            from playsound import playsound
-            playsound('callouts.mp3')
+
    
 #Set Variables to compare to next check
         last_feeding = feeding
@@ -137,10 +147,10 @@ while True:
     else:
         print ("Rechecking OpenSky")
         planeDataMSG = str(planeData)
-        push = pb.push_note("Rechecking OpenSky, OpenSky Debug->", planeDataMSG)
+#        push = pb.push_note("Rechecking OpenSky, OpenSky Debug->", planeDataMSG)
 
     print (Back.MAGENTA, "--------", running_Count, "-------------------------------------------------------------", Style.RESET_ALL)
     print ("")
-    time.sleep(15)
+    time.sleep(25)
 
 

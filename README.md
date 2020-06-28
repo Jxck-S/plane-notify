@@ -1,5 +1,6 @@
 # plane-notify
-Still WIP Should not use yet. Notify If a Selected Plane has taken off or landed using Python with OpenSky API, outputs location of takeoff location of landing and takeoff by revese lookup of cordinates.
+Developed so I could auto tweet Elon Musk's jet activity.
+Still WIP Should not use yet. Nearing final first version. Notify If a Selected Plane has taken off or landed using Python with OpenSky API, outputs location of takeoff location of landing and takeoff by revese lookup of cordinates.
 
 ## Required PIP packages
 - OpenSky API https://github.com/openskynetwork/opensky-api

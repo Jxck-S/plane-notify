@@ -64,4 +64,12 @@ screen -R <name screen whatever you want>
 python3 NotifyBot.py
 ```
 
+#### Refrences
+- https://opensky-network.org/apidoc/
+- https://geopy.readthedocs.io/en/stable/
+- https://www.geeksforgeeks.org/python-get-google-map-image-specified-location-using-google-static-maps-api/
+- https://realpython.com/twitter-bot-python-tweepy/
+- https://github.com/rbrcsk/pushbullet.py
+
+
 

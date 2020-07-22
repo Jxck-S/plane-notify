@@ -63,7 +63,9 @@ screen -R <name screen whatever you want>
 ```
 python3 NotifyBot.py
 ```
-
+### TODO
+implement YAML file for config options
+implement airport name, done by closest airport
 #### Refrences
 - https://opensky-network.org/apidoc/
 - https://geopy.readthedocs.io/en/stable/

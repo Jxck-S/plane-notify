@@ -1,18 +1,20 @@
+#Github Updated - NotifyBot 8
 #Import Modules
 #Setup Geopy
 from geopy.geocoders import Nominatim
-geolocator = Nominatim(user_agent="*", timeout=5)
+geolocator = Nominatim(user_agent="OpenSkyBot", timeout=5)
 
 import json
 import time
 from colorama import Fore, Back, Style 
 import datetime
 from defOpenSky import pullplane
+from defMap import getMap
 
 #Setup PushBullet
 from pushbullet import Pushbullet
 pb = Pushbullet("<pushbulletapikey>")
-elon_jet_channel = pb.get_channel('<channeltaghere>')
+pb_channel = pb.get_channel('<channeltaghere>')
 
 #Setup Tweepy
 from defTweet import tweepysetup
@@ -162,18 +164,32 @@ while True:
         if tookoff:
             tookoff_message = ("Just took off from" + " " + aera_hierarchy + ", " + state + ", " + country_code)
             print (tookoff_message)
-            push = elon_jet_channel.push_note("title", tookoff_message)
-            tweet_api.update_status(tookoff_message)
+            getMap(aera_hierarchy + ", "  + state + ", "  + country_code)
+            with open("map.png", "rb") as pic:
+                map_data = pb.upload_file(pic, "Tookoff")
+            push = pb_channel.push_note("title", tookoff_message)
+            push = pb_channel.push_file(**map_data)
+            tweet_api.update_with_media("map.png", status = tookoff_message)
             takeoff_time = time.time()
 
 
 
-        if landed:
-            landed_message = ("Landed just now in" + " " + aera_hierarchy + ", " + state + ", " + country_code)
+        if landed: 
+            landed_time_msg = ""
+            if takeoff_time != None:
+                landed_time = time.time() - takeoff_time
+                landed_time_msg = time.strftime("Apx. flt. time %H Hours : %M Mins ", time.gmtime(landed_time))
+            landed_message = ("Landed just now in" + " " + aera_hierarchy + ", " + state + ", " + country_code + ". " + landed_time_msg)
             print (landed_message)
-            push = elon_jet_channel.push_note("title", landed_message)
-            tweet_api.update_status(landed_message)
+            getMap(aera_hierarchy + ", "  + state + ", "  + country_code)
+            with open("map.png", "rb") as pic:
+                map_data = pb.upload_file(pic, "Landed")
+            push = pb_channel.push_note("title", landed_message)
+            push = pb_channel.push_file(**map_data)
+            tweet_api.update_with_media("map.png", status = landed_message)
             takeoff_time = None
+            landed_time = None
+            time_since_tk = None
             
 
 #Set Variables to compare to next check
@@ -187,8 +203,8 @@ while True:
         planeDataMSG = str(planeData)
     if takeoff_time != None:
         elapsed_time = time.time() - takeoff_time
-        timesince = time.strftime("Time Since Take off %H Hours : %M Mins : %S Secs", time.gmtime(elapsed_time))
-        print(timesince)
+        time_since_tk = time.strftime("Time Since Take off %H Hours : %M Mins : %S Secs", time.gmtime(elapsed_time))
+        print(time_since_tk)
 
 
    

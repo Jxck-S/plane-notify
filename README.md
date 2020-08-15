@@ -9,13 +9,19 @@ Made it so I could track Elon Musk's Jet and share with others of his whereabout
 ## How It works
 
 -   Takes data about every 15 seconds from OpenSky Network or ADS-B Exchange and compares it to previous data with whats I've defined as a landing or takeoff event.
+
 -   A takeoff event event is the plane is not on ground, below 10k feet and ((previously no data and now getting data) or was previously on ground).
+
 -   A landing event is previosly below 10k feet and (previously getting data, no longer getting data and previously not on ground) or (now on ground and previously not on ground).
+
 -   Given the coordinates of the aircraft the coordinates are reverse looked up for a location name. (Geopy Nomination Geolocater)
+
 -   At time of takeoff a takeoff time is set which is refrenced in landing event to calculate an approximate total flight time.
+
 -   Static map image is created based off location name. (Google Static Maps API)
+
 -   If the landing event and takeoff events are true creates the output to Twitter and Pushbullet, uses the  location name, map image and takeoff time if landing. (Tweepy and Pushbullet )
-    a
+
 
 ## Required PIP packages
 

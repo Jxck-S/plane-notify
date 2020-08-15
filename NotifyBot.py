@@ -9,7 +9,6 @@ geolocator = Nominatim(user_agent="OpenSkyBot", timeout=5)
 
 import time
 from colorama import Fore, Back, Style
-import datetime
 from defOpenSky import pullOpenSky
 from defADSBX import pullADSBX
 

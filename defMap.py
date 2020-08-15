@@ -1,6 +1,9 @@
 def getMap(mapLocation):
     import requests 
-    api_key = "<google maps static api key>"
+    import configparser
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    api_key = config.get('GOOGLE', 'STATICMAPKEY')
     url = "https://maps.googleapis.com/maps/api/staticmap?"
 
     center = str(mapLocation)

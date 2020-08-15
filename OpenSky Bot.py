@@ -1,4 +1,4 @@
-#Github Updated - NotifyBot 8
+#Github Updated - NotifyBot 9
 #Import Modules
 #Setup Geopy
 from geopy.geocoders import Nominatim
@@ -21,6 +21,7 @@ from defTweet import tweepysetup
 tweet_api = tweepysetup()
 #Set Plane ICAO
 TRACK_PLANE = '<planeicaohere>' 
+icao = TRACK_PLANE.upper()
 #Pre Set Variables
 geo_altitude = None
 geo_alt_ft = None
@@ -35,7 +36,6 @@ longitude = None
 latitude = None
 geo_alt_m = None
 running_Count = 0
-icao = None
 callsign = None
 takeoff_time = None
 #Begin Looping program
@@ -191,7 +191,6 @@ while True:
             landed_time = None
             time_since_tk = None
             
-
 #Set Variables to compare to next check
         last_feeding = feeding
         last_geo_alt_ft = geo_alt_ft

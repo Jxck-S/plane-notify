@@ -1,20 +1,19 @@
 #Github Updated - NotifyBot 11
 #Import Modules
-#Clear Terminal 
+#Clear Terminal
 import os
 os.system('cls' if os.name == 'nt' else 'clear')
 #Setup Geopy
 from geopy.geocoders import Nominatim
 geolocator = Nominatim(user_agent="OpenSkyBot", timeout=5)
 
-import json
 import time
-from colorama import Fore, Back, Style 
+from colorama import Fore, Back, Style
 import datetime
 from defOpenSky import pullOpenSky
 from defADSBX import pullADSBX
 
-#Setup Config File 
+#Setup Config File
 import configparser
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -30,15 +29,15 @@ if config.getboolean('DISCORD', 'ENABLE'):
 if config.getboolean('TWITTER', 'ENABLE'):
     from defTweet import tweepysetup
     tweet_api = tweepysetup()
-else: 
-    tweet_api = None 
+else:
+    tweet_api = None
 #Setup PushBullet
 if config.getboolean('PUSHBULLET', 'ENABLE'):
     from pushbullet import Pushbullet
     pb = Pushbullet(config['PUSHBULLET']['API_KEY'])
     pb_channel = pb.get_channel(config.get('PUSHBULLET', 'CHANNEL_TAG'))
-else: 
-    pb_channel = None 
+else:
+    pb_channel = None
     pb = None
 
 #Set Plane ICAO
@@ -49,7 +48,7 @@ geo_alt_ft = None
 last_geo_alt_ft = None
 last_below_desired_ft = None
 feeding = None
-last_feeding = None   
+last_feeding = None
 last_on_ground = None
 on_ground = None
 invalid_Location = None
@@ -107,7 +106,7 @@ while True:
             print ("Longitude: ", longitude)
             print ("GEO Alitude Ft: ", geo_alt_ft)
             print(Style.RESET_ALL)
-        #Lookup Location of coordinates 
+        #Lookup Location of coordinates
             if longitude != None and latitude != None:
                 combined = f"{latitude}, {longitude}"
                 try:
@@ -116,8 +115,8 @@ while True:
                     print ("Geopy API Error")
                 print (Fore.YELLOW)
     #            print ("Geopy debug: ", location.raw)
-                print(Style.RESET_ALL) 
-                feeding = True 
+                print(Style.RESET_ALL)
+                feeding = True
             else:
                 print (Fore.RED + 'No Location')
                 feeding = False
@@ -136,13 +135,13 @@ while True:
                 invalid_Location = True
 
             print ("Invalid Location: ", invalid_Location)
-        
+
             if invalid_Location:
                 print (Fore.RED)
                 print (geoError)
                 print ("Likely Over Water or Invalid Location")
                 print(Style.RESET_ALL)
-            
+
 
         #Convert Full address to sep variables only if Valid Location
             elif invalid_Location is False:
@@ -153,7 +152,7 @@ while True:
                 county = address.get('county', '')
                 city = address.get('city', '')
                 town = address.get('town', '')
-                hamlet = address.get('hamlet', '')      
+                hamlet = address.get('hamlet', '')
     #           print (Fore.YELLOW)
     #           print ("Address Fields debug: ", address)
     #           print(Style.RESET_ALL)
@@ -167,7 +166,7 @@ while True:
                 print ("Hamlet: ", hamlet)
                 print ("County: ", county)
                 print(Style.RESET_ALL)
-            
+
     #Check if below desire ft
             if geo_alt_ft is None:
                 below_desired_ft = False
@@ -176,15 +175,15 @@ while True:
 #Check if tookoff
         tookoff = bool(invalid_Location is False and below_desired_ft and on_ground is False and ((last_feeding is False and feeding) or (last_on_ground)))
         print ("Tookoff Just Now:", tookoff)
-            
+
 
 #Check if Landed
         landed = bool(last_below_desired_ft and invalid_Location is False and ((last_feeding and feeding is False and last_on_ground is False)  or (on_ground and last_on_ground is False)))
         print ("Landed Just Now:", landed)
-        
-    #Chose city town county or hamlet for location as not all are always avalible. 
+
+    #Chose city town county or hamlet for location as not all are always avalible.
         if feeding and invalid_Location is False:
-            aera_hierarchy = city or town or county or hamlet 
+            aera_hierarchy = city or town or county or hamlet
     #Takeoff Notifcation and Landed
         if tookoff:
             tookoff_message = ("Just took off from" + " " + aera_hierarchy + ", " + state + ", " + country_code)
@@ -196,7 +195,7 @@ while True:
                 getSS(icao)
             #Discord
             if config.getboolean('DISCORD', 'ENABLE'):
-                dis_message = icao + " "  + tookoff_message 
+                dis_message = icao + " "  + tookoff_message
                 sendDis(dis_message)
             #PushBullet
             if pb != None:
@@ -211,7 +210,7 @@ while True:
             os.remove("map.png")
 
 
-        if landed: 
+        if landed:
             landed_time_msg = ""
             if takeoff_time != None:
                 landed_time = time.time() - takeoff_time
@@ -221,7 +220,7 @@ while True:
             #Google Map or tar1090 screenshot
             if config.getboolean('GOOGLE', 'STATICMAP_ENABLE'):
                 getMap(aera_hierarchy + ", "  + state + ", "  + country_code)
-            else: 
+            else:
                 getSS(icao)
             #Discord
             if config.getboolean('DISCORD', 'ENABLE'):
@@ -248,7 +247,7 @@ while True:
         last_below_desired_ft = below_desired_ft
 
     elif failed:
-        print ("Failed to connect to data source rechecking in 15s") 
+        print ("Failed to connect to data source rechecking in 15s")
 
     if takeoff_time != None:
         elapsed_time = time.time() - takeoff_time
@@ -256,7 +255,7 @@ while True:
         print(time_since_tk)
 
 
-   
+
     elapsed_calc_time = time.time() - start_time
 
     print (Back.MAGENTA, "--------", running_Count, "------------------------Elapsed Time- ", elapsed_calc_time, "-------------------------------------", Style.RESET_ALL)

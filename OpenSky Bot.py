@@ -1,9 +1,9 @@
-#Github Updated - NotifyBot 10
+#Github Updated - NotifyBot 11
 #Import Modules
-#Setup Geopy
 #Clear Terminal 
 import os
 os.system('cls' if os.name == 'nt' else 'clear')
+#Setup Geopy
 from geopy.geocoders import Nominatim
 geolocator = Nominatim(user_agent="OpenSkyBot", timeout=5)
 
@@ -11,13 +11,27 @@ import json
 import time
 from colorama import Fore, Back, Style 
 import datetime
-from defOpenSky import pullplane
-from defMap import getMap
+from defOpenSky import pullOpenSky
+from defADSBX import pullADSBX
+
 #Setup Config File 
 import configparser
 config = configparser.ConfigParser()
 config.read('config.ini')
 
+if config.getboolean('GOOGLE', 'STATICMAP_ENABLE'):
+    from defMap import getMap
+else:
+    from defSS import getSS
+
+if config.getboolean('DISCORD', 'ENABLE'):
+    from defDiscord import sendDis
+#Setup Tweepy
+if config.getboolean('TWITTER', 'ENABLE'):
+    from defTweet import tweepysetup
+    tweet_api = tweepysetup()
+else: 
+    tweet_api = None 
 #Setup PushBullet
 if config.getboolean('PUSHBULLET', 'ENABLE'):
     from pushbullet import Pushbullet
@@ -27,16 +41,8 @@ else:
     pb_channel = None 
     pb = None
 
-from defSS import getSS
-
-#Setup Tweepy
-if config.getboolean('TWITTER', 'ENABLE'):
-    from defTweet import tweepysetup
-    tweet_api = tweepysetup()
-else: 
-    tweet_api = None 
 #Set Plane ICAO
-TRACK_PLANE = config.get('PLANE', 'ICAO')
+TRACK_PLANE = config.get('DATA', 'ICAO')
 icao = TRACK_PLANE.upper()
 #Pre Set Non Reseting Variables
 geo_alt_ft = None
@@ -66,52 +72,58 @@ while True:
     on_ground = None
     geo_alt_m = None
 #Get API States for Plane
-    planeData = None
-    try:
-        planeData = pullplane(TRACK_PLANE)
-    except:
-        print ("Opensky Error")
-    print (Fore.YELLOW)
-    print ("OpenSky Debug", planeData)
-    print(Style.RESET_ALL) 
+    plane_Dict = None
+    if config.get('DATA', 'SOURCE') == "OPENS":
+        plane_Dict, failed = pullOpenSky(TRACK_PLANE)
+        print (Fore.YELLOW)
+        print ("OpenSky Sourced Data: ", plane_Dict)
+        print(Style.RESET_ALL)
+    elif config.get('DATA', 'SOURCE') == "ADSBX":
+        plane_Dict, failed = pullADSBX(TRACK_PLANE)
+        print (Fore.YELLOW)
+        print ("ADSBX Sourced Data: ", plane_Dict)
+        print(Style.RESET_ALL)
 
-#Pull Variables from planeData
-    if planeData != None:
-        for dataStates in planeData.states:
-            icao = (dataStates.icao24).upper()
-            callsign = (dataStates.callsign)
-            longitude = (dataStates.longitude)
-            latitude = (dataStates.latitude)
-            on_ground = (dataStates.on_ground)           
-            geo_alt_m = (dataStates.geo_altitude)
-        if geo_alt_m != None:
-	        geo_alt_ft = geo_alt_m  * 3.281
-        elif geo_alt_m == None and on_ground:
-            geo_alt_ft = 0 
-        print (Fore.CYAN)
-        print ("ICAO: ", icao)
-        print ("Callsign: ", callsign)
-        print ("On Ground: ", on_ground)
-        print ("Latitude: ", latitude)
-        print ("Longitude: ", longitude)
-        print ("GEO Alitude Ft: ", geo_alt_ft)
+    print (Fore.CYAN)
+    print ("Failed:", failed)
+    print ("ICAO:", icao)
+    print(Style.RESET_ALL)
 
-    #Lookup Location of coordinates 
-        if longitude != None and latitude != None:
-
-            combined = f"{latitude}, {longitude}"
-            try:
-                location = geolocator.reverse(combined)
-            except:
-                print ("Geopy API Error")
-            print (Fore.YELLOW)
-            print ("Geopy debug: ", location.raw)
-            print(Style.RESET_ALL) 
-            feeding = True 
-        else:
-            print (Fore.RED + 'Not Feeding')
+#Pull Variables from plane_Dict
+    if failed is False:
+        if plane_Dict == None:
             feeding = False
-            print(Style.RESET_ALL) 
+        elif plane_Dict != None:
+            for key, value in plane_Dict.items():
+                exec(key + '=value')
+            print (Fore.CYAN)
+            if config.get('DATA', 'SOURCE') == "ADSBX":
+                print("Registration: ", reg)
+            else:
+                print("Registration: ", "Only shows when using ADSBX!")
+            print ("Callsign: ", callsign)
+            print ("On Ground: ", on_ground)
+            print ("Latitude: ", latitude)
+            print ("Longitude: ", longitude)
+            print ("GEO Alitude Ft: ", geo_alt_ft)
+            print(Style.RESET_ALL)
+        #Lookup Location of coordinates 
+            if longitude != None and latitude != None:
+                combined = f"{latitude}, {longitude}"
+                try:
+                    location = geolocator.reverse(combined)
+                except:
+                    print ("Geopy API Error")
+                print (Fore.YELLOW)
+    #            print ("Geopy debug: ", location.raw)
+                print(Style.RESET_ALL) 
+                feeding = True 
+            else:
+                print (Fore.RED + 'No Location')
+                feeding = False
+                print(Style.RESET_ALL)
+
+
 
     #Figure if valid location, valid being geopy finds a location
         if feeding:
@@ -141,9 +153,7 @@ while True:
                 county = address.get('county', '')
                 city = address.get('city', '')
                 town = address.get('town', '')
-                hamlet = address.get('hamlet', '')
-                
-                
+                hamlet = address.get('hamlet', '')      
     #           print (Fore.YELLOW)
     #           print ("Address Fields debug: ", address)
     #           print(Style.RESET_ALL)
@@ -157,21 +167,21 @@ while True:
                 print ("Hamlet: ", hamlet)
                 print ("County: ", county)
                 print(Style.RESET_ALL)
-        
-#Check if below desire ft
-        if geo_alt_ft is None:
-            below_desired_ft = False
-        elif geo_alt_ft < 10000:
-            below_desired_ft = True
+            
+    #Check if below desire ft
+            if geo_alt_ft is None:
+                below_desired_ft = False
+            elif geo_alt_ft < 10000:
+                below_desired_ft = True
 #Check if tookoff
         tookoff = bool(invalid_Location is False and below_desired_ft and on_ground is False and ((last_feeding is False and feeding) or (last_on_ground)))
         print ("Tookoff Just Now:", tookoff)
-        
+            
 
 #Check if Landed
         landed = bool(last_below_desired_ft and invalid_Location is False and ((last_feeding and feeding is False and last_on_ground is False)  or (on_ground and last_on_ground is False)))
         print ("Landed Just Now:", landed)
-    
+        
     #Chose city town county or hamlet for location as not all are always avalible. 
         if feeding and invalid_Location is False:
             aera_hierarchy = city or town or county or hamlet 
@@ -179,19 +189,27 @@ while True:
         if tookoff:
             tookoff_message = ("Just took off from" + " " + aera_hierarchy + ", " + state + ", " + country_code)
             print (tookoff_message)
-            getMap(aera_hierarchy + ", "  + state + ", "  + country_code)
-            getSS(icao)
+            #Google Map or tar1090 screenshot
+            if config.getboolean('GOOGLE', 'STATICMAP_ENABLE'):
+                getMap(aera_hierarchy + ", "  + state + ", "  + country_code)
+            else:
+                getSS(icao)
+            #Discord
+            if config.getboolean('DISCORD', 'ENABLE'):
+                dis_message = icao + " "  + tookoff_message 
+                sendDis(dis_message)
+            #PushBullet
             if pb != None:
                 with open("map.png", "rb") as pic:
                     map_data = pb.upload_file(pic, "Tookoff IMG")
                 push = pb_channel.push_note(config.get('PUSHBULLET', 'TITLE'), tookoff_message)
                 push = pb_channel.push_file(**map_data)
-                with open("screenshot.png", "rb") as pic:
-                    map_data = pb.upload_file(pic, "Tookoff IMG2")
-                push = pb_channel.push_file(**map_data)
+            #Twitter
             if tweet_api != None:
                 tweet_api.update_with_media("map.png", status = tookoff_message)
             takeoff_time = time.time()
+            os.remove("map.png")
+
 
         if landed: 
             landed_time_msg = ""
@@ -200,21 +218,28 @@ while True:
                 landed_time_msg = time.strftime("Apx. flt. time %H Hours : %M Mins ", time.gmtime(landed_time))
             landed_message = ("Landed just now in" + " " + aera_hierarchy + ", " + state + ", " + country_code + ". " + landed_time_msg)
             print (landed_message)
-            getMap(aera_hierarchy + ", "  + state + ", "  + country_code)
-            getSS(icao)
+            #Google Map or tar1090 screenshot
+            if config.getboolean('GOOGLE', 'STATICMAP_ENABLE'):
+                getMap(aera_hierarchy + ", "  + state + ", "  + country_code)
+            else: 
+                getSS(icao)
+            #Discord
+            if config.getboolean('DISCORD', 'ENABLE'):
+                dis_message = icao + " "  + landed_message
+                sendDis(dis_message)
+            #PushBullet
             if pb != None:
                 with open("map.png", "rb") as pic:
                     map_data = pb.upload_file(pic, "Landed IMG")
                 push = pb_channel.push_note(config.get('PUSHBULLET', 'TITLE'), landed_message)
                 push = pb_channel.push_file(**map_data)
-                with open("screenshot.png", "rb") as pic:
-                    map_data = pb.upload_file(pic, "Landed IMG2")
-                push = pb_channel.push_file(**map_data)
+            #Twitter
             if tweet_api != None:
                 tweet_api.update_with_media("map.png", status = landed_message)
             takeoff_time = None
             landed_time = None
             time_since_tk = None
+            os.remove("map.png")
 
 #Set Variables to compare to next check
         last_feeding = feeding
@@ -222,12 +247,12 @@ while True:
         last_on_ground = on_ground
         last_below_desired_ft = below_desired_ft
 
-    else:
-        print ("Rechecking OpenSky")
-        planeDataMSG = str(planeData)
+    elif failed:
+        print ("Failed to connect to data source rechecking in 15s") 
+
     if takeoff_time != None:
         elapsed_time = time.time() - takeoff_time
-        time_since_tk = time.strftime("Time Since Take off %H Hours : %M Mins : %S Secs", time.gmtime(elapsed_time))
+        time_since_tk = time.strftime("Time Since Take off  %H Hours : %M Mins : %S Secs", time.gmtime(elapsed_time))
         print(time_since_tk)
 
 

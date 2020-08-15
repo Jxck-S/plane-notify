@@ -22,7 +22,6 @@ Made it so I could track Elon Musk's Jet and share with others of his whereabout
 
 -   If the landing event and takeoff events are true creates the output to Twitter and Pushbullet, uses the  location name, map image and takeoff time if landing. (Tweepy and Pushbullet )
 
-
 ## Required PIP packages
 
 -   OpenSky API <https://github.com/openskynetwork/opensky-api>
@@ -53,19 +52,19 @@ pip install pushbullet.py
 
 ### Install Screen to run in background
 
-```
+```bash
 apt install screen
 ```
 
 ### Make sure Python is installed
 
-```
+```bash
 apt install python3
 ```
 
 ### Download / Clone
 
-```
+```bash
 git clone https://github.com/Jxck-S/plane-notify.git
 cd plane-notify
 ```
@@ -76,13 +75,13 @@ cd plane-notify
 
 ### Enter and create new Screen Session
 
-```
+```bash
 screen -R <name screen whatever you want>
 ```
 
 ### Start Program
 
-```
+```bash
 python3 NotifyBot.py
 ```
 

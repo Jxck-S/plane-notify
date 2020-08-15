@@ -1,9 +1,12 @@
 # Authenticate to Twitter
+import configparser
+config = configparser.ConfigParser()
+config.read('config.ini')
+import tweepy
 def tweepysetup():
     #DOCU 
     #https://realpython.com/twitter-bot-python-tweepy/
-    import tweepy
-    auth = tweepy.OAuthHandler("CONSUMER_KEY", "CONSUMER_SECRET")
-    auth.set_access_token("ACCESS_TOKEN", "ACCESS_TOKEN_SECRET")
+    auth = tweepy.OAuthHandler(config.get('TWITTER', 'CONSUMER_KEY'), config.get('TWITTER', 'CONSUMER_SECRET'))
+    auth.set_access_token(config.get('TWITTER', 'ACCESS_TOKEN'), config.get('TWITTER', 'ACCESS_TOKEN_SECRET'))
     tweet_api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
     return tweet_api

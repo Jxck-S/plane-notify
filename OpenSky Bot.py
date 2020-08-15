@@ -1,6 +1,9 @@
-#Github Updated - NotifyBot 9
+#Github Updated - NotifyBot 10
 #Import Modules
 #Setup Geopy
+#Clear Terminal 
+import os
+os.system('cls' if os.name == 'nt' else 'clear')
 from geopy.geocoders import Nominatim
 geolocator = Nominatim(user_agent="OpenSkyBot", timeout=5)
 
@@ -10,20 +13,32 @@ from colorama import Fore, Back, Style
 import datetime
 from defOpenSky import pullplane
 from defMap import getMap
+#Setup Config File 
+import configparser
+config = configparser.ConfigParser()
+config.read('config.ini')
 
 #Setup PushBullet
-from pushbullet import Pushbullet
-pb = Pushbullet("<pushbulletapikey>")
-pb_channel = pb.get_channel('<channeltaghere>')
+if config.getboolean('PUSHBULLET', 'ENABLE'):
+    from pushbullet import Pushbullet
+    pb = Pushbullet(config['PUSHBULLET']['API_KEY'])
+    pb_channel = pb.get_channel(config.get('PUSHBULLET', 'CHANNEL_TAG'))
+else: 
+    pb_channel = None 
+    pb = None
+
+from defSS import getSS
 
 #Setup Tweepy
-from defTweet import tweepysetup
-tweet_api = tweepysetup()
+if config.getboolean('TWITTER', 'ENABLE'):
+    from defTweet import tweepysetup
+    tweet_api = tweepysetup()
+else: 
+    tweet_api = None 
 #Set Plane ICAO
-TRACK_PLANE = '<planeicaohere>' 
+TRACK_PLANE = config.get('PLANE', 'ICAO')
 icao = TRACK_PLANE.upper()
-#Pre Set Variables
-geo_altitude = None
+#Pre Set Non Reseting Variables
 geo_alt_ft = None
 last_geo_alt_ft = None
 last_below_desired_ft = None
@@ -63,7 +78,7 @@ while True:
 #Pull Variables from planeData
     if planeData != None:
         for dataStates in planeData.states:
-            icao = (dataStates.icao24)
+            icao = (dataStates.icao24).upper()
             callsign = (dataStates.callsign)
             longitude = (dataStates.longitude)
             latitude = (dataStates.latitude)
@@ -165,14 +180,18 @@ while True:
             tookoff_message = ("Just took off from" + " " + aera_hierarchy + ", " + state + ", " + country_code)
             print (tookoff_message)
             getMap(aera_hierarchy + ", "  + state + ", "  + country_code)
-            with open("map.png", "rb") as pic:
-                map_data = pb.upload_file(pic, "Tookoff")
-            push = pb_channel.push_note("title", tookoff_message)
-            push = pb_channel.push_file(**map_data)
-            tweet_api.update_with_media("map.png", status = tookoff_message)
+            getSS(icao)
+            if pb != None:
+                with open("map.png", "rb") as pic:
+                    map_data = pb.upload_file(pic, "Tookoff IMG")
+                push = pb_channel.push_note(config.get('PUSHBULLET', 'TITLE'), tookoff_message)
+                push = pb_channel.push_file(**map_data)
+                with open("screenshot.png", "rb") as pic:
+                    map_data = pb.upload_file(pic, "Tookoff IMG2")
+                push = pb_channel.push_file(**map_data)
+            if tweet_api != None:
+                tweet_api.update_with_media("map.png", status = tookoff_message)
             takeoff_time = time.time()
-
-
 
         if landed: 
             landed_time_msg = ""
@@ -182,15 +201,21 @@ while True:
             landed_message = ("Landed just now in" + " " + aera_hierarchy + ", " + state + ", " + country_code + ". " + landed_time_msg)
             print (landed_message)
             getMap(aera_hierarchy + ", "  + state + ", "  + country_code)
-            with open("map.png", "rb") as pic:
-                map_data = pb.upload_file(pic, "Landed")
-            push = pb_channel.push_note("title", landed_message)
-            push = pb_channel.push_file(**map_data)
-            tweet_api.update_with_media("map.png", status = landed_message)
+            getSS(icao)
+            if pb != None:
+                with open("map.png", "rb") as pic:
+                    map_data = pb.upload_file(pic, "Landed IMG")
+                push = pb_channel.push_note(config.get('PUSHBULLET', 'TITLE'), landed_message)
+                push = pb_channel.push_file(**map_data)
+                with open("screenshot.png", "rb") as pic:
+                    map_data = pb.upload_file(pic, "Landed IMG2")
+                push = pb_channel.push_file(**map_data)
+            if tweet_api != None:
+                tweet_api.update_with_media("map.png", status = landed_message)
             takeoff_time = None
             landed_time = None
             time_since_tk = None
-            
+
 #Set Variables to compare to next check
         last_feeding = feeding
         last_geo_alt_ft = geo_alt_ft

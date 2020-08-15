@@ -4,7 +4,7 @@ config = configparser.ConfigParser()
 config.read('config.ini')
 import tweepy
 def tweepysetup():
-    #DOCU 
+    #DOCU
     #https://realpython.com/twitter-bot-python-tweepy/
     auth = tweepy.OAuthHandler(config.get('TWITTER', 'CONSUMER_KEY'), config.get('TWITTER', 'CONSUMER_SECRET'))
     auth.set_access_token(config.get('TWITTER', 'ACCESS_TOKEN'), config.get('TWITTER', 'ACCESS_TOKEN_SECRET'))

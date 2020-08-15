@@ -47,16 +47,22 @@ pip install pushbullet.py
 
 ### Install Screen to run in background
 
-    apt install screen
+```
+apt install screen
+```
 
 ### Make sure Python is installed
 
-    apt install python3
+```
+apt install python3
+```
 
 ### Download / Clone
 
-    git clone https://github.com/Jxck-S/plane-notify.git
-    cd plane-notify
+```
+git clone https://github.com/Jxck-S/plane-notify.git
+cd plane-notify
+```
 
 ### Configure config file with keys and urls
 
@@ -64,11 +70,15 @@ pip install pushbullet.py
 
 ### Enter and create new Screen Session
 
-    screen -R <name screen whatever you want>
+```
+screen -R <name screen whatever you want>
+```
 
 ### Start Program
 
-    python3 NotifyBot.py
+```
+python3 NotifyBot.py
+```
 
 ### TODO
 

@@ -92,8 +92,7 @@ while True:
         if plane_Dict == None:
             feeding = False
         elif plane_Dict != None:
-            for key, value in plane_Dict.items():
-                exec(key + '=value')
+            locals().update(plane_Dict)
             print (Fore.CYAN)
             if config.get('DATA', 'SOURCE') == "ADSBX":
                 print("Registration: ", reg)

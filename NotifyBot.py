@@ -1,8 +1,10 @@
 #Github Updated - NotifyBot 11
 #Import Modules
 #Clear Terminal
-import os
-os.system('cls' if os.name == 'nt' else 'clear')
+print("\033[H\033[J") 
+
+#Ability to Remove old Map
+import os 
 #Setup Geopy
 from geopy.geocoders import Nominatim
 geolocator = Nominatim(user_agent="OpenSkyBot", timeout=5)

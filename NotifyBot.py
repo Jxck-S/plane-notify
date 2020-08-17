@@ -1,10 +1,10 @@
 #Github Updated - NotifyBot 11
 #Import Modules
 #Clear Terminal
-print("\033[H\033[J") 
+print("\033[H\033[J")
 
 #Ability to Remove old Map
-import os 
+import os
 #Setup Geopy
 from geopy.geocoders import Nominatim
 geolocator = Nominatim(user_agent="OpenSkyBot", timeout=5)
@@ -59,6 +59,7 @@ geo_alt_m = None
 running_Count = 0
 callsign = None
 takeoff_time = None
+reg = None
 #Begin Looping program
 while True:
     running_Count += 1

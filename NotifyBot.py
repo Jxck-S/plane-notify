@@ -42,8 +42,7 @@ else:
     pb = None
 
 #Set Plane ICAO
-TRACK_PLANE = config.get('DATA', 'ICAO')
-icao = TRACK_PLANE.upper()
+icao = config.get('DATA', 'ICAO').upper()
 #Pre Set Non Reseting Variables
 geo_alt_ft = None
 last_geo_alt_ft = None
@@ -75,12 +74,12 @@ while True:
 #Get API States for Plane
     plane_Dict = None
     if config.get('DATA', 'SOURCE') == "OPENS":
-        plane_Dict, failed = pullOpenSky(TRACK_PLANE)
+        plane_Dict, failed = pullOpenSky(icao)
         print (Fore.YELLOW)
         print ("OpenSky Sourced Data: ", plane_Dict)
         print(Style.RESET_ALL)
     elif config.get('DATA', 'SOURCE') == "ADSBX":
-        plane_Dict, failed = pullADSBX(TRACK_PLANE)
+        plane_Dict, failed = pullADSBX(icao)
         print (Fore.YELLOW)
         print ("ADSBX Sourced Data: ", plane_Dict)
         print(Style.RESET_ALL)

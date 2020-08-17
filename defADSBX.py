@@ -13,8 +13,10 @@ def pullADSBX(icao):
     response = requests.get(url, headers = headers)
     data = response.text
     data = json.loads(data)
-  except:
-    print("ADSBX Error")
+    #print (json.dumps(data, indent=4))
+  except (requests.HTTPError, requests.ConnectionError, requests.Timeout) as error_message:
+    print("ADSBX Connection Error")
+    print(error_message)
     failed = True
     plane_Dict = None
   if failed is False:

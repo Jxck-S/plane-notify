@@ -30,16 +30,11 @@ if config.getboolean('DISCORD', 'ENABLE'):
 if config.getboolean('TWITTER', 'ENABLE'):
     from defTweet import tweepysetup
     tweet_api = tweepysetup()
-else:
-    tweet_api = None
 #Setup PushBullet
 if config.getboolean('PUSHBULLET', 'ENABLE'):
     from pushbullet import Pushbullet
     pb = Pushbullet(config['PUSHBULLET']['API_KEY'])
     pb_channel = pb.get_channel(config.get('PUSHBULLET', 'CHANNEL_TAG'))
-else:
-    pb_channel = None
-    pb = None
 
 #Set Plane ICAO
 icao = config.get('DATA', 'ICAO').upper()
@@ -54,7 +49,6 @@ on_ground = None
 invalid_Location = None
 longitude = None
 latitude = None
-geo_alt_m = None
 running_Count = 0
 callsign = None
 takeoff_time = None
@@ -70,7 +64,6 @@ while True:
     longitude = None
     latitude = None
     on_ground = None
-    geo_alt_m = None
 #Get API States for Plane
     plane_Dict = None
     if config.get('DATA', 'SOURCE') == "OPENS":
@@ -195,16 +188,16 @@ while True:
                 getSS(icao)
             #Discord
             if config.getboolean('DISCORD', 'ENABLE'):
-                dis_message = icao + " "  + tookoff_message
+                dis_message = config.get('DISCORD', 'TITLE') + " "  + tookoff_message
                 sendDis(dis_message)
             #PushBullet
-            if pb != None:
+            if config.getboolean('PUSHBULLET', 'ENABLE'):
                 with open("map.png", "rb") as pic:
                     map_data = pb.upload_file(pic, "Tookoff IMG")
                 push = pb_channel.push_note(config.get('PUSHBULLET', 'TITLE'), tookoff_message)
                 push = pb_channel.push_file(**map_data)
             #Twitter
-            if tweet_api != None:
+            if config.getboolean('TWITTER', 'ENABLE'):
                 tweet_api.update_with_media("map.png", status = tookoff_message)
             takeoff_time = time.time()
             os.remove("map.png")
@@ -224,16 +217,16 @@ while True:
                 getSS(icao)
             #Discord
             if config.getboolean('DISCORD', 'ENABLE'):
-                dis_message = icao + " "  + landed_message
+                dis_message =  config.get('DISCORD', 'TITLE') + " "  + landed_message
                 sendDis(dis_message)
             #PushBullet
-            if pb != None:
+            if config.getboolean('PUSHBULLET', 'ENABLE'):
                 with open("map.png", "rb") as pic:
                     map_data = pb.upload_file(pic, "Landed IMG")
                 push = pb_channel.push_note(config.get('PUSHBULLET', 'TITLE'), landed_message)
                 push = pb_channel.push_file(**map_data)
             #Twitter
-            if tweet_api != None:
+            if config.getboolean('TWITTER', 'ENABLE'):
                 tweet_api.update_with_media("map.png", status = landed_message)
             takeoff_time = None
             landed_time = None

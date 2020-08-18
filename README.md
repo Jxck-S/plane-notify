@@ -5,6 +5,14 @@
 
 Notify If a Selected Plane has taken off or landed using Python with OpenSky or ADS-B Exchange Data, outputs location of takeoff location of landing and takeoff by reverse lookup of coordinates.
 
+### Discord Output Example
+
+![Discord Output Example](./ExImages/DiscordEX.png?raw=true)
+
+#### More examples in  the ExImages folder
+
+[ExImages](./ExImages)
+
 ## Why I made it
 
 Made it so I could track Elon Musk's Jet and share with others of his whereabouts on Twitter. [![Twitter Follow](https://img.shields.io/twitter/follow/ElonJet.svg?style=social)](https://twitter.com/ElonJet)

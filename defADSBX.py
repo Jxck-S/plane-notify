@@ -19,18 +19,24 @@ def pullADSBX(icao):
     print(error_message)
     failed = True
     plane_Dict = None
+  except json.decoder.JSONDecodeError as error_message:
+    print("Error with JSON")
+    print(error_message)
+    failed = True
+    plane_Dict = None
   if failed is False:
     ac = data['ac']
     if ac != None:
       ac_dict = ac[0]
-      if ac_dict["gnd"] == 0 or 1:
+      try:
         plane_Dict = {'icao' : ac_dict['icao'], 'callsign' : ac_dict['call'], 'reg' : ac_dict['reg'], 'latitude' : float(ac_dict['lat']), 'longitude' : float(ac_dict['lon']), 'geo_alt_ft' : int(ac_dict['galt']), 'on_ground' : bool(int(ac_dict["gnd"]))}
         if plane_Dict['on_ground']:
           plane_Dict['geo_alt_ft'] = 0
-      else:
+      except ValueError as e:
         plane_Dict = None
         failed = True
-        print("Got data but on_ground is invalid!")
+        print("Got data but some data is invalid!")
+        print(e)
     else:
       plane_Dict = None
 

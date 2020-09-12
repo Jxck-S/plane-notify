@@ -16,53 +16,51 @@ class Plane:
         self.callsign = None
         self.takeoff_time = None
         self.reg = None
+        self.map_file_name = icao.upper() + "_map.png"
     def getICAO(self):
         return self.icao
-    def run(self, plane_Dict):
+    def run(self, ac_dict):
+
         #Import Modules
         #Clear Terminal
-        print("\033[H\033[J")
+        #print("\033[H\033[J")
 
         #Ability to Remove old Map
         import os
         #Setup Geopy
         from geopy.geocoders import Nominatim
-        geolocator = Nominatim(user_agent="OpenSkyBot", timeout=5)
-
+        geolocator = Nominatim(user_agent="NotifyBot", timeout=5)
         import time
         from colorama import Fore, Back, Style
-        from defOpenSky import pullOpenSky
-        from defADSBX import pullADSBX
-
         #Setup Config File
         import configparser
-        config = configparser.ConfigParser()
-        config.read(self.conf_file)
+        self.config = configparser.ConfigParser()
+        self.config.read(self.conf_file)
+        main_config = configparser.ConfigParser()
+        main_config.read('mainconf.ini')
 
-        if config.getboolean('GOOGLE', 'STATICMAP_ENABLE'):
+        if self.config.getboolean('GOOGLE', 'STATICMAP_ENABLE'):
             from defMap import getMap
         else:
             from defSS import getSS
 
-        if config.getboolean('DISCORD', 'ENABLE'):
+        if self.config.getboolean('DISCORD', 'ENABLE'):
             from defDiscord import sendDis
         #Setup Tweepy
-        if config.getboolean('TWITTER', 'ENABLE'):
+        if self.config.getboolean('TWITTER', 'ENABLE'):
             from defTweet import tweepysetup
-            tweet_api = tweepysetup()
+            self.tweet_api = tweepysetup()
         #Setup PushBullet
-        if config.getboolean('PUSHBULLET', 'ENABLE'):
+        if self.config.getboolean('PUSHBULLET', 'ENABLE'):
             from pushbullet import Pushbullet
-            pb = Pushbullet(config['PUSHBULLET']['API_KEY'])
-            pb_channel = pb.get_channel(config.get('PUSHBULLET', 'CHANNEL_TAG'))
+            self.pb = Pushbullet(self.config['PUSHBULLET']['API_KEY'])
+            self.pb_channel = pb.get_channel(self.config.get('PUSHBULLET', 'CHANNEL_TAG'))
 
-        #Set Plane ICAO
-        icao = config.get('DATA', 'ICAO').upper()
         #Pre Set Non Reseting Variables
 
-        running_Count +=1
-        start_time = time.time()
-        print (Back.MAGENTA, "--------", running_Count, "-------------------------------------------------------------", Style.RESET_ALL)
+        self.running_Count +=1
+        self.start_time = time.time()
+        print (Back.MAGENTA, "--------", self.running_Count, "----------------------------- ICAO:", self.icao, "--------------------------", Style.RESET_ALL)
     #Reset Variables
         self.below_desired_ft = None
         self.geo_alt_ft = None
@@ -71,189 +69,201 @@ class Plane:
         self.on_ground = None
     #Get API States for Plane
         self.plane_Dict = None
-        if config.get('DATA', 'SOURCE') == "OPENS":
-            plane_Dict, failed = pullOpenSky(icao)
-            print (Fore.YELLOW)
-            print ("OpenSky Sourced Data: ", plane_Dict)
-            print(Style.RESET_ALL)
-        elif config.get('DATA', 'SOURCE') == "ADSBX":
-            plane_Dict, failed = pullADSBX(icao)
-            print (Fore.YELLOW)
-            print ("ADSBX Sourced Data: ", plane_Dict)
-            print(Style.RESET_ALL)
+        if main_config.get('DATA', 'SOURCE') == "OPENS":
+            raise NotImplementedError
+            #plane_Dict, failed = pullOpenSky(icao)
+            #print (Fore.YELLOW)
+            #print ("OpenSky Sourced Data: ", plane_Dict)
+            #print(Style.RESET_ALL)
+        elif main_config.get('DATA', 'SOURCE') == "ADSBX":
+            self.val_error = False
+            if ac_dict != None:
+                try:
+                    self.plane_Dict = {'icao' : ac_dict['icao'], 'callsign' : ac_dict['call'], 'reg' : ac_dict['reg'], 'latitude' : float(ac_dict['lat']), 'longitude' : float(ac_dict['lon']), 'geo_alt_ft' : int(ac_dict['galt']), 'on_ground' : bool(int(ac_dict["gnd"]))}
+                    if self.plane_Dict['on_ground']:
+                        self.plane_Dict['geo_alt_ft'] = 0
+                except ValueError as e:
+                    self.plane_Dict = None
+                    self.val_error = True
+                    print("Got data but some data is invalid!")
+                    print(e)
+            else:
+                self.plane_Dict = None
 
+        print (Fore.YELLOW)
+        print ("ADSBX Sourced Data: ", self.plane_Dict)
+        print(Style.RESET_ALL)
         print (Fore.CYAN)
-        print ("Failed:", failed)
-        print ("ICAO:", icao)
+        print ("ICAO:", self.icao)
         print(Style.RESET_ALL)
 
     #Pull Variables from plane_Dict
-        if failed is False:
-            if plane_Dict == None:
-                feeding = False
-            elif plane_Dict != None:
-                locals().update(plane_Dict)
+        if self.val_error is False:
+            if self.plane_Dict == None:
+                self.feeding = False
+            elif self.plane_Dict != None:
+                self.__dict__.update(self.plane_Dict)
                 print (Fore.CYAN)
-                if config.get('DATA', 'SOURCE') == "ADSBX":
-                    print("Registration: ", reg)
+                if main_config.get('DATA', 'SOURCE') == "ADSBX":
+                    print("Registration: ", self.reg)
                 else:
                     print("Registration: ", "Only shows when using ADSBX!")
-                print ("Callsign: ", callsign)
-                print ("On Ground: ", on_ground)
-                print ("Latitude: ", latitude)
-                print ("Longitude: ", longitude)
-                print ("GEO Alitude Ft: ", geo_alt_ft)
+                print ("Callsign: ", self.callsign)
+                print ("On Ground: ", self.on_ground)
+                print ("Latitude: ", self.latitude)
+                print ("Longitude: ", self.longitude)
+                print ("GEO Alitude Ft: ", self.geo_alt_ft)
                 print(Style.RESET_ALL)
             #Lookup Location of coordinates
-                if longitude != None and latitude != None:
-                    combined = f"{latitude}, {longitude}"
+                if self.longitude != None and self.latitude != None:
+                    self.combined = f"{self.latitude}, {self.longitude}"
                     try:
-                        location = geolocator.reverse(combined)
-                    except:
-                        print ("Geopy API Error")
+                        self.location = geolocator.reverse(self.combined)
+                    except BaseException as e:
+                        print ("Geopy API Error", e)
                     print (Fore.YELLOW)
         #            print ("Geopy debug: ", location.raw)
                     print(Style.RESET_ALL)
-                    feeding = True
+                    self.feeding = True
                 else:
                     print (Fore.RED + 'No Location')
-                    feeding = False
+                    self.feeding = False
                     print(Style.RESET_ALL)
 
 
 
         #Figure if valid location, valid being geopy finds a location
-            if feeding:
+            if self.feeding:
                 try:
-                    geoError = location.raw['error']
+                    self.geoError = self.location.raw['error']
                 except KeyError:
-                    invalid_Location = False
-                    geoError = None
+                    self.invalid_Location = False
+                    self.geoError = None
                 else:
-                    invalid_Location = True
+                    self.invalid_Location = True
 
-                print ("Invalid Location: ", invalid_Location)
+                print ("Invalid Location: ", self.invalid_Location)
 
-                if invalid_Location:
+                if self.invalid_Location:
                     print (Fore.RED)
-                    print (geoError)
+                    print (self.geoError)
                     print ("Likely Over Water or Invalid Location")
                     print(Style.RESET_ALL)
 
 
             #Convert Full address to sep variables only if Valid Location
-                elif invalid_Location is False:
-                    address = location.raw['address']
-                    country = address.get('country', '')
-                    country_code = address.get('country_code', '').upper()
-                    state = address.get('state', '')
-                    county = address.get('county', '')
-                    city = address.get('city', '')
-                    town = address.get('town', '')
-                    hamlet = address.get('hamlet', '')
+                elif self.invalid_Location is False:
+                    self.address = self.location.raw['address']
+                    self.country = self.address.get('country', '')
+                    self.country_code = self.address.get('country_code', '').upper()
+                    self.state = self.address.get('state', '')
+                    self.county = self.address.get('county', '')
+                    self.city = self.address.get('city', '')
+                    self.town = self.address.get('town', '')
+                    self.hamlet = self.address.get('hamlet', '')
         #           print (Fore.YELLOW)
-        #           print ("Address Fields debug: ", address)
+        #           print ("Address Fields debug: ", self.address)
         #           print(Style.RESET_ALL)
                     print (Fore.GREEN)
-                    print("Entire Address: ", location.address)
-                    print ("Country Code: ", country_code)
-                    print ("Country: ", country)
-                    print ("State: ", state)
-                    print ("City: ", city)
-                    print ("Town: ", town)
-                    print ("Hamlet: ", hamlet)
-                    print ("County: ", county)
+                    print("Entire Address: ", self.location.address)
+                    print ("Country Code: ", self.country_code)
+                    print ("Country: ", self.country)
+                    print ("State: ", self.state)
+                    print ("City: ", self.city)
+                    print ("Town: ", self.town)
+                    print ("Hamlet: ", self.hamlet)
+                    print ("County: ", self.county)
                     print(Style.RESET_ALL)
 
         #Check if below desire ft
-                if geo_alt_ft is None:
-                    below_desired_ft = False
-                elif geo_alt_ft < 10000:
-                    below_desired_ft = True
+                if self.geo_alt_ft is None:
+                    self.below_desired_ft = False
+                elif self.geo_alt_ft < 10000:
+                    self.below_desired_ft = True
     #Check if tookoff
-            tookoff = bool(invalid_Location is False and below_desired_ft and on_ground is False and ((last_feeding is False and feeding) or (last_on_ground)))
-            print ("Tookoff Just Now:", tookoff)
+            self.tookoff = bool(self.invalid_Location is False and self.below_desired_ft and self.on_ground is False and ((self.last_feeding is False and self.feeding) or (self.last_on_ground)))
+            print ("Tookoff Just Now:", self.tookoff)
 
 
     #Check if Landed
-            landed = bool(last_below_desired_ft and invalid_Location is False and ((last_feeding and feeding is False and last_on_ground is False)  or (on_ground and last_on_ground is False)))
-            print ("Landed Just Now:", landed)
+            self.landed = bool(self.last_below_desired_ft and self.invalid_Location is False and ((self.last_feeding and self.feeding is False and self.last_on_ground is False)  or (self.on_ground and self.last_on_ground is False)))
+            print ("Landed Just Now:", self.landed)
 
         #Chose city town county or hamlet for location as not all are always avalible.
-            if feeding and invalid_Location is False:
-                aera_hierarchy = city or town or county or hamlet
+            if self.feeding and self.invalid_Location is False:
+                self.aera_hierarchy = self.city or self.town or self.county or self.hamlet
         #Takeoff Notifcation and Landed
-            if tookoff:
-                tookoff_message = ("Just took off from" + " " + aera_hierarchy + ", " + state + ", " + country_code)
+            if self.tookoff:
+                tookoff_message = ("Just took off from" + " " + self.aera_hierarchy + ", " + self.state + ", " + self.country_code)
                 print (tookoff_message)
                 #Google Map or tar1090 screenshot
-                if config.getboolean('GOOGLE', 'STATICMAP_ENABLE'):
-                    getMap(aera_hierarchy + ", "  + state + ", "  + country_code)
+                if self.config.getboolean('GOOGLE', 'STATICMAP_ENABLE'):
+                    getMap(self.aera_hierarchy + ", "  + self.state + ", "  + self.country_code)
                 else:
-                    getSS(icao)
+                    getSS(self.icao)
                 #Discord
-                if config.getboolean('DISCORD', 'ENABLE'):
-                    dis_message = config.get('DISCORD', 'TITLE') + " "  + tookoff_message
-                    sendDis(dis_message)
+                if self.config.getboolean('DISCORD', 'ENABLE'):
+                    self.dis_message = self.config.get('DISCORD', 'TITLE') + " "  + self.tookoff_message
+                    sendDis(dis_message, self.map_file_name)
                 #PushBullet
-                if config.getboolean('PUSHBULLET', 'ENABLE'):
-                    with open("map.png", "rb") as pic:
+                if self.config.getboolean('PUSHBULLET', 'ENABLE'):
+                    with open(self.map_file_name, "rb") as pic:
                         map_data = pb.upload_file(pic, "Tookoff IMG")
-                    push = pb_channel.push_note(config.get('PUSHBULLET', 'TITLE'), tookoff_message)
-                    push = pb_channel.push_file(**map_data)
+                    push = self.pb_channel.push_note(self.config.get('PUSHBULLET', 'TITLE'), self.tookoff_message)
+                    push = self.pb_channel.push_file(**map_data)
                 #Twitter
-                if config.getboolean('TWITTER', 'ENABLE'):
-                    tweet_api.update_with_media("map.png", status = tookoff_message)
-                takeoff_time = time.time()
-                os.remove("map.png")
+                if self.config.getboolean('TWITTER', 'ENABLE'):
+                    self.tweet_api.update_with_media(self.map_file_name, status = self.tookoff_message)
+                self.takeoff_time = time.time()
+                os.remove(self.map_file_name)
 
 
-            if landed:
-                landed_time_msg = ""
-                if takeoff_time != None:
-                    landed_time = time.time() - takeoff_time
-                    landed_time_msg = time.strftime("Apx. flt. time %H Hours : %M Mins ", time.gmtime(landed_time))
-                landed_message = ("Landed just now in" + " " + aera_hierarchy + ", " + state + ", " + country_code + ". " + landed_time_msg)
+            if self.landed:
+                self.landed_time_msg = ""
+                if self.takeoff_time != None:
+                    self.landed_time = time.time() - self.takeoff_time
+                    self.landed_time_msg = time.strftime("Apx. flt. time %H Hours : %M Mins ", self.time.gmtime(landed_time))
+                self.landed_message = ("Landed just now in" + " " + self.aera_hierarchy + ", " + self.state + ", " + self.country_code + ". " + self.landed_time_msg)
                 print (landed_message)
                 #Google Map or tar1090 screenshot
-                if config.getboolean('GOOGLE', 'STATICMAP_ENABLE'):
-                    getMap(aera_hierarchy + ", "  + state + ", "  + country_code)
+                if self.config.getboolean('GOOGLE', 'STATICMAP_ENABLE'):
+                    getMap(self.aera_hierarchy + ", "  + self.state + ", "  + self.country_code)
                 else:
-                    getSS(icao)
+                    getSS(self.icao)
                 #Discord
-                if config.getboolean('DISCORD', 'ENABLE'):
-                    dis_message =  config.get('DISCORD', 'TITLE') + " "  + landed_message
-                    sendDis(dis_message)
+                if self.config.getboolean('DISCORD', 'ENABLE'):
+                    self.dis_message =  self.config.get('DISCORD', 'TITLE') + " "  + self.landed_message
+                    sendDis(self.dis_message, self.map_file_name)
                 #PushBullet
-                if config.getboolean('PUSHBULLET', 'ENABLE'):
-                    with open("map.png", "rb") as pic:
+                if self.config.getboolean('PUSHBULLET', 'ENABLE'):
+                    with open(self.map_file_name, "rb") as pic:
                         map_data = pb.upload_file(pic, "Landed IMG")
-                    push = pb_channel.push_note(config.get('PUSHBULLET', 'TITLE'), landed_message)
-                    push = pb_channel.push_file(**map_data)
+                    push = self.pb_channel.push_note(self.config.get('PUSHBULLET', 'TITLE'), self.landed_message)
+                    push = self.pb_channel.push_file(**map_data)
                 #Twitter
-                if config.getboolean('TWITTER', 'ENABLE'):
-                    tweet_api.update_with_media("map.png", status = landed_message)
-                takeoff_time = None
-                landed_time = None
-                time_since_tk = None
-                os.remove("map.png")
+                if self.config.getboolean('TWITTER', 'ENABLE'):
+                    self.tweet_api.update_with_media(self.map_file_name, status = self.landed_message)
+                self.takeoff_time = None
+                self.landed_time = None
+                self.time_since_tk = None
+                os.remove(self.map_file_name)
 
     #Set Variables to compare to next check
-            last_feeding = feeding
-            last_geo_alt_ft = geo_alt_ft
-            last_on_ground = on_ground
-            last_below_desired_ft = below_desired_ft
+            self.last_feeding = self.feeding
+            self.last_geo_alt_ft = self.geo_alt_ft
+            self.last_on_ground = self.on_ground
+            self.last_below_desired_ft = self.below_desired_ft
 
-        elif failed:
-            print ("Failed to connect to data source rechecking in 15s")
+        elif self.val_error:
+            print ("Failed to Parse Will Recheck this Plane After new data")
 
-        if takeoff_time != None:
-            elapsed_time = time.time() - takeoff_time
-            time_since_tk = time.strftime("Time Since Take off  %H Hours : %M Mins : %S Secs", time.gmtime(elapsed_time))
-            print(time_since_tk)
+        if self.takeoff_time != None:
+            self.elapsed_time = self.time.time() - self.takeoff_time
+            self.time_since_tk = self.time.strftime("Time Since Take off  %H Hours : %M Mins : %S Secs", time.gmtime(self.elapsed_time))
+            print(self.time_since_tk)
 
 
 
-        elapsed_calc_time = time.time() - start_time
+        self.elapsed_calc_time = time.time() - self.start_time
 
-        print (Back.MAGENTA, "--------", running_Count, "------------------------Elapsed Time- ", elapsed_calc_time, "-------------------------------------", Style.RESET_ALL)
+        print (Back.MAGENTA, "--------", self.running_Count, "------------------------Elapsed Time- ", self.elapsed_calc_time, "-------------------------------------", Style.RESET_ALL)

@@ -16,5 +16,6 @@ def getSS(icao):
     url = "https://globe.adsbexchange.com/?largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=9&icao=" + icao
     browser.get(url)
     time.sleep(30)
-    browser.save_screenshot("map.png")
+    file_name = icao + "_map.png"
+    browser.save_screenshot(file_name)
     browser.quit()

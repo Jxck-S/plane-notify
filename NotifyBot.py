@@ -1,4 +1,3 @@
-#Github Updated - NotifyBot 11
 #Import Modules
 #Clear Terminal
 print("\033[H\033[J")
@@ -64,6 +63,7 @@ while True:
     longitude = None
     latitude = None
     on_ground = None
+    has_location = None
 #Get API States for Plane
     plane_Dict = None
     if config.get('DATA', 'SOURCE') == "OPENS":
@@ -87,6 +87,7 @@ while True:
         if plane_Dict == None:
             feeding = False
         elif plane_Dict != None:
+            feeding = True
             locals().update(plane_Dict)
             print (Fore.CYAN)
             if config.get('DATA', 'SOURCE') == "ADSBX":
@@ -99,7 +100,25 @@ while True:
             print ("Longitude: ", longitude)
             print ("GEO Alitude Ft: ", geo_alt_ft)
             print(Style.RESET_ALL)
-        #Lookup Location of coordinates
+
+
+
+    #Check if below desire ft
+            if geo_alt_ft is None:
+                below_desired_ft = False
+            elif geo_alt_ft < 10000:
+                below_desired_ft = True
+#Check if tookoff
+        tookoff = bool(below_desired_ft and on_ground is False and ((last_feeding is False and feeding) or (last_on_ground)))
+        print ("Tookoff Just Now:", tookoff)
+
+
+#Check if Landed
+        landed = bool(last_below_desired_ft and ((last_feeding and feeding is False and last_on_ground is False)  or (on_ground and last_on_ground is False)))
+        print ("Landed Just Now:", landed)
+
+#Lookup Location of coordinates
+        if landed or tookoff:
             if longitude != None and latitude != None:
                 combined = f"{latitude}, {longitude}"
                 try:
@@ -109,16 +128,17 @@ while True:
                 print (Fore.YELLOW)
     #            print ("Geopy debug: ", location.raw)
                 print(Style.RESET_ALL)
-                feeding = True
+                has_location = True
             else:
                 print (Fore.RED + 'No Location')
-                feeding = False
+                has_location = False
+                invalid_Location = True
                 print(Style.RESET_ALL)
 
 
 
     #Figure if valid location, valid being geopy finds a location
-        if feeding:
+        if has_location:
             try:
                 geoError = location.raw['error']
             except KeyError:
@@ -160,26 +180,17 @@ while True:
                 print ("County: ", county)
                 print(Style.RESET_ALL)
 
-    #Check if below desire ft
-            if geo_alt_ft is None:
-                below_desired_ft = False
-            elif geo_alt_ft < 10000:
-                below_desired_ft = True
-#Check if tookoff
-        tookoff = bool(invalid_Location is False and below_desired_ft and on_ground is False and ((last_feeding is False and feeding) or (last_on_ground)))
-        print ("Tookoff Just Now:", tookoff)
-
-
-#Check if Landed
-        landed = bool(last_below_desired_ft and invalid_Location is False and ((last_feeding and feeding is False and last_on_ground is False)  or (on_ground and last_on_ground is False)))
-        print ("Landed Just Now:", landed)
 
     #Chose city town county or hamlet for location as not all are always avalible.
-        if feeding and invalid_Location is False:
+        if invalid_Location is False:
             aera_hierarchy = city or town or county or hamlet
+
     #Takeoff Notifcation and Landed
         if tookoff:
-            tookoff_message = ("Just took off from" + " " + aera_hierarchy + ", " + state + ", " + country_code)
+            if invalid_Location is False:
+                tookoff_message = ("Just took off from" + " " + aera_hierarchy + ", " + state + ", " + country_code)
+            else:
+                tookoff_message = ("Just took off")
             print (tookoff_message)
             #Google Map or tar1090 screenshot
             if config.getboolean('GOOGLE', 'STATICMAP_ENABLE'):
@@ -208,7 +219,10 @@ while True:
             if takeoff_time != None:
                 landed_time = time.time() - takeoff_time
                 landed_time_msg = time.strftime("Apx. flt. time %H Hours : %M Mins ", time.gmtime(landed_time))
-            landed_message = ("Landed just now in" + " " + aera_hierarchy + ", " + state + ", " + country_code + ". " + landed_time_msg)
+            if invalid_Location is False:
+                landed_message = ("Landed just now in" + " " + aera_hierarchy + ", " + state + ", " + country_code + ". " + landed_time_msg)
+            else:
+                landed_message = ("Landed just now")
             print (landed_message)
             #Google Map or tar1090 screenshot
             if config.getboolean('GOOGLE', 'STATICMAP_ENABLE'):
@@ -253,6 +267,6 @@ while True:
 
     print (Back.MAGENTA, "--------", running_Count, "------------------------Elapsed Time- ", elapsed_calc_time, "-------------------------------------", Style.RESET_ALL)
     print ("")
-    time.sleep(15)
+    time.sleep(30)
 
 

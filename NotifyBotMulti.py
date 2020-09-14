@@ -2,6 +2,7 @@ import requests
 import configparser
 import json
 import time
+from colorama import Fore, Back, Style
 from planeClass import Plane
 main_config = configparser.ConfigParser()
 main_config.read('mainconf.ini')
@@ -25,7 +26,11 @@ if main_config.get('DATA', 'SOURCE') == "ADSBX":
     }
 elif main_config.get('DATA', 'SOURCE') == "OPENS":
     raise NotImplementedError
+running_Count = 0
 while True:
+    running_Count +=1
+    start_time = time.time()
+    print (Back.GREEN,  Fore.BLACK, "--------", running_Count, "-------------------------------------------------------", Style.RESET_ALL)
     if main_config.get('DATA', 'SOURCE') == "ADSBX":
         try:
             response = requests.get(url, headers = headers)
@@ -38,23 +43,26 @@ while True:
             failed = True
         except json.decoder.JSONDecodeError as error_message:
             print("Error with JSON")
+            print (json.dumps(data, indent = 2))
             print(error_message)
             failed = True
 
         if failed == False:
-            print(data)
             if data['ac'] != None:
-                for planeData in data['ac']:
-                    for key, obj in planes.items():
+                for key, obj in planes.items():
+                    has_data = False
+                    for planeData in data['ac']:
                         if planeData['icao'] == key:
-                            print(planeData['icao'])
-                            print(planeData)
                             obj.run(planeData)
-                        else:
-                            obj.run(None)
+                            has_data = True
+                            break
+                    if has_data is False:
+                        obj.run(None)
             else:
                 for obj in planes.values():
                     obj.run(None)
+    elapsed_calc_time = time.time() - start_time
+    print (Back.GREEN,  Fore.BLACK, "--------", running_Count, "------------------------Elapsed Time-", elapsed_calc_time, " -------------------------------------", Style.RESET_ALL)
+    print(Back.RED, "Sleep 30", Style.RESET_ALL)
+    time.sleep(30)
 
-
-    time.sleep(15)

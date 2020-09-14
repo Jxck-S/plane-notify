@@ -1,9 +1,10 @@
 # Authenticate to Twitter
-import configparser
-config = configparser.ConfigParser()
-config.read('config.ini')
-import tweepy
-def tweepysetup():
+
+def tweepysetup(conf_file):
+    import configparser
+    config = configparser.ConfigParser()
+    config.read(conf_file)
+    import tweepy
     #DOCU
     #https://realpython.com/twitter-bot-python-tweepy/
     auth = tweepy.OAuthHandler(config.get('TWITTER', 'CONSUMER_KEY'), config.get('TWITTER', 'CONSUMER_SECRET'))

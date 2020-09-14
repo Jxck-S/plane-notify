@@ -12,7 +12,6 @@ class Plane:
         self.invalid_Location = None
         self.longitude = None
         self.latitude = None
-        self.running_Count = 0
         self.callsign = None
         self.takeoff_time = None
         self.reg = None
@@ -49,18 +48,16 @@ class Plane:
         #Setup Tweepy
         if self.config.getboolean('TWITTER', 'ENABLE'):
             from defTweet import tweepysetup
-            self.tweet_api = tweepysetup()
+            self.tweet_api = tweepysetup(self.conf_file)
         #Setup PushBullet
         if self.config.getboolean('PUSHBULLET', 'ENABLE'):
             from pushbullet import Pushbullet
             self.pb = Pushbullet(self.config['PUSHBULLET']['API_KEY'])
-            self.pb_channel = pb.get_channel(self.config.get('PUSHBULLET', 'CHANNEL_TAG'))
+            self.pb_channel = self.pb.get_channel(self.config.get('PUSHBULLET', 'CHANNEL_TAG'))
 
         #Pre Set Non Reseting Variables
 
-        self.running_Count +=1
-        self.start_time = time.time()
-        print (Back.MAGENTA, "--------", self.running_Count, "----------------------------- ICAO:", self.icao, "--------------------------", Style.RESET_ALL)
+        print (Back.MAGENTA, "---------", self.conf_file, "---------------------------- ICAO:", self.icao, "--------------------------", Style.RESET_ALL)
     #Reset Variables
         self.below_desired_ft = None
         self.geo_alt_ft = None
@@ -194,8 +191,8 @@ class Plane:
                 self.aera_hierarchy = self.city or self.town or self.county or self.hamlet
         #Takeoff Notifcation and Landed
             if self.tookoff:
-                tookoff_message = ("Just took off from" + " " + self.aera_hierarchy + ", " + self.state + ", " + self.country_code)
-                print (tookoff_message)
+                self.tookoff_message = ("Just took off from" + " " + self.aera_hierarchy + ", " + self.state + ", " + self.country_code)
+                print (self.tookoff_message)
                 #Google Map or tar1090 screenshot
                 if self.config.getboolean('GOOGLE', 'STATICMAP_ENABLE'):
                     getMap(self.aera_hierarchy + ", "  + self.state + ", "  + self.country_code)
@@ -204,7 +201,7 @@ class Plane:
                 #Discord
                 if self.config.getboolean('DISCORD', 'ENABLE'):
                     self.dis_message = self.config.get('DISCORD', 'TITLE') + " "  + self.tookoff_message
-                    sendDis(dis_message, self.map_file_name)
+                    sendDis(self.dis_message, self.map_file_name, self.conf_file)
                 #PushBullet
                 if self.config.getboolean('PUSHBULLET', 'ENABLE'):
                     with open(self.map_file_name, "rb") as pic:
@@ -224,7 +221,7 @@ class Plane:
                     self.landed_time = time.time() - self.takeoff_time
                     self.landed_time_msg = time.strftime("Apx. flt. time %H Hours : %M Mins ", self.time.gmtime(landed_time))
                 self.landed_message = ("Landed just now in" + " " + self.aera_hierarchy + ", " + self.state + ", " + self.country_code + ". " + self.landed_time_msg)
-                print (landed_message)
+                print (self.landed_message)
                 #Google Map or tar1090 screenshot
                 if self.config.getboolean('GOOGLE', 'STATICMAP_ENABLE'):
                     getMap(self.aera_hierarchy + ", "  + self.state + ", "  + self.country_code)
@@ -233,7 +230,7 @@ class Plane:
                 #Discord
                 if self.config.getboolean('DISCORD', 'ENABLE'):
                     self.dis_message =  self.config.get('DISCORD', 'TITLE') + " "  + self.landed_message
-                    sendDis(self.dis_message, self.map_file_name)
+                    sendDis(self.dis_message, self.map_file_name, self.conf_file)
                 #PushBullet
                 if self.config.getboolean('PUSHBULLET', 'ENABLE'):
                     with open(self.map_file_name, "rb") as pic:
@@ -258,12 +255,11 @@ class Plane:
             print ("Failed to Parse Will Recheck this Plane After new data")
 
         if self.takeoff_time != None:
-            self.elapsed_time = self.time.time() - self.takeoff_time
+            self.elapsed_time = time.time() - self.takeoff_time
             self.time_since_tk = self.time.strftime("Time Since Take off  %H Hours : %M Mins : %S Secs", time.gmtime(self.elapsed_time))
             print(self.time_since_tk)
 
 
 
-        self.elapsed_calc_time = time.time() - self.start_time
 
-        print (Back.MAGENTA, "--------", self.running_Count, "------------------------Elapsed Time- ", self.elapsed_calc_time, "-------------------------------------", Style.RESET_ALL)
+        print (Back.MAGENTA, "---------------------------------------------------------------------------", Style.RESET_ALL)

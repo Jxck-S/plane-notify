@@ -4,7 +4,7 @@ def pullOpenSky(TRACK_PLANE):
     config.read('config.ini')
     from opensky_api import OpenSkyApi
     planeData = None
-    opens_api = OpenSkyApi(config.get('OPENSKY', 'USERNAME'), config.get('OPENSKY', 'PASSWORD'))
+    opens_api = OpenSkyApi(username= None if config.get('OPENSKY', 'USERNAME').upper() == "NONE" else config.get('OPENSKY', 'USERNAME'), password= None if config.get('OPENSKY', 'PASSWORD').upper() == "NONE" else config.get('OPENSKY', 'PASSWORD').upper())
     failed = False
     try:
         planeData = opens_api.get_states(time_secs=0, icao24=TRACK_PLANE.lower())

@@ -103,8 +103,6 @@ class Plane:
                 print (Fore.CYAN)
                 if main_config.get('DATA', 'SOURCE') == "ADSBX":
                     print("Registration: ", self.reg)
-                else:
-                    print("Registration: ", "Only shows when using ADSBX!")
                 print ("Callsign: ", self.callsign)
                 print ("On Ground: ", self.on_ground)
                 print ("Latitude: ", self.latitude)

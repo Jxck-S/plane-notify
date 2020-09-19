@@ -1,47 +1,34 @@
 import requests
 import json
 import configparser
-config = configparser.ConfigParser()
-config.read('config.ini')
-def pullADSBX(icao):
-  url = 'https://adsbexchange.com/api/aircraft/icao/' + icao + "/"
-  headers = {
-      'api-auth': config.get('ADSBX', 'API_KEY')
-  }
-  failed = False
-  try:
-    response = requests.get(url, headers = headers)
-    data = response.text
-    data = json.loads(data)
-    #print (json.dumps(data, indent=4))
-  except (requests.HTTPError, requests.ConnectionError, requests.Timeout) as error_message:
-    print("ADSBX Connection Error")
-    print(error_message)
-    failed = True
-    plane_Dict = None
-  except json.decoder.JSONDecodeError as error_message:
-    print("Error with JSON")
-    print(error_message)
-    failed = True
-    plane_Dict = None
-  if failed is False:
-    ac = data['ac']
-    if ac != None:
-      ac_dict = ac[0]
-      try:
-        plane_Dict = {'icao' : ac_dict['icao'], 'callsign' : ac_dict['call'], 'reg' : ac_dict['reg'], 'latitude' : float(ac_dict['lat']), 'longitude' : float(ac_dict['lon']), 'geo_alt_ft' : int(ac_dict['galt']), 'on_ground' : bool(int(ac_dict["gnd"]))}
-        if plane_Dict['on_ground']:
-          plane_Dict['geo_alt_ft'] = 0
-      except ValueError as e:
-        plane_Dict = None
+main_config = configparser.ConfigParser()
+main_config.read('mainconf.ini')
+def pullADSBX(planes):
+    if len(planes) > 1:
+                url = "https://adsbexchange.com/api/aircraft/json/"
+    elif len(planes) == 1:
+                url = "https://adsbexchange.com/api/aircraft/icao/" +    str(list(planes.keys())[0]) + "/"
+
+    headers = {
+                'api-auth': main_config.get('ADSBX', 'API_KEY'),
+                'Content-Encoding': 'gzip'
+    }
+    try:
+        response = requests.get(url, headers = headers)
+        data = response.text
+        data = json.loads(data)
+        failed = False
+    except (requests.HTTPError, requests.ConnectionError, requests.Timeout) as error_message:
+        print("ADSBX Connection Error")
+        print(error_message)
         failed = True
-        print("Got data but some data is invalid!")
-        print(e)
-    else:
-      plane_Dict = None
-
-  return plane_Dict, failed
-
+    except json.decoder.JSONDecodeError as error_message:
+        print("Error with JSON")
+        print (json.dumps(data, indent = 2))
+        print(error_message)
+        failed = True
+    print("Failed:", failed)
+    return data, failed
 
 
 

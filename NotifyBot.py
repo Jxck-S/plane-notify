@@ -52,6 +52,8 @@ running_Count = 0
 callsign = None
 takeoff_time = None
 reg = None
+last_latitude = None
+last_longitude = None
 #Begin Looping program
 while True:
     running_Count += 1
@@ -92,8 +94,6 @@ while True:
             print (Fore.CYAN)
             if config.get('DATA', 'SOURCE') == "ADSBX":
                 print("Registration: ", reg)
-            else:
-                print("Registration: ", "Only shows when using ADSBX!")
             print ("Callsign: ", callsign)
             print ("On Ground: ", on_ground)
             print ("Latitude: ", latitude)
@@ -119,21 +119,27 @@ while True:
 
 #Lookup Location of coordinates
         if landed or tookoff:
-            if longitude != None and latitude != None:
-                combined = f"{latitude}, {longitude}"
-                try:
-                    location = geolocator.reverse(combined)
-                except:
-                    print ("Geopy API Error")
-                print (Fore.YELLOW)
-    #            print ("Geopy debug: ", location.raw)
-                print(Style.RESET_ALL)
-                has_location = True
-            else:
-                print (Fore.RED + 'No Location')
-                has_location = False
-                invalid_Location = True
-                print(Style.RESET_ALL)
+                if landed and last_longitude != None and last_latitude != None:
+                    combined =  f"{last_latitude} , {last_longitude}"
+                    has_coords = True
+                elif tookoff and longitude != None and latitude != None:
+                    combined =  f"{latitude} , {longitude}"
+                    has_coords = True
+                else:
+                    print (Fore.RED + 'No Location')
+                    has_location = False
+                    invalid_Location = True
+                    has_coords = False
+                    print(Style.RESET_ALL)
+                if has_coords:
+                    try:
+                        location = geolocator.reverse(combined)
+                    except:
+                        print ("Geopy API Error")
+                    else:
+            #           print (Fore.YELLOW, "Geopy debug: ", location.raw, Style.RESET_ALL)
+                        has_location = True
+
 
 
 
@@ -184,6 +190,9 @@ while True:
     #Chose city town county or hamlet for location as not all are always avalible.
         if invalid_Location is False:
             aera_hierarchy = city or town or county or hamlet
+    #Set Discord Title
+        if config.getboolean('DISCORD', 'ENABLE'):
+            dis_title = icao if config.get('DISCORD', 'TITLE') == "icao" else callsign if config.get('DISCORD', 'TITLE') == "callsign" else config.get('DISCORD', 'TITLE')
 
     #Takeoff Notifcation and Landed
         if tookoff:
@@ -199,7 +208,7 @@ while True:
                 getSS(icao)
             #Discord
             if config.getboolean('DISCORD', 'ENABLE'):
-                dis_message = config.get('DISCORD', 'TITLE') + " "  + tookoff_message
+                dis_message = dis_title + " "  + tookoff_message
                 sendDis(dis_message)
             #PushBullet
             if config.getboolean('PUSHBULLET', 'ENABLE'):
@@ -231,7 +240,7 @@ while True:
                 getSS(icao)
             #Discord
             if config.getboolean('DISCORD', 'ENABLE'):
-                dis_message =  config.get('DISCORD', 'TITLE') + " "  + landed_message
+                dis_message = dis_title + " "  + landed_message
                 sendDis(dis_message)
             #PushBullet
             if config.getboolean('PUSHBULLET', 'ENABLE'):
@@ -252,6 +261,8 @@ while True:
         last_geo_alt_ft = geo_alt_ft
         last_on_ground = on_ground
         last_below_desired_ft = below_desired_ft
+        last_longitude = longitude
+        last_latitude = latitude
 
     elif failed:
         print ("Failed to connect to data source rechecking in 15s")
@@ -267,6 +278,6 @@ while True:
 
     print (Back.MAGENTA, "--------", running_Count, "------------------------Elapsed Time- ", elapsed_calc_time, "-------------------------------------", Style.RESET_ALL)
     print ("")
-    time.sleep(30)
+    time.sleep(20)
 
 

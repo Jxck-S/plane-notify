@@ -1,6 +1,8 @@
 import requests
 import json
 import configparser
+import time
+from datetime import datetime
 main_config = configparser.ConfigParser()
 main_config.read('mainconf.ini')
 def pullADSBX(planes):
@@ -17,6 +19,7 @@ def pullADSBX(planes):
         response = requests.get(url, headers = headers)
         data = response.text
         data = json.loads(data)
+        print ("HTTP Status Code:", response.status_code)
         failed = False
     except (requests.HTTPError, requests.ConnectionError, requests.Timeout) as error_message:
         print("ADSBX Connection Error")
@@ -27,8 +30,10 @@ def pullADSBX(planes):
         print (json.dumps(data, indent = 2))
         print(error_message)
         failed = True
-    print("Failed:", failed)
+    if failed is False:
+        data_ctime = data['ctime'] / 1000.0
+        print("UTC of Data:",datetime.utcfromtimestamp(data_ctime))
+        print("Current UTC:", datetime.utcnow())
     return data, failed
-
 
 

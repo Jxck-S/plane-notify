@@ -29,8 +29,8 @@ def pullADSBX(icao):
 		plane_Dict = None
 	if failed is False:
 		ac = data['ac']
-		a = data['ctime'] / 1000.0
-		print("UTC of Data:",datetime.utcfromtimestamp(a))
+		ctime = data['ctime'] / 1000.0
+		print("UTC of Data:",datetime.utcfromtimestamp(ctime))
 		print("Current UTC:", datetime.utcnow())
 		if ac != None:
 			ac_dict = ac[0]

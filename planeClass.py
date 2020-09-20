@@ -16,6 +16,8 @@ class Plane:
         self.takeoff_time = None
         self.reg = None
         self.map_file_name = icao.upper() + "_map.png"
+        self.last_latitude = None
+        self.last_longitude = None
     def getICAO(self):
         return self.icao
     def run(self, ac_dict):
@@ -64,6 +66,7 @@ class Plane:
         self.longitude = None
         self.latitude = None
         self.on_ground = None
+        self.has_location = None
     #Get API States for Plane
         self.plane_Dict = None
         if main_config.get('DATA', 'SOURCE') == "OPENS":
@@ -109,26 +112,50 @@ class Plane:
                 print ("Longitude: ", self.longitude)
                 print ("GEO Alitude Ft: ", self.geo_alt_ft)
                 print(Style.RESET_ALL)
-            #Lookup Location of coordinates
-                if self.longitude != None and self.latitude != None:
-                    self.combined = f"{self.latitude}, {self.longitude}"
-                    try:
-                        self.location = geolocator.reverse(self.combined)
-                    except BaseException as e:
-                        print ("Geopy API Error", e)
-                    print (Fore.YELLOW)
-        #            print ("Geopy debug: ", location.raw)
-                    print(Style.RESET_ALL)
-                    self.feeding = True
+
+
+        #Check if below desire ft
+                if self.geo_alt_ft is None:
+                    self.below_desired_ft = False
+                elif self.geo_alt_ft < 10000:
+                    self.below_desired_ft = True
+    #Check if tookoff
+            self.tookoff = bool(self.below_desired_ft and self.on_ground is False and ((self.last_feeding is False and self.feeding) or (self.last_on_ground)))
+            print ("Tookoff Just Now:", self.tookoff)
+
+
+    #Check if Landed
+            self.landed = bool(self.last_below_desired_ft  and ((self.last_feeding and self.feeding is False and self.last_on_ground is False)  or (self.on_ground and self.last_on_ground is False)))
+            print ("Landed Just Now:", self.landed)
+
+    #Lookup Location of coordinates
+            if self.landed or self.tookoff:
+                if self.landed and self.last_longitude != None and self.last_latitude != None:
+                    self.combined = f"{self.last_latitude}, {self.last_longitude}"
+                    self.has_coords = True
+                elif self.tookoff and self.longitude != None and self.latitude != None:
+                    self.combined =  f"{self.latitude} , {self.longitude}"
+                    self.has_coords = True
                 else:
                     print (Fore.RED + 'No Location')
-                    self.feeding = False
+                    self.has_location = False
+                    self.invalid_Location = True
+                    self.has_coords = False
                     print(Style.RESET_ALL)
+                if self.has_coords:
+                    try:
+                        self.location = geolocator.reverse(self.combined)
+                    except:
+                        print ("Geopy API Error")
+                    else:
+            #           print (Fore.YELLOW, "Geopy debug: ", location.raw, Style.RESET_ALL)
+                        self.has_location = True
+
 
 
 
         #Figure if valid location, valid being geopy finds a location
-            if self.feeding:
+            if self.has_location:
                 try:
                     self.geoError = self.location.raw['error']
                 except KeyError:
@@ -169,27 +196,19 @@ class Plane:
                     print ("Hamlet: ", self.hamlet)
                     print ("County: ", self.county)
                     print(Style.RESET_ALL)
-
-        #Check if below desire ft
-                if self.geo_alt_ft is None:
-                    self.below_desired_ft = False
-                elif self.geo_alt_ft < 10000:
-                    self.below_desired_ft = True
-    #Check if tookoff
-            self.tookoff = bool(self.invalid_Location is False and self.below_desired_ft and self.on_ground is False and ((self.last_feeding is False and self.feeding) or (self.last_on_ground)))
-            print ("Tookoff Just Now:", self.tookoff)
-
-
-    #Check if Landed
-            self.landed = bool(self.last_below_desired_ft and self.invalid_Location is False and ((self.last_feeding and self.feeding is False and self.last_on_ground is False)  or (self.on_ground and self.last_on_ground is False)))
-            print ("Landed Just Now:", self.landed)
-
         #Chose city town county or hamlet for location as not all are always avalible.
-            if self.feeding and self.invalid_Location is False:
+            if self.invalid_Location is False:
                 self.aera_hierarchy = self.city or self.town or self.county or self.hamlet
+        #Set Discord Title
+            if self.config.getboolean('DISCORD', 'ENABLE'):
+                self.dis_title = self.icao if self.config.get('DISCORD', 'TITLE') == "icao" else self.callsign if self.config.get('DISCORD', 'TITLE') == "callsign" else self.config.get('DISCORD', 'TITLE')
+
         #Takeoff Notifcation and Landed
             if self.tookoff:
-                self.tookoff_message = ("Just took off from" + " " + self.aera_hierarchy + ", " + self.state + ", " + self.country_code)
+                if self.invalid_Location is False:
+                    self.tookoff_message = ("Just took off from" + " " + self.aera_hierarchy + ", " + self.state + ", " + self.country_code)
+                else:
+                    self.tookoff_message = ("Just took off")
                 print (self.tookoff_message)
                 #Google Map or tar1090 screenshot
                 if self.config.getboolean('GOOGLE', 'STATICMAP_ENABLE'):
@@ -198,7 +217,7 @@ class Plane:
                     getSS(self.icao)
                 #Discord
                 if self.config.getboolean('DISCORD', 'ENABLE'):
-                    self.dis_message = self.config.get('DISCORD', 'TITLE') + " "  + self.tookoff_message
+                    self.dis_message = self.dis_title + " "  + self.tookoff_message
                     sendDis(self.dis_message, self.map_file_name, self.conf_file)
                 #PushBullet
                 if self.config.getboolean('PUSHBULLET', 'ENABLE'):
@@ -218,7 +237,10 @@ class Plane:
                 if self.takeoff_time != None:
                     self.landed_time = time.time() - self.takeoff_time
                     self.landed_time_msg = time.strftime("Apx. flt. time %H Hours : %M Mins ", self.time.gmtime(landed_time))
-                self.landed_message = ("Landed just now in" + " " + self.aera_hierarchy + ", " + self.state + ", " + self.country_code + ". " + self.landed_time_msg)
+                if self.invalid_Location is False:
+                    self.landed_message = ("Landed just now in" + " " + self.aera_hierarchy + ", " + self.state + ", " + self.country_code + ". " + self.landed_time_msg)
+                else:
+                    self.landed_message = ("Landed just now" , self.landed_time_msg)
                 print (self.landed_message)
                 #Google Map or tar1090 screenshot
                 if self.config.getboolean('GOOGLE', 'STATICMAP_ENABLE'):
@@ -227,7 +249,7 @@ class Plane:
                     getSS(self.icao)
                 #Discord
                 if self.config.getboolean('DISCORD', 'ENABLE'):
-                    self.dis_message =  self.config.get('DISCORD', 'TITLE') + " "  + self.landed_message
+                    self.dis_message =  self.dis_title + " "  + self.landed_message
                     sendDis(self.dis_message, self.map_file_name, self.conf_file)
                 #PushBullet
                 if self.config.getboolean('PUSHBULLET', 'ENABLE'):
@@ -248,13 +270,15 @@ class Plane:
             self.last_geo_alt_ft = self.geo_alt_ft
             self.last_on_ground = self.on_ground
             self.last_below_desired_ft = self.below_desired_ft
+            self.last_longitude = self.longitude
+            self.last_latitude = self.latitude
 
         elif self.val_error:
             print ("Failed to Parse Will Recheck this Plane After new data")
 
         if self.takeoff_time != None:
             self.elapsed_time = time.time() - self.takeoff_time
-            self.time_since_tk = self.time.strftime("Time Since Take off  %H Hours : %M Mins : %S Secs", time.gmtime(self.elapsed_time))
+            self.time_since_tk = time.strftime("Time Since Take off  %H Hours : %M Mins : %S Secs", time.gmtime(self.elapsed_time))
             print(self.time_since_tk)
 
 

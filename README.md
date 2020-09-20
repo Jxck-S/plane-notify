@@ -103,14 +103,7 @@ python3 NotifyBot.py
 
 ### TODO
 
-Move the lookup location of coordinates so that it only rungs when landing or takeoff occurs. So then Geopy/Nomination API is called less
+-   Possibly implement airport name, done by closest airport
+-   General Cleanup 
 
-Implement airport name, done by closest airport
-
-#### Refrences
-
--   <https://opensky-network.org/apidoc/>
--   <https://geopy.readthedocs.io/en/stable/>
--   <https://www.geeksforgeeks.org/python-get-google-map-image-specified-location-using-google-static-maps-api/>
--   <https://realpython.com/twitter-bot-python-tweepy/>
--   <https://github.com/rbrcsk/pushbullet.py>
+### [ More Refrences / Documentation](Refrences.md)

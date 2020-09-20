@@ -31,9 +31,15 @@ def pullADSBX(planes):
         print(error_message)
         failed = True
     if failed is False:
-        data_ctime = data['ctime'] / 1000.0
+        data_ctime = float(data['ctime']) / 1000.0
         print("UTC of Data:",datetime.utcfromtimestamp(data_ctime))
         print("Current UTC:", datetime.utcnow())
+        try:
+            if data['msg'] == 'You need a key. Get a feeder or use pay API. https://rapidapi.com/adsbx/api/adsbexchange-com1':
+                print("Bad auth", data['msg'])
+                failed = True
+        except KeyError:
+            pass
     return data, failed
 
 

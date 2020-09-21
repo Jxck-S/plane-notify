@@ -102,6 +102,7 @@ class Plane:
             if self.plane_Dict == None:
                 self.feeding = False
             elif self.plane_Dict != None:
+                self.feeding = True
                 self.__dict__.update(self.plane_Dict)
                 print (Fore.CYAN)
                 if main_config.get('DATA', 'SOURCE') == "ADSBX":
@@ -222,7 +223,7 @@ class Plane:
                 #PushBullet
                 if self.config.getboolean('PUSHBULLET', 'ENABLE'):
                     with open(self.map_file_name, "rb") as pic:
-                        map_data = pb.upload_file(pic, "Tookoff IMG")
+                        map_data = self.pb.upload_file(pic, "Tookoff IMG")
                     push = self.pb_channel.push_note(self.config.get('PUSHBULLET', 'TITLE'), self.tookoff_message)
                     push = self.pb_channel.push_file(**map_data)
                 #Twitter
@@ -236,7 +237,7 @@ class Plane:
                 self.landed_time_msg = ""
                 if self.takeoff_time != None:
                     self.landed_time = time.time() - self.takeoff_time
-                    self.landed_time_msg = time.strftime("Apx. flt. time %H Hours : %M Mins ", self.time.gmtime(landed_time))
+                    self.landed_time_msg = time.strftime("Apx. flt. time %H Hours : %M Mins ", time.gmtime(self.landed_time))
                 if self.invalid_Location is False:
                     self.landed_message = ("Landed just now in" + " " + self.aera_hierarchy + ", " + self.state + ", " + self.country_code + ". " + self.landed_time_msg)
                 else:
@@ -254,7 +255,7 @@ class Plane:
                 #PushBullet
                 if self.config.getboolean('PUSHBULLET', 'ENABLE'):
                     with open(self.map_file_name, "rb") as pic:
-                        map_data = pb.upload_file(pic, "Landed IMG")
+                        map_data = self.pb.upload_file(pic, "Landed IMG")
                     push = self.pb_channel.push_note(self.config.get('PUSHBULLET', 'TITLE'), self.landed_message)
                     push = self.pb_channel.push_file(**map_data)
                 #Twitter

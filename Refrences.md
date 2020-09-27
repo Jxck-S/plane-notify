@@ -12,6 +12,11 @@
 ## GeoPy - Location Name Lookup
 
 -   <https://geopy.readthedocs.io/en/stable/>
+-   <https://github.com/geopy/geopy>
+
+## Colorama
+
+-   <https://github.com/tartley/colorama>
 
 ## Google Static Maps
 

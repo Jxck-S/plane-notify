@@ -5,6 +5,10 @@
 
 Notify If a Selected Plane has taken off or landed using Python with OpenSky or ADS-B Exchange Data, outputs location of takeoff location of landing and takeoff by reverse lookup of coordinates.
 
+### Branches
+
+Their are two branches of this program single is the original only supports one plane works with OpenSky and ADSBX. Multi branch is the new version supports multiple planes currently only works with ADSBX, will eventually implement OpenSky. Your current viewing multi.
+
 ### Discord Output Example
 
 ![Discord Output Example](./ExImages/DiscordEX.png?raw=true)
@@ -33,20 +37,12 @@ Made it so I could track Elon Musk's Jet and share with others of his whereabout
 
 -   If the landing event and takeoff events are true, It will output to any of the following built-in output methods. (Twitter, Pushbullet, and Discord all of which can be setup and enabled in config.ini). Outputs the location name, map image and takeoff time if landing. (Tweepy and "Pushbullet.py" and Discord_webhooks)
 
-## Required PIP packages
-
--   OpenSky API <https://github.com/openskynetwork/opensky-api> (If using OpenSky, which is default and anybody can use)
-
--   geopy <https://github.com/geopy/geopy>
-
--   colorama <https://github.com/tartley/colorama>
-
-### Install OpenSky API
+### Make sure Python/PIP is installed
 
 ```bash
-apt install git
-git clone https://github.com/openskynetwork/opensky-api.git
-pip install -e ~/opensky-api/python
+apt update
+apt install python3
+apt install python3-pip
 ```
 
 ### Install Colorama and geopy
@@ -56,7 +52,29 @@ pip install colorama
 pip install geopy
 ```
 
-### Install Pushbullet, Tweepy, and Discord optional output methods already implemented in code
+### Install Selenium / ChromeDriver or setup Google Static Maps
+
+Selenium/ChromeDriver is used to take a screenshot of the plane on globe.adsbexchange.com. Or use Google Static Maps, which can cost money if over used(No tutorial use https://developers.google.com/maps/documentation/maps-static/get-api-key to get to a key).
+
+#### 1. Chromium
+
+```
+sudo apt-get install chromium
+```
+
+#### 2. ChromeDriver
+
+```
+sudo apt-get install chromium-driver
+```
+
+#### 3. Selenium
+
+```
+pip install -U selenium
+```
+
+### Install Pushbullet, Tweepy, and Discord optional output methods already implemented in code, only install the ones you want to use.
 
 ```bash
 pip install tweepy
@@ -64,7 +82,7 @@ pip install pushbullet.py
 pip install discord_webhooks
 ```
 
-Configure these methods of output in config.ini
+These output methods once installed can be configured in planes config you create, using the example plane1.ini
 
 ### Install Screen to run in the background
 
@@ -72,22 +90,21 @@ Configure these methods of output in config.ini
 apt install screen
 ```
 
-### Make sure Python is installed
-
-```bash
-apt install python3
-```
-
 ### Download / Clone
 
 ```bash
-git clone https://github.com/Jxck-S/plane-notify.git
+apt install git
+git clone -b multi --single-branch https://github.com/Jxck-S/plane-notify.git
 cd plane-notify
 ```
 
-### Configure config file with keys and URLs (config.ini)
+### Configure main config file with keys and URLs (mainconf.ini)
 
 -   edit them with nano or vi on the running machine or on your pc and transfer the config to where you will be running the bot
+
+### Configure individual planes
+
+#### an example file is given (plane1.ini) Plane config files should be in the programs directory, the program looks for any file with a .ini exstenstion.
 
 ### Enter and create new Screen Session
 
@@ -98,12 +115,13 @@ screen -R <name screen whatever you want>
 ### Start Program
 
 ```bash
-python3 NotifyBot.py
+python3 NotifyBotMulti.py
 ```
 
 ### TODO
 
 -   Possibly implement airport name, done by closest airport
--   General Cleanup 
+-   General Cleanup
+-   Move all configs to own folder
 
 ### [ More Refrences / Documentation](Refrences.md)

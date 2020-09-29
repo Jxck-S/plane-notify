@@ -3,7 +3,8 @@ import configparser
 import json
 import time
 from defADSBX import pullADSBX
-from colorama import Fore, Back, Style
+from colorama import init, Fore, Back, Style
+init(convert=True)
 from planeClass import Plane
 from datetime import datetime
 import pytz

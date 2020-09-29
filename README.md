@@ -45,11 +45,12 @@ apt install python3
 apt install python3-pip
 ```
 
-### Install Colorama and geopy
+### Install Colorama, geopy, ptyz
 
 ```bash
 pip install colorama
 pip install geopy
+pip3 install ptyz
 ```
 
 ### Install Selenium / ChromeDriver or setup Google Static Maps

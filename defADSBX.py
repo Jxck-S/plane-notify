@@ -3,6 +3,7 @@ import json
 import configparser
 import time
 from datetime import datetime
+from http.client import IncompleteRead
 main_config = configparser.ConfigParser()
 main_config.read('mainconf.ini')
 def pullADSBX(planes):
@@ -21,7 +22,7 @@ def pullADSBX(planes):
         data = json.loads(data)
         print ("HTTP Status Code:", response.status_code)
         failed = False
-    except (requests.HTTPError, requests.ConnectionError, requests.Timeout) as error_message:
+    except (requests.HTTPError, requests.ConnectionError, requests.Timeout, IncompleteRead) as error_message:
         print("ADSBX Connection Error")
         print(error_message)
         failed = True

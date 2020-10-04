@@ -40,6 +40,9 @@ class Plane:
         main_config = configparser.ConfigParser()
         main_config.read('mainconf.ini')
 
+        #Platform for determining OS for strftime
+        import platform
+
         if self.config.getboolean('GOOGLE', 'STATICMAP_ENABLE'):
             from defMap import getMap
         else:
@@ -237,7 +240,10 @@ class Plane:
                 self.landed_time_msg = ""
                 if self.takeoff_time != None:
                     self.landed_time = time.time() - self.takeoff_time
-                    self.landed_time_msg = time.strftime("Apx. flt. time %H Hours : %M Mins ", time.gmtime(self.landed_time))
+                    if platform.system() == "Linux":
+                        self.landed_time_msg = time.strftime("Apx. flt. time %-H Hours : %-M Mins ", time.gmtime(self.landed_time))
+                    elif platform.system() == "Windows":
+                        self.landed_time_msg = time.strftime("Apx. flt. time %#H Hours : %#M Mins ", time.gmtime(self.landed_time))
                 if self.invalid_Location is False:
                     self.landed_message = ("Landed just now in" + " " + self.aera_hierarchy + ", " + self.state + ", " + self.country_code + ". " + self.landed_time_msg)
                 else:

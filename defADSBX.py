@@ -20,7 +20,6 @@ def pullADSBX(planes):
         response = requests.get(url, headers = headers)
         data = response.text
         data = json.loads(data)
-        print ("HTTP Status Code:", response.status_code)
         failed = False
     except (requests.HTTPError, requests.ConnectionError, requests.Timeout, IncompleteRead) as error_message:
         print("ADSBX Connection Error")
@@ -31,6 +30,7 @@ def pullADSBX(planes):
         print (json.dumps(data, indent = 2))
         print(error_message)
         failed = True
+    print ("HTTP Status Code:", response.status_code)
     if failed is False:
         data_ctime = float(data['ctime']) / 1000.0
         print("UTC of Data:",datetime.utcfromtimestamp(data_ctime))

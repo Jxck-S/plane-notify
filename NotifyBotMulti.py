@@ -3,6 +3,7 @@ import configparser
 import json
 import time
 from defADSBX import pullADSBX
+from defOpenSky import pullOpenSky
 from colorama import init, Fore, Back, Style
 init(convert=True)
 from planeClass import Plane
@@ -12,16 +13,13 @@ main_config = configparser.ConfigParser()
 main_config.read('mainconf.ini')
 import os
 #Setup Plane Objects off of Plane configs
-if main_config.get('DATA', 'SOURCE') == "ADSBX":
-    planes = {}
-    for filename in os.listdir(os. getcwd()):
-        if filename.endswith(".ini") and filename != "mainconf.ini":
-            plane_config = configparser.ConfigParser()
-            plane_config.read(filename)
-            planes[plane_config.get('DATA', 'ICAO').upper()] = Plane(plane_config.get('DATA', 'ICAO'), filename)
+planes = {}
+for filename in os.listdir(os. getcwd()):
+    if filename.endswith(".ini") and filename != "mainconf.ini":
+        plane_config = configparser.ConfigParser()
+        plane_config.read(filename)
+        planes[plane_config.get('DATA', 'ICAO').upper()] = Plane(plane_config.get('DATA', 'ICAO'), filename)
 
-elif main_config.get('DATA', 'SOURCE') == "OPENS":
-    raise NotImplementedError
 running_Count = 0
 try:
     tz = pytz.timezone(main_config.get('DATA', 'TZ'))
@@ -44,6 +42,22 @@ while True:
                     for planeData in data['ac']:
                         if planeData['icao'] == key:
                             obj.run(planeData)
+                            has_data = True
+                            break
+                    if has_data is False:
+                        obj.run(None)
+            else:
+                for obj in planes.values():
+                    obj.run(None)
+    elif main_config.get('DATA', 'SOURCE') == "OPENS":
+        planeData, failed = pullOpenSky(planes)
+        if failed == False:
+            if planeData.states != []:
+                for key, obj in planes.items():
+                    has_data = False
+                    for dataState in planeData.states:
+                        if (dataState.icao24).upper() == key:
+                            obj.run(dataState)
                             has_data = True
                             break
                     if has_data is False:

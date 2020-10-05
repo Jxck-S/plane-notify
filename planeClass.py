@@ -70,14 +70,29 @@ class Plane:
         self.latitude = None
         self.on_ground = None
         self.has_location = None
-    #Get API States for Plane
+    #Get States from ADSBX or OPENS Vector
         self.plane_Dict = None
         if main_config.get('DATA', 'SOURCE') == "OPENS":
-            raise NotImplementedError
-            #plane_Dict, failed = pullOpenSky(icao)
-            #print (Fore.YELLOW)
-            #print ("OpenSky Sourced Data: ", plane_Dict)
-            #print(Style.RESET_ALL)
+            self.val_error = False
+            if ac_dict != None:
+                try:
+                    self.plane_Dict ={'icao' : ac_dict.icao24, 'callsign' : ac_dict.callsign, 'latitude' : ac_dict.latitude, 'longitude' : ac_dict.longitude,  'on_ground' : bool(ac_dict.on_ground)}
+                    if ac_dict.geo_altitude != None:
+                        self.plane_Dict['geo_alt_ft'] = float(ac_dict.geo_altitude)  * 3.281
+                    elif self.plane_Dict['on_ground']:
+                        self.plane_Dict['geo_alt_ft'] = 0
+                except ValueError as e:
+                    self.plane_Dict = None
+                    self.val_error = True
+                    print("Got data but some data is invalid!")
+                    print(e)
+            else:
+                self.plane_Dict = None
+
+            print (Fore.YELLOW)
+            print ("OpenSky Sourced Data: ", self.plane_Dict)
+            print(Style.RESET_ALL)
+
         elif main_config.get('DATA', 'SOURCE') == "ADSBX":
             self.val_error = False
             if ac_dict != None:
@@ -93,14 +108,14 @@ class Plane:
             else:
                 self.plane_Dict = None
 
-        print (Fore.YELLOW)
-        print ("ADSBX Sourced Data: ", self.plane_Dict)
-        print(Style.RESET_ALL)
-        print (Fore.CYAN)
-        print ("ICAO:", self.icao)
-        print(Style.RESET_ALL)
+            print (Fore.YELLOW)
+            print ("ADSBX Sourced Data: ", self.plane_Dict)
+            print(Style.RESET_ALL)
+            print (Fore.CYAN)
+            print ("ICAO:", self.icao)
+            print(Style.RESET_ALL)
 
-    #Pull Variables from plane_Dict
+
         if self.val_error is False:
             if self.plane_Dict == None:
                 self.feeding = False

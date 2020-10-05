@@ -4,8 +4,11 @@ import json
 import time
 from defADSBX import pullADSBX
 from defOpenSky import pullOpenSky
-from colorama import init, Fore, Back, Style
-init(convert=True)
+from colorama import Fore, Back, Style
+import platform
+if platform.system() == "Windows":
+    from colorama import init
+    init(convert=True)
 from planeClass import Plane
 from datetime import datetime
 import pytz

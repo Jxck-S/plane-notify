@@ -131,12 +131,14 @@ class Plane:
                 print ("Longitude: ", self.longitude)
                 print ("GEO Alitude Ft: ", self.geo_alt_ft)
                 print(Style.RESET_ALL)
-        #Set Check for inconsistancy in data 
+        #Set Check for inconsistancy in data
             if not self.last_recheck_needed:
                 #Recheck needed if feeding state changes
-                if self.feeding != self.last_feeding:
+                if self.feeding == False  and self.last_feeding:
                     self.recheck_needed = True
                     print("Recheck needed, feeding status changed")
+                else:
+                    self.recheck_needed = False
             elif self.last_recheck_needed:
                 self.recheck_needed = False
 
@@ -148,9 +150,9 @@ class Plane:
                 elif self.recheck_feeding != self.feeding:
                     print("Data Feeding change was Inconsistent last data ignored")
 
-            self.recheck_feeding = self.feeding 
+            self.recheck_feeding = self.feeding
             self.last_recheck_needed = self.recheck_needed
-            
+
             if self.recheck_needed is False:
 
         #Check if below desire ft

@@ -1,10 +1,10 @@
 def pullOpenSky(planes):
     import configparser
-    config = configparser.ConfigParser()
-    config.read('mainconf.ini')
+    main_config = configparser.ConfigParser()
+    main_config.read('mainconf.ini')
     from opensky_api import OpenSkyApi
     planeData = None
-    opens_api = OpenSkyApi(config.get('OPENSKY', 'USERNAME'), config.get('OPENSKY', 'PASSWORD'))
+    opens_api = OpenSkyApi(username= None if main_config.get('OPENSKY', 'USERNAME').upper() == "NONE" else main_config.get('OPENSKY', 'USERNAME'), password= None if main_config.get('OPENSKY', 'PASSWORD').upper() == "NONE" else main_config.get('OPENSKY', 'PASSWORD').upper())
     failed = False
     icao_array = []
     for key, obj in planes.items():

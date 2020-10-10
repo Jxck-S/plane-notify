@@ -134,9 +134,11 @@ class Plane:
         #Set Check for inconsistancy in data 
             if not self.last_recheck_needed:
                 #Recheck needed if feeding state changes
-                if self.feeding != self.last_feeding:
+                if self.feeding == False  and self.last_feeding:
                     self.recheck_needed = True
                     print("Recheck needed, feeding status changed")
+                else:
+                    self.recheck_needed = False
             elif self.last_recheck_needed:
                 self.recheck_needed = False
 
@@ -148,9 +150,9 @@ class Plane:
                 elif self.recheck_feeding != self.feeding:
                     print("Data Feeding change was Inconsistent last data ignored")
 
-            self.recheck_feeding = self.feeding 
+            self.recheck_feeding = self.feeding
             self.last_recheck_needed = self.recheck_needed
-            
+
             if self.recheck_needed is False:
 
         #Check if below desire ft
@@ -159,13 +161,43 @@ class Plane:
                 elif self.geo_alt_ft < 10000:
                     self.below_desired_ft = True
         #Check if tookoff
-                self.tookoff = bool(self.below_desired_ft and self.on_ground is False and ((self.last_feeding is False and self.feeding) or (self.last_on_ground)))
+                if self.below_desired_ft and self.on_ground is False:
+                    if self.last_on_ground:
+                        self.tookoff = True
+                        self.trigger_type = "no longer on ground"
+                        self.tookoff_header = "Took off from "
+                    elif self.last_feeding is False and self.feeding:
+                        self.tookoff = True
+                        self.trigger_type = "data acquisition"
+                        self.tookoff_header = "Took off near "
+                    else:
+                        self.tookoff = False
+                else:
+                    self.tookoff = False
+
+                #self.tookoff = bool(self.below_desired_ft and self.on_ground is False and ((self.last_feeding is False and self.feeding) or (self.last_on_ground)))
                 print ("Tookoff Just Now:", self.tookoff)
 
 
         #Check if Landed
-                self.landed = bool(self.last_below_desired_ft  and ((self.last_feeding and self.feeding is False and self.last_on_ground is False)  or (self.on_ground and self.last_on_ground is False)))
+                if self.last_below_desired_ft:
+                    if self.on_ground and self.last_on_ground is False:
+                        self.landed = True
+                        self.trigger_type = "now on ground"
+                        self.landed_header = "Landed in "
+                    elif self.last_feeding and self.feeding is False and self.last_on_ground is False:
+                        self.landed = True
+                        self.trigger_type = "data loss"
+                        self.landed_header = "Landed near "
+                    else:
+                        self.landed = False
+                else:
+                    self.landed = False
+                    
+                #self.landed = bool(self.last_below_desired_ft  and ((self.last_feeding and self.feeding is False and self.last_on_ground is False)  or (self.on_ground and self.last_on_ground is False)))
                 print ("Landed Just Now:", self.landed)
+                if self.landed or self.tookoff:
+                    print ("Trigger Type:", self.trigger_type)
 
         #Lookup Location of coordinates
                 if self.landed or self.tookoff:
@@ -245,9 +277,9 @@ class Plane:
             #Takeoff Notifcation and Landed
                 if self.tookoff:
                     if self.invalid_Location is False:
-                        self.tookoff_message = ("Just took off from" + " " + self.aera_hierarchy + ", " + self.state + ", " + self.country_code)
+                        self.tookoff_message = (self.tookoff_header  + self.aera_hierarchy + ", " + self.state + ", " + self.country_code)
                     else:
-                        self.tookoff_message = ("Just took off")
+                        self.tookoff_message = ("Took off")
                     print (self.tookoff_message)
                     #Google Map or tar1090 screenshot
                     if self.config.getboolean('GOOGLE', 'STATICMAP_ENABLE'):
@@ -280,9 +312,9 @@ class Plane:
                         elif platform.system() == "Windows":
                             self.landed_time_msg = time.strftime("Apx. flt. time %#H Hours : %#M Mins ", time.gmtime(self.landed_time))
                     if self.invalid_Location is False:
-                        self.landed_message = ("Landed just now in" + " " + self.aera_hierarchy + ", " + self.state + ", " + self.country_code + ". " + self.landed_time_msg)
+                        self.landed_message = (self.landed_header + self.aera_hierarchy + ", " + self.state + ", " + self.country_code + ". " + self.landed_time_msg)
                     else:
-                        self.landed_message = ("Landed just now" , self.landed_time_msg)
+                        self.landed_message = ("Landed", self.landed_time_msg)
                     print (self.landed_message)
                     #Google Map or tar1090 screenshot
                     if self.config.getboolean('GOOGLE', 'STATICMAP_ENABLE'):

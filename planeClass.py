@@ -131,7 +131,7 @@ class Plane:
                 print ("Longitude: ", self.longitude)
                 print ("GEO Alitude Ft: ", self.geo_alt_ft)
                 print(Style.RESET_ALL)
-        #Set Check for inconsistancy in data 
+        #Set Check for inconsistancy in data
             if not self.last_recheck_needed:
                 #Recheck needed if feeding state changes
                 if self.feeding == False  and self.last_feeding:

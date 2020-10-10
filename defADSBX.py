@@ -21,7 +21,7 @@ def pullADSBX(planes):
         data = response.text
         data = json.loads(data)
         failed = False
-    except (requests.HTTPError, requests.ConnectionError, requests.Timeout, IncompleteRead) as error_message:
+    except (requests.HTTPError,  requests.Timeout, IncompleteRead, ConnectionError, ConnectionResetError) as error_message:
         print("ADSBX Connection Error")
         print(error_message)
         failed = True

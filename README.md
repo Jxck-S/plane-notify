@@ -21,6 +21,9 @@ Their are two branches of this program single is the original only supports one 
 
 I made this program so I could track Elon Musk's Jet and share with others of his whereabouts on Twitter. [![Twitter Follow](https://img.shields.io/twitter/follow/ElonJet.svg?style=social)](https://twitter.com/ElonJet) I have now Expanded and run multiple accounts for multiple planes, a list of the accounts here [plane-notify Twitter List](https://twitter.com/i/lists/1307414615316467715)
 
+### Contributing
+ Im open to any help or suggestions, I realize theirs much better ways im sure to do alot of my methods, im only a noob. I'll accept pull requests. If you'd like to discuss join https://JacksTech.net/Discord
+
 ### [ How It Works](PseudoCode.md)
 
 ## Setup / Install

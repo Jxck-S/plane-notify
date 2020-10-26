@@ -38,24 +38,26 @@ class Plane:
         #Setup Config File
         import configparser
         self.config = configparser.ConfigParser()
-        self.config.read(self.conf_file)
+        self.config.read(("./configs/"+ self.conf_file))
         main_config = configparser.ConfigParser()
-        main_config.read('mainconf.ini')
+        main_config.read('./configs/mainconf.ini')
 
         #Platform for determining OS for strftime
         import platform
-
-        if self.config.getboolean('GOOGLE', 'STATICMAP_ENABLE'):
+        from defAirport import getAirport
+        if self.config.get('MAP', 'OPTION') == "GOOGLESTATICMAP":
             from defMap import getMap
-        else:
+        elif self.config.get('MAP', 'OPTION') == "ADSBX":
             from defSS import getSS
+        else:
+            raise Exception("Map option not set correctly in this planes conf")
 
         if self.config.getboolean('DISCORD', 'ENABLE'):
             from defDiscord import sendDis
         #Setup Tweepy
         if self.config.getboolean('TWITTER', 'ENABLE'):
             from defTweet import tweepysetup
-            self.tweet_api = tweepysetup(self.conf_file)
+            self.tweet_api = tweepysetup(self.config)
         #Setup PushBullet
         if self.config.getboolean('PUSHBULLET', 'ENABLE'):
             from pushbullet import Pushbullet
@@ -70,13 +72,14 @@ class Plane:
         self.latitude = None
         self.on_ground = None
         self.has_location = None
-    #Get States from ADSBX or OPENS Vector
+    #Parse OpenSky Vector
         self.plane_Dict = None
         if main_config.get('DATA', 'SOURCE') == "OPENS":
             self.val_error = False
             if ac_dict != None:
+                #print (Fore.YELLOW + "OpenSky Sourced Data: ", ac_dict)
                 try:
-                    self.plane_Dict ={'icao' : ac_dict.icao24, 'callsign' : ac_dict.callsign, 'latitude' : ac_dict.latitude, 'longitude' : ac_dict.longitude,  'on_ground' : bool(ac_dict.on_ground)}
+                    self.plane_Dict ={'icao' : ac_dict.icao24.upper(), 'callsign' : ac_dict.callsign, 'latitude' : ac_dict.latitude, 'longitude' : ac_dict.longitude,  'on_ground' : bool(ac_dict.on_ground)}
                     if ac_dict.geo_altitude != None:
                         self.plane_Dict['geo_alt_ft'] = float(ac_dict.geo_altitude)  * 3.281
                     elif self.plane_Dict['on_ground']:
@@ -89,13 +92,11 @@ class Plane:
             else:
                 self.plane_Dict = None
 
-            print (Fore.YELLOW)
-            print ("OpenSky Sourced Data: ", self.plane_Dict)
-            print(Style.RESET_ALL)
-
+    #Parse ADBSX Vector
         elif main_config.get('DATA', 'SOURCE') == "ADSBX":
             self.val_error = False
             if ac_dict != None:
+                #print (Fore.YELLOW +"ADSBX Sourced Data: ", ac_dict + Style.RESET_ALL)
                 try:
                     self.plane_Dict = {'icao' : ac_dict['icao'], 'callsign' : ac_dict['call'], 'reg' : ac_dict['reg'], 'latitude' : float(ac_dict['lat']), 'longitude' : float(ac_dict['lon']), 'geo_alt_ft' : int(ac_dict['galt']), 'on_ground' : bool(int(ac_dict["gnd"]))}
                     if self.plane_Dict['on_ground']:
@@ -105,32 +106,32 @@ class Plane:
                     self.val_error = True
                     print("Got data but some data is invalid!")
                     print(e)
+                if "to" in ac_dict.keys():
+                    self.plane_Dict['to_location'] = ac_dict["to"]
+                if "from" in ac_dict.keys():
+                    self.plane_Dict['from_location'] = ac_dict["from"]
             else:
                 self.plane_Dict = None
-
-            print (Fore.YELLOW)
-            print ("ADSBX Sourced Data: ", self.plane_Dict)
-            print(Style.RESET_ALL)
-            print (Fore.CYAN)
-            print ("ICAO:", self.icao)
-            print(Style.RESET_ALL)
-
-
+        print (Fore.CYAN + "ICAO:", self.icao + Style.RESET_ALL)
+    #Print out data, and convert to locals
         if self.val_error is False:
             if self.plane_Dict == None:
                 self.feeding = False
+                print("No Data")
             elif self.plane_Dict != None:
                 self.feeding = True
                 self.__dict__.update(self.plane_Dict)
-                print (Fore.CYAN)
-                if main_config.get('DATA', 'SOURCE') == "ADSBX":
-                    print("Registration: ", self.reg)
-                print ("Callsign: ", self.callsign)
+                if "reg" in self.plane_Dict.keys():
+                    print(Fore.CYAN + "Registration: ", self.reg)
+                if "from_location" in self.plane_Dict.keys():
+                    print("From: ", self.from_location)
+                if "to_location" in self.plane_Dict.keys():
+                    print("To: ", self.to_location)
+                print (Fore.CYAN + "Callsign: ", self.callsign)
                 print ("On Ground: ", self.on_ground)
                 print ("Latitude: ", self.latitude)
                 print ("Longitude: ", self.longitude)
-                print ("GEO Alitude Ft: ", self.geo_alt_ft)
-                print(Style.RESET_ALL)
+                print ("GEO Alitude Ft: ", self.geo_alt_ft, Style.RESET_ALL)
         #Set Check for inconsistancy in data
             if not self.last_recheck_needed:
                 #Recheck needed if feeding state changes
@@ -146,9 +147,9 @@ class Plane:
             #Run a Check compares new data to last flagged(check) data
             if self.last_recheck_needed:
                 if self.recheck_feeding == self.feeding:
-                    print("Data Feeding change Consistent")
+                    print("Data Feeding change consistent")
                 elif self.recheck_feeding != self.feeding:
-                    print("Data Feeding change was Inconsistent last data ignored")
+                    print("Data Feeding change was inconsistent last data ignored")
 
             self.recheck_feeding = self.feeding
             self.last_recheck_needed = self.recheck_needed
@@ -176,7 +177,7 @@ class Plane:
                     self.tookoff = False
 
                 #self.tookoff = bool(self.below_desired_ft and self.on_ground is False and ((self.last_feeding is False and self.feeding) or (self.last_on_ground)))
-                print ("Tookoff Just Now:", self.tookoff)
+                #print ("Tookoff Just Now:", self.tookoff)
 
 
         #Check if Landed
@@ -193,12 +194,12 @@ class Plane:
                         self.landed = False
                 else:
                     self.landed = False
-                    
                 #self.landed = bool(self.last_below_desired_ft  and ((self.last_feeding and self.feeding is False and self.last_on_ground is False)  or (self.on_ground and self.last_on_ground is False)))
-                print ("Landed Just Now:", self.landed)
-                if self.landed or self.tookoff:
-                    print ("Trigger Type:", self.trigger_type)
-
+                #print ("Landed Just Now:", self.landed)
+                if self.landed:
+                    print ("Landed by", self.trigger_type)
+                if self.tookoff:
+                    print("Tookoff by", self.trigger_type)
         #Lookup Location of coordinates
                 if self.landed or self.tookoff:
                     if self.landed and self.last_longitude != None and self.last_latitude != None:
@@ -273,23 +274,28 @@ class Plane:
             #Set Discord Title
                 if self.config.getboolean('DISCORD', 'ENABLE'):
                     self.dis_title = self.icao if self.config.get('DISCORD', 'TITLE') == "icao" else self.callsign if self.config.get('DISCORD', 'TITLE') == "callsign" else self.config.get('DISCORD', 'TITLE')
-
+            #Set Twitter Title
+                if self.config.getboolean('TWITTER', 'ENABLE'):
+                    self.twitter_title = self.icao if self.config.get('TWITTER', 'TITLE') == "icao" else self.callsign if self.config.get('TWITTER', 'TITLE') == "callsign" else self.config.get('TWITTER', 'TITLE')
             #Takeoff Notifcation and Landed
                 if self.tookoff:
                     if self.invalid_Location is False:
-                        self.tookoff_message = (self.tookoff_header  + self.aera_hierarchy + ", " + self.state + ", " + self.country_code)
+                        self.tookoff_message = (self.tookoff_header  + self.aera_hierarchy + ", " + self.state + ", " + self.country_code + ". ")
                     else:
                         self.tookoff_message = ("Took off")
                     print (self.tookoff_message)
                     #Google Map or tar1090 screenshot
-                    if self.config.getboolean('GOOGLE', 'STATICMAP_ENABLE'):
-                        getMap(self.aera_hierarchy + ", "  + self.state + ", "  + self.country_code)
-                    else:
+                    if self.config.get('MAP', 'OPTION') == "GOOGLESTATICMAP":
+                        getMap((self.aera_hierarchy + ", "  + self.state + ", "  + self.country_code), self.icao)
+                    elif self.config.get('MAP', 'OPTION') == "ADSBX":
                         getSS(self.icao)
+                    else:
+                        raise Exception("Map option not set correctly in this planes conf")
                     #Discord
                     if self.config.getboolean('DISCORD', 'ENABLE'):
-                        self.dis_message = self.dis_title + " "  + self.tookoff_message
-                        sendDis(self.dis_message, self.map_file_name, self.conf_file)
+                        nearest = getAirport(self.latitude, self.longitude)
+                        self.dis_message = (self.dis_title + " "  + self.tookoff_message + nearest['icao'] + ", " + nearest["name"]).strip()
+                        sendDis(self.dis_message, self.map_file_name, self.config)
                     #PushBullet
                     if self.config.getboolean('PUSHBULLET', 'ENABLE'):
                         with open(self.map_file_name, "rb") as pic:
@@ -298,7 +304,7 @@ class Plane:
                         push = self.pb_channel.push_file(**map_data)
                     #Twitter
                     if self.config.getboolean('TWITTER', 'ENABLE'):
-                        self.tweet_api.update_with_media(self.map_file_name, status = self.tookoff_message)
+                        self.tweet_api.update_with_media(self.map_file_name, status = (self.twitter_title + " " + self.tookoff_message).strip())
                     self.takeoff_time = time.time()
                     os.remove(self.map_file_name)
 
@@ -308,23 +314,26 @@ class Plane:
                     if self.takeoff_time != None:
                         self.landed_time = time.time() - self.takeoff_time
                         if platform.system() == "Linux":
-                            self.landed_time_msg = time.strftime("Apx. flt. time %-H Hours : %-M Mins ", time.gmtime(self.landed_time))
+                            self.landed_time_msg = time.strftime("Apx. flt. time %-H Hours : %-M Mins. ", time.gmtime(self.landed_time))
                         elif platform.system() == "Windows":
-                            self.landed_time_msg = time.strftime("Apx. flt. time %#H Hours : %#M Mins ", time.gmtime(self.landed_time))
+                            self.landed_time_msg = time.strftime("Apx. flt. time %#H Hours : %#M Mins. ", time.gmtime(self.landed_time))
                     if self.invalid_Location is False:
                         self.landed_message = (self.landed_header + self.aera_hierarchy + ", " + self.state + ", " + self.country_code + ". " + self.landed_time_msg)
                     else:
                         self.landed_message = ("Landed", self.landed_time_msg)
                     print (self.landed_message)
                     #Google Map or tar1090 screenshot
-                    if self.config.getboolean('GOOGLE', 'STATICMAP_ENABLE'):
-                        getMap(self.aera_hierarchy + ", "  + self.state + ", "  + self.country_code)
-                    else:
+                    if self.config.get('MAP', 'OPTION') == "GOOGLESTATICMAP":
+                        getMap((self.aera_hierarchy + ", "  + self.state + ", "  + self.country_code), self.icao)
+                    elif self.config.get('MAP', 'OPTION') == "ADSBX":
                         getSS(self.icao)
+                    else:
+                        raise Exception("Map option not set correctly in this planes conf")
                     #Discord
                     if self.config.getboolean('DISCORD', 'ENABLE'):
-                        self.dis_message =  self.dis_title + " "  + self.landed_message
-                        sendDis(self.dis_message, self.map_file_name, self.conf_file)
+                        nearest = getAirport(self.last_latitude, self.last_longitude)
+                        self.dis_message =  (self.dis_title + " "  +self.landed_message + nearest['icao'] + ", " + nearest["name"]).strip()
+                        sendDis(self.dis_message, self.map_file_name, self.config)
                     #PushBullet
                     if self.config.getboolean('PUSHBULLET', 'ENABLE'):
                         with open(self.map_file_name, "rb") as pic:
@@ -333,7 +342,7 @@ class Plane:
                         push = self.pb_channel.push_file(**map_data)
                     #Twitter
                     if self.config.getboolean('TWITTER', 'ENABLE'):
-                        self.tweet_api.update_with_media(self.map_file_name, status = self.landed_message)
+                        self.tweet_api.update_with_media(self.map_file_name, status = (self.twitter_title + " " + self.landed_message).strip())
                     self.takeoff_time = None
                     self.landed_time = None
                     self.time_since_tk = None

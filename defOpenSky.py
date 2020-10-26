@@ -1,7 +1,7 @@
 def pullOpenSky(planes):
     import configparser
     main_config = configparser.ConfigParser()
-    main_config.read('mainconf.ini')
+    main_config.read('./configs/mainconf.ini')
     from opensky_api import OpenSkyApi
     planeData = None
     opens_api = OpenSkyApi(username= None if main_config.get('OPENSKY', 'USERNAME').upper() == "NONE" else main_config.get('OPENSKY', 'USERNAME'), password= None if main_config.get('OPENSKY', 'PASSWORD').upper() == "NONE" else main_config.get('OPENSKY', 'PASSWORD').upper())

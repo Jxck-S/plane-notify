@@ -1,9 +1,9 @@
-def getMap(mapLocation):
+def getMap(mapLocation, icao):
     import requests
     import configparser
     config = configparser.ConfigParser()
-    config.read('config.ini')
-    api_key = config.get('GOOGLE', 'STATICMAPKEY')
+    config.read('./configs/mainconf.ini')
+    api_key = config.get('GOOGLE', 'API_KEY')
     url = "https://maps.googleapis.com/maps/api/staticmap?"
 
     center = str(mapLocation)
@@ -14,6 +14,7 @@ def getMap(mapLocation):
                                 api_key + "&sensor=false")
 
     # wb mode is stand for write binary mode
+    file_name = icao + "_map.png"
     f = open('map.png', 'wb')
 
     # r.content gives content,

@@ -13,14 +13,14 @@ from planeClass import Plane
 from datetime import datetime
 import pytz
 main_config = configparser.ConfigParser()
-main_config.read('mainconf.ini')
+main_config.read('./configs/mainconf.ini')
 import os
 #Setup Plane Objects off of Plane configs
 planes = {}
-for filename in os.listdir(os. getcwd()):
+for filename in os.listdir("./configs"):
     if filename.endswith(".ini") and filename != "mainconf.ini":
         plane_config = configparser.ConfigParser()
-        plane_config.read(filename)
+        plane_config.read(("./configs/" + filename))
         planes[plane_config.get('DATA', 'ICAO').upper()] = Plane(plane_config.get('DATA', 'ICAO'), filename)
 
 running_Count = 0

@@ -1,9 +1,6 @@
 # Authenticate to Twitter
 
-def tweepysetup(conf_file):
-    import configparser
-    config = configparser.ConfigParser()
-    config.read(conf_file)
+def tweepysetup(config):
     import tweepy
     #DOCU
     #https://realpython.com/twitter-bot-python-tweepy/

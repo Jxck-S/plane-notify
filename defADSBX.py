@@ -4,8 +4,10 @@ import configparser
 import time
 from datetime import datetime
 from http.client import IncompleteRead
+import http.client as http
+import urllib3
 main_config = configparser.ConfigParser()
-main_config.read('mainconf.ini')
+main_config.read('./configs/mainconf.ini')
 def pullADSBX(planes):
     if len(planes) > 1:
                 url = "https://adsbexchange.com/api/aircraft/json/"
@@ -14,22 +16,46 @@ def pullADSBX(planes):
 
     headers = {
                 'api-auth': main_config.get('ADSBX', 'API_KEY'),
-                'Content-Encoding': 'gzip'
+                'Accept-Encoding': 'gzip'
     }
     try:
         response = requests.get(url, headers = headers)
-        data = response.text
-        data = json.loads(data)
-        failed = False
-    except (requests.HTTPError,  requests.Timeout, IncompleteRead, ConnectionError, ConnectionResetError) as error_message:
-        print("ADSBX Connection Error")
+        response.raise_for_status()
+    except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError, requests.exceptions.Timeout, requests.exceptions.RequestException):
+        print("Basic Connection Error")
         print(error_message)
         failed = True
-    except json.decoder.JSONDecodeError as error_message:
-        print("Error with JSON")
-        print (json.dumps(data, indent = 2))
+        data = None
+    except (urllib3.exceptions.RemoteDisconected,  IncompleteRead, http.IncompleteRead, ConnectionResetError, requests.ChunkEncodingError, urllib3.exceptions.ProtocolError, ValueError) as error_message:
+        print("Connection Error")
         print(error_message)
         failed = True
+        data = None
+    except Exception as error_message:
+        print("Connection Error uncaught, basic exception for all")
+        print(error_message)
+        failed = True
+        data = None
+    else:
+        if response.status_code == 200:
+            try:
+                data = json.loads(response.text)
+            except (json.decoder.JSONDecodeError, ValueError) as error_message:
+                print("Error with JSON")
+                print (json.dumps(data, indent = 2))
+                print(error_message)
+                failed = True
+                data = None
+            except TypeError as error_message:
+                print("Type Error", error_message)
+                failed = True
+                data = None
+            else:
+                failed = False
+        else:
+            failed = True
+            data = None
+
     print ("HTTP Status Code:", response.status_code)
     if failed is False:
         data_ctime = float(data['ctime']) / 1000.0

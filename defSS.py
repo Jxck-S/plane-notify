@@ -21,7 +21,8 @@ def getSS(icao):
     url = "https://globe.adsbexchange.com/?largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=9&icao=" + icao
     browser.set_page_load_timeout(80)
     browser.get(url)
-    WebDriverWait(browser, 10).until(lambda d: d.execute_script("return jQuery.active == 0"))
+    WebDriverWait(browser, 30).until(lambda d: d.execute_script("return jQuery.active == 0"))
+    time.sleep(5)
     file_name = icao + "_map.png"
     browser.save_screenshot(file_name)
     browser.quit()

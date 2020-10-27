@@ -15,6 +15,7 @@ import pytz
 main_config = configparser.ConfigParser()
 main_config.read('./configs/mainconf.ini')
 import os
+import sys
 #Setup Plane Objects off of Plane configs
 planes = {}
 for filename in os.listdir("./configs"):
@@ -56,6 +57,7 @@ while True:
         planeData, failed = pullOpenSky(planes)
         if failed == False:
             if planeData.states != []:
+                print(planeData.time)
                 for key, obj in planes.items():
                     has_data = False
                     for dataState in planeData.states:
@@ -71,6 +73,13 @@ while True:
     elapsed_calc_time = time.time() - start_time
     datetime_tz = datetime.now(tz)
     print (Back.GREEN,  Fore.BLACK, "--------", running_Count, "--------", datetime_tz.strftime("%I:%M:%S %p"), "------------------------Elapsed Time-", elapsed_calc_time, " -------------------------------------", Style.RESET_ALL)
-    print(Back.RED, "Sleep 30", Style.RESET_ALL)
-    time.sleep(30)
+
+
+    sleep_sec = 30
+    for i in range(sleep_sec,0,-1):
+        sys.stdout.write("\r")
+        sys.stdout.write(Back.RED + "Sleep {:2d}".format(i) + Style.RESET_ALL)
+        sys.stdout.flush()
+        time.sleep(1)
+    print()
 

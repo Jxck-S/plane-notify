@@ -44,6 +44,8 @@ class Plane:
 
         #Platform for determining OS for strftime
         import platform
+        from datetime import datetime
+        from tabulate import tabulate
         from defAirport import getAirport
         if self.config.get('MAP', 'OPTION') == "GOOGLESTATICMAP":
             from defMap import getMap
@@ -79,9 +81,9 @@ class Plane:
             if ac_dict != None:
                 #print (Fore.YELLOW + "OpenSky Sourced Data: ", ac_dict)
                 try:
-                    self.plane_Dict ={'icao' : ac_dict.icao24.upper(), 'callsign' : ac_dict.callsign, 'latitude' : ac_dict.latitude, 'longitude' : ac_dict.longitude,  'on_ground' : bool(ac_dict.on_ground)}
+                    self.plane_Dict ={'icao' : ac_dict.icao24.upper(), 'callsign' : ac_dict.callsign, 'latitude' : ac_dict.latitude, 'longitude' : ac_dict.longitude,  'on_ground' : bool(ac_dict.on_ground), 'last_contact' : ac_dict.last_contact}
                     if ac_dict.geo_altitude != None:
-                        self.plane_Dict['geo_alt_ft'] = float(ac_dict.geo_altitude)  * 3.281
+                        self.plane_Dict['geo_alt_ft'] = round(float(ac_dict.geo_altitude)  * 3.281)
                     elif self.plane_Dict['on_ground']:
                         self.plane_Dict['geo_alt_ft'] = 0
                 except ValueError as e:
@@ -96,9 +98,10 @@ class Plane:
         elif main_config.get('DATA', 'SOURCE') == "ADSBX":
             self.val_error = False
             if ac_dict != None:
-                #print (Fore.YELLOW +"ADSBX Sourced Data: ", ac_dict + Style.RESET_ALL)
+                #print (Fore.YELLOW +"ADSBX Sourced Data: ", ac_dict, Style.RESET_ALL)
                 try:
-                    self.plane_Dict = {'icao' : ac_dict['icao'], 'callsign' : ac_dict['call'], 'reg' : ac_dict['reg'], 'latitude' : float(ac_dict['lat']), 'longitude' : float(ac_dict['lon']), 'geo_alt_ft' : int(ac_dict['galt']), 'on_ground' : bool(int(ac_dict["gnd"]))}
+                    #postime is divided by 1000 to get seconds from milliseconds, from timestamp expects secs.
+                    self.plane_Dict = {'icao' : ac_dict['icao'], 'callsign' : ac_dict['call'], 'reg' : ac_dict['reg'], 'latitude' : float(ac_dict['lat']), 'longitude' : float(ac_dict['lon']), 'geo_alt_ft' : int(ac_dict['galt']), 'on_ground' : bool(int(ac_dict["gnd"])), 'last_contact' : round(float(ac_dict["postime"])/1000)}
                     if self.plane_Dict['on_ground']:
                         self.plane_Dict['geo_alt_ft'] = 0
                 except ValueError as e:
@@ -112,26 +115,45 @@ class Plane:
                     self.plane_Dict['from_location'] = ac_dict["from"]
             else:
                 self.plane_Dict = None
-        print (Fore.CYAN + "ICAO:", self.icao + Style.RESET_ALL)
+        #print (Fore.CYAN + "ICAO:", self.icao + Style.RESET_ALL)
     #Print out data, and convert to locals
         if self.val_error is False:
             if self.plane_Dict == None:
                 self.feeding = False
+                print(tabulate([[(Fore.CYAN + "ICAO" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.icao + Style.RESET_ALL)]], [], 'fancy_grid'))
                 print("No Data")
             elif self.plane_Dict != None:
                 self.feeding = True
                 self.__dict__.update(self.plane_Dict)
-                if "reg" in self.plane_Dict.keys():
-                    print(Fore.CYAN + "Registration: ", self.reg)
-                if "from_location" in self.plane_Dict.keys():
-                    print("From: ", self.from_location)
-                if "to_location" in self.plane_Dict.keys():
-                    print("To: ", self.to_location)
-                print (Fore.CYAN + "Callsign: ", self.callsign)
-                print ("On Ground: ", self.on_ground)
-                print ("Latitude: ", self.latitude)
-                print ("Longitude: ", self.longitude)
-                print ("GEO Alitude Ft: ", self.geo_alt_ft, Style.RESET_ALL)
+                #if "reg" in self.plane_Dict.keys():
+                    #print(Fore.CYAN + "Registration: ", self.reg)
+                #if "from_location" in self.plane_Dict.keys():
+                    #print("From: ", self.from_location)
+                #if "to_location" in self.plane_Dict.keys():
+                    #print("To: ", self.to_location)
+                if "last_contact" in self.plane_Dict.keys():
+                    last_contact = datetime.fromtimestamp(self.last_contact)
+                    time_since = datetime.now() - last_contact
+                #print(Fore.CYAN + "Time Since Contact:", time_since)
+                #print (Fore.CYAN + "Callsign: ", self.callsign)
+                #print ("On Ground: ", self.on_ground)
+                #print ("Latitude: ", self.latitude)
+                #print ("Longitude: ", self.longitude)
+                #print ("GEO Alitude Ft: ", self.geo_alt_ft, Style.RESET_ALL)
+                output = [
+                [(Fore.CYAN + "ICAO" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.icao + Style.RESET_ALL)],
+                [(Fore.CYAN + "Callsign" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.callsign + Style.RESET_ALL)],
+                [(Fore.CYAN + "Reg" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.reg + Style.RESET_ALL)] if "reg" in self.plane_Dict.keys() else None,
+                [(Fore.CYAN + "From" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.from_location + Style.RESET_ALL)] if "from_location" in self.plane_Dict.keys() else None,
+                [(Fore.CYAN + "To" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.to_location + Style.RESET_ALL)] if "to_location" in self.plane_Dict.keys() else None,
+                [(Fore.CYAN + "Latitude" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str(self.latitude) + Style.RESET_ALL)],
+                [(Fore.CYAN + "Longitude" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str(self.longitude) + Style.RESET_ALL)],
+                [(Fore.CYAN + "Last Contact" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str(time_since) + Style.RESET_ALL)],
+                [(Fore.CYAN + "On Ground" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str(self.on_ground) + Style.RESET_ALL)],
+                [(Fore.CYAN + "GEO Alitude Ft" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str(self.geo_alt_ft) + Style.RESET_ALL)]
+                ]
+                output = list(filter(None, output))
+                print(tabulate(output, [], 'fancy_grid'))
         #Set Check for inconsistancy in data
             if not self.last_recheck_needed:
                 #Recheck needed if feeding state changes
@@ -304,7 +326,11 @@ class Plane:
                         push = self.pb_channel.push_file(**map_data)
                     #Twitter
                     if self.config.getboolean('TWITTER', 'ENABLE'):
-                        self.tweet_api.update_with_media(self.map_file_name, status = (self.twitter_title + " " + self.tookoff_message).strip())
+                        twitter_media_map_obj = self.tweet_api.media_upload(self.map_file_name)
+                        alt_text = "Call: " + self.callsign + " On Ground: " + str(self.on_ground) + " Alt: " + str(self.geo_alt_ft) + " Last Contact: " + str(time_since) + " Trigger: " + self.trigger_type
+                        self.tweet_api.create_media_metadata(media_id= twitter_media_map_obj.media_id, alt_text= alt_text)
+                        self.tweet_api.update_status(status = ((self.twitter_title + " " + self.tookoff_message).strip()), media_ids=[twitter_media_map_obj.media_id])
+                        #self.tweet_api.update_with_media(self.map_file_name, status = (self.twitter_title + " " + self.tookoff_message).strip())
                     self.takeoff_time = time.time()
                     os.remove(self.map_file_name)
 
@@ -342,7 +368,11 @@ class Plane:
                         push = self.pb_channel.push_file(**map_data)
                     #Twitter
                     if self.config.getboolean('TWITTER', 'ENABLE'):
-                        self.tweet_api.update_with_media(self.map_file_name, status = (self.twitter_title + " " + self.landed_message).strip())
+                        twitter_media_map_obj = self.tweet_api.media_upload(self.map_file_name)
+                        alt_text = "Call: " + self.callsign + " On Ground: " + str(self.on_ground) + " Alt: " + str(self.geo_alt_ft) + " Last Contact: " + str(time_since) + " Trigger: " + self.trigger_type
+                        self.tweet_api.create_media_metadata(media_id= twitter_media_map_obj.media_id, alt_text= alt_text)
+                        self.tweet_api.update_status(status = ((self.twitter_title + " " + self.landed_message).strip()), media_ids=[twitter_media_map_obj.media_id])
+                        #self.tweet_api.update_with_media(self.map_file_name, status = (self.twitter_title + " " + self.landed_message).strip())
                     self.takeoff_time = None
                     self.landed_time = None
                     self.time_since_tk = None

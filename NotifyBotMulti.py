@@ -57,7 +57,7 @@ while True:
         planeData, failed = pullOpenSky(planes)
         if failed == False:
             if planeData.states != []:
-                print(planeData.time)
+                #   print(planeData.time)
                 for key, obj in planes.items():
                     has_data = False
                     for dataState in planeData.states:
@@ -75,11 +75,14 @@ while True:
     print (Back.GREEN,  Fore.BLACK, "--------", running_Count, "--------", datetime_tz.strftime("%I:%M:%S %p"), "------------------------Elapsed Time-", elapsed_calc_time, " -------------------------------------", Style.RESET_ALL)
 
 
-    sleep_sec = 30
+    sleep_sec = 20
     for i in range(sleep_sec,0,-1):
+        if i < 10:
+            i = " " + str(i)
         sys.stdout.write("\r")
-        sys.stdout.write(Back.RED + "Sleep {:2d}".format(i) + Style.RESET_ALL)
+        sys.stdout.write(Back.RED + "Sleep {00000000}".format(i) + Style.RESET_ALL)
         sys.stdout.flush()
         time.sleep(1)
+    sys.stdout.write(Back.RED + ('\x1b[1K\r' +"Slept for " +str(sleep_sec)) + Style.RESET_ALL)
     print()
 

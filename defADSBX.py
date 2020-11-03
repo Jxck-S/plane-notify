@@ -21,7 +21,7 @@ def pullADSBX(planes):
     try:
         response = requests.get(url, headers = headers)
         response.raise_for_status()
-    except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError, requests.exceptions.Timeout, requests.exceptions.RequestException):
+    except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError, requests.exceptions.Timeout, requests.exceptions.RequestException) as error_message:
         print("Basic Connection Error")
         print(error_message)
         failed = True
@@ -37,7 +37,7 @@ def pullADSBX(planes):
         failed = True
         data = None
     else:
-        if response.status_code == 200:
+        if "response" in locals() and response.status_code == 200:
             try:
                 data = json.loads(response.text)
             except (json.decoder.JSONDecodeError, ValueError) as error_message:

@@ -20,6 +20,7 @@ class Plane:
         self.last_longitude = None
         self.recheck_needed = None
         self.last_recheck_needed = None
+        self.last_contact = None
     def getICAO(self):
         return self.icao
     def run(self, ac_dict):
@@ -118,12 +119,25 @@ class Plane:
         #print (Fore.CYAN + "ICAO:", self.icao + Style.RESET_ALL)
     #Print out data, and convert to locals
         if self.val_error is False:
+            if self.plane_Dict != None:
+                self.last_contact = self.plane_Dict["last_contact"]
+            if self.last_contact != None:
+                last_contact_dt = datetime.fromtimestamp(self.last_contact)
+                time_since_contact = datetime.now() - last_contact_dt
+            else:
+                time_since_contact = None
             if self.plane_Dict == None:
                 self.feeding = False
-                print(tabulate([[(Fore.CYAN + "ICAO" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.icao + Style.RESET_ALL)]], [], 'fancy_grid'))
+                output = [
+                [(Fore.CYAN + "ICAO" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.icao + Style.RESET_ALL)],
+                [(Fore.CYAN + "Last Contact" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str(time_since_contact) + Style.RESET_ALL)] if time_since_contact != None else None
+                ]
+                output = list(filter(None, output))
+                print(tabulate(output, [], 'fancy_grid'))
                 print("No Data")
             elif self.plane_Dict != None:
                 self.feeding = True
+                #Update dictionary to Plane object direct variables
                 self.__dict__.update(self.plane_Dict)
                 #if "reg" in self.plane_Dict.keys():
                     #print(Fore.CYAN + "Registration: ", self.reg)
@@ -131,9 +145,7 @@ class Plane:
                     #print("From: ", self.from_location)
                 #if "to_location" in self.plane_Dict.keys():
                     #print("To: ", self.to_location)
-                if "last_contact" in self.plane_Dict.keys():
-                    last_contact = datetime.fromtimestamp(self.last_contact)
-                    time_since = datetime.now() - last_contact
+
                 #print(Fore.CYAN + "Time Since Contact:", time_since)
                 #print (Fore.CYAN + "Callsign: ", self.callsign)
                 #print ("On Ground: ", self.on_ground)
@@ -148,7 +160,7 @@ class Plane:
                 [(Fore.CYAN + "To" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.to_location + Style.RESET_ALL)] if "to_location" in self.plane_Dict.keys() else None,
                 [(Fore.CYAN + "Latitude" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str(self.latitude) + Style.RESET_ALL)],
                 [(Fore.CYAN + "Longitude" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str(self.longitude) + Style.RESET_ALL)],
-                [(Fore.CYAN + "Last Contact" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str(time_since) + Style.RESET_ALL)],
+                [(Fore.CYAN + "Last Contact" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str(time_since_contact) + Style.RESET_ALL)],
                 [(Fore.CYAN + "On Ground" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str(self.on_ground) + Style.RESET_ALL)],
                 [(Fore.CYAN + "GEO Alitude Ft" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str(self.geo_alt_ft) + Style.RESET_ALL)]
                 ]
@@ -327,7 +339,7 @@ class Plane:
                     #Twitter
                     if self.config.getboolean('TWITTER', 'ENABLE'):
                         twitter_media_map_obj = self.tweet_api.media_upload(self.map_file_name)
-                        alt_text = "Call: " + self.callsign + " On Ground: " + str(self.on_ground) + " Alt: " + str(self.geo_alt_ft) + " Last Contact: " + str(time_since) + " Trigger: " + self.trigger_type
+                        alt_text = "Call: " + self.callsign + " On Ground: " + str(self.on_ground) + " Alt: " + str(self.geo_alt_ft) + " Last Contact: " + str(time_since_contact) + " Trigger: " + self.trigger_type
                         self.tweet_api.create_media_metadata(media_id= twitter_media_map_obj.media_id, alt_text= alt_text)
                         self.tweet_api.update_status(status = ((self.twitter_title + " " + self.tookoff_message).strip()), media_ids=[twitter_media_map_obj.media_id])
                         #self.tweet_api.update_with_media(self.map_file_name, status = (self.twitter_title + " " + self.tookoff_message).strip())
@@ -369,7 +381,7 @@ class Plane:
                     #Twitter
                     if self.config.getboolean('TWITTER', 'ENABLE'):
                         twitter_media_map_obj = self.tweet_api.media_upload(self.map_file_name)
-                        alt_text = "Call: " + self.callsign + " On Ground: " + str(self.on_ground) + " Alt: " + str(self.geo_alt_ft) + " Last Contact: " + str(time_since) + " Trigger: " + self.trigger_type
+                        alt_text = "Call: " + self.callsign + " On Ground: " + str(self.on_ground) + " Alt: " + str(self.geo_alt_ft) + " Last Contact: " + str(time_since_contact) + " Trigger: " + self.trigger_type
                         self.tweet_api.create_media_metadata(media_id= twitter_media_map_obj.media_id, alt_text= alt_text)
                         self.tweet_api.update_status(status = ((self.twitter_title + " " + self.landed_message).strip()), media_ids=[twitter_media_map_obj.media_id])
                         #self.tweet_api.update_with_media(self.map_file_name, status = (self.twitter_title + " " + self.landed_message).strip())
@@ -377,6 +389,7 @@ class Plane:
                     self.landed_time = None
                     self.time_since_tk = None
                     os.remove(self.map_file_name)
+                    self.last_contact = None
 
         #Set Variables to compare to next check
                 self.last_feeding = self.feeding

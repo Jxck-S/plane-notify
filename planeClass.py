@@ -105,15 +105,15 @@ class Plane:
                     self.plane_Dict = {'icao' : ac_dict['icao'], 'callsign' : ac_dict['call'], 'reg' : ac_dict['reg'], 'latitude' : float(ac_dict['lat']), 'longitude' : float(ac_dict['lon']), 'geo_alt_ft' : int(ac_dict['galt']), 'on_ground' : bool(int(ac_dict["gnd"])), 'last_contact' : round(float(ac_dict["postime"])/1000)}
                     if self.plane_Dict['on_ground']:
                         self.plane_Dict['geo_alt_ft'] = 0
+                    if "to" in ac_dict.keys():
+                        self.plane_Dict['to_location'] = ac_dict["to"]
+                    if "from" in ac_dict.keys():
+                        self.plane_Dict['from_location'] = ac_dict["from"]
                 except ValueError as e:
                     self.plane_Dict = None
                     self.val_error = True
                     print("Got data but some data is invalid!")
                     print(e)
-                if "to" in ac_dict.keys():
-                    self.plane_Dict['to_location'] = ac_dict["to"]
-                if "from" in ac_dict.keys():
-                    self.plane_Dict['from_location'] = ac_dict["from"]
             else:
                 self.plane_Dict = None
         #print (Fore.CYAN + "ICAO:", self.icao + Style.RESET_ALL)

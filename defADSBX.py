@@ -55,8 +55,8 @@ def pullADSBX(planes):
         else:
             failed = True
             data = None
-
-    print ("HTTP Status Code:", response.status_code)
+    if "response" in locals():
+        print ("HTTP Status Code:", response.status_code)
     if failed is False:
         data_ctime = float(data['ctime']) / 1000.0
         print("UTC of Data:",datetime.utcfromtimestamp(data_ctime))

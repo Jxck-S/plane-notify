@@ -76,24 +76,20 @@ class Plane:
         self.on_ground = None
         self.has_location = None
     #Parse OpenSky Vector
-        self.plane_Dict = None
         if main_config.get('DATA', 'SOURCE') == "OPENS":
             self.val_error = False
             if ac_dict != None:
                 #print (Fore.YELLOW + "OpenSky Sourced Data: ", ac_dict)
                 try:
-                    self.plane_Dict ={'icao' : ac_dict.icao24.upper(), 'callsign' : ac_dict.callsign, 'latitude' : ac_dict.latitude, 'longitude' : ac_dict.longitude,  'on_ground' : bool(ac_dict.on_ground), 'last_contact' : ac_dict.last_contact}
+                    self.__dict__.update({'icao' : ac_dict.icao24.upper(), 'callsign' : ac_dict.callsign, 'latitude' : ac_dict.latitude, 'longitude' : ac_dict.longitude,  'on_ground' : bool(ac_dict.on_ground), 'last_contact' : ac_dict.last_contact})
                     if ac_dict.geo_altitude != None:
-                        self.plane_Dict['geo_alt_ft'] = round(float(ac_dict.geo_altitude)  * 3.281)
-                    elif self.plane_Dict['on_ground']:
-                        self.plane_Dict['geo_alt_ft'] = 0
+                        self.geo_alt_ft = round(float(ac_dict.geo_altitude)  * 3.281)
+                    elif self.on_ground:
+                        self.geo_alt_ft = 0
                 except ValueError as e:
-                    self.plane_Dict = None
                     self.val_error = True
                     print("Got data but some data is invalid!")
                     print(e)
-            else:
-                self.plane_Dict = None
 
     #Parse ADBSX Vector
         elif main_config.get('DATA', 'SOURCE') == "ADSBX":
@@ -102,31 +98,27 @@ class Plane:
                 #print (Fore.YELLOW +"ADSBX Sourced Data: ", ac_dict, Style.RESET_ALL)
                 try:
                     #postime is divided by 1000 to get seconds from milliseconds, from timestamp expects secs.
-                    self.plane_Dict = {'icao' : ac_dict['icao'], 'callsign' : ac_dict['call'], 'reg' : ac_dict['reg'], 'latitude' : float(ac_dict['lat']), 'longitude' : float(ac_dict['lon']), 'geo_alt_ft' : int(ac_dict['galt']), 'on_ground' : bool(int(ac_dict["gnd"])), 'last_contact' : round(float(ac_dict["postime"])/1000)}
-                    if self.plane_Dict['on_ground']:
-                        self.plane_Dict['geo_alt_ft'] = 0
+                    self.__dict__.update({'icao' : ac_dict['icao'], 'callsign' : ac_dict['call'], 'reg' : ac_dict['reg'], 'latitude' : float(ac_dict['lat']), 'longitude' : float(ac_dict['lon']), 'geo_alt_ft' : int(ac_dict['galt']), 'on_ground' : bool(int(ac_dict["gnd"])), 'last_contact' : round(float(ac_dict["postime"])/1000)})
+                    if self.on_ground:
+                        self.geo_alt_ft = 0
                     if "to" in ac_dict.keys():
-                        self.plane_Dict['to_location'] = ac_dict["to"]
+                        self.to_location = ac_dict["to"]
                     if "from" in ac_dict.keys():
-                        self.plane_Dict['from_location'] = ac_dict["from"]
+                        self.from_location = ac_dict["from"]
                 except ValueError as e:
-                    self.plane_Dict = None
                     self.val_error = True
                     print("Got data but some data is invalid!")
                     print(e)
-            else:
-                self.plane_Dict = None
+
         #print (Fore.CYAN + "ICAO:", self.icao + Style.RESET_ALL)
     #Print out data, and convert to locals
         if self.val_error is False:
-            if self.plane_Dict != None:
-                self.last_contact = self.plane_Dict["last_contact"]
             if self.last_contact != None:
                 last_contact_dt = datetime.fromtimestamp(self.last_contact)
                 time_since_contact = datetime.now() - last_contact_dt
             else:
                 time_since_contact = None
-            if self.plane_Dict == None:
+            if ac_dict == None:
                 self.feeding = False
                 output = [
                 [(Fore.CYAN + "ICAO" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.icao + Style.RESET_ALL)],
@@ -135,29 +127,14 @@ class Plane:
                 output = list(filter(None, output))
                 print(tabulate(output, [], 'fancy_grid'))
                 print("No Data")
-            elif self.plane_Dict != None:
+            elif ac_dict != None:
                 self.feeding = True
-                #Update dictionary to Plane object direct variables
-                self.__dict__.update(self.plane_Dict)
-                #if "reg" in self.plane_Dict.keys():
-                    #print(Fore.CYAN + "Registration: ", self.reg)
-                #if "from_location" in self.plane_Dict.keys():
-                    #print("From: ", self.from_location)
-                #if "to_location" in self.plane_Dict.keys():
-                    #print("To: ", self.to_location)
-
-                #print(Fore.CYAN + "Time Since Contact:", time_since)
-                #print (Fore.CYAN + "Callsign: ", self.callsign)
-                #print ("On Ground: ", self.on_ground)
-                #print ("Latitude: ", self.latitude)
-                #print ("Longitude: ", self.longitude)
-                #print ("GEO Alitude Ft: ", self.geo_alt_ft, Style.RESET_ALL)
                 output = [
                 [(Fore.CYAN + "ICAO" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.icao + Style.RESET_ALL)],
                 [(Fore.CYAN + "Callsign" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.callsign + Style.RESET_ALL)],
-                [(Fore.CYAN + "Reg" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.reg + Style.RESET_ALL)] if "reg" in self.plane_Dict.keys() else None,
-                [(Fore.CYAN + "From" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.from_location + Style.RESET_ALL)] if "from_location" in self.plane_Dict.keys() else None,
-                [(Fore.CYAN + "To" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.to_location + Style.RESET_ALL)] if "to_location" in self.plane_Dict.keys() else None,
+                [(Fore.CYAN + "Reg" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.reg + Style.RESET_ALL)] if "reg" in self.__dict__ else None,
+                [(Fore.CYAN + "From" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.from_location + Style.RESET_ALL)] if "from_location" in self.__dict__ else None,
+                [(Fore.CYAN + "To" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.to_location + Style.RESET_ALL)] if "to_location" in self.__dict__ else None,
                 [(Fore.CYAN + "Latitude" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str(self.latitude) + Style.RESET_ALL)],
                 [(Fore.CYAN + "Longitude" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str(self.longitude) + Style.RESET_ALL)],
                 [(Fore.CYAN + "Last Contact" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str(time_since_contact) + Style.RESET_ALL)],

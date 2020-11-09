@@ -44,3 +44,11 @@
 -   <https://tecadmin.net/setup-selenium-with-chromedriver-on-debian/>
 -   <https://blog.testproject.io/2018/02/20/chrome-headless-selenium-python-linux-servers/>
 -   <https://serverfault.com/questions/172076/how-to-find-the-browser-versions-from-command-line-in-linux-windows>
+
+## Tabulate
+
+-   <https://pypi.org/project/tabulate/>
+
+## Nearest Airport / Airports.dat / OpenFlights
+
+-   <https://openflights.org/data.html>

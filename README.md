@@ -22,7 +22,8 @@ Their are two branches of this program single is the original only supports one 
 I made this program so I could track Elon Musk's Jet and share with others of his whereabouts on Twitter. [![Twitter Follow](https://img.shields.io/twitter/follow/ElonJet.svg?style=social)](https://twitter.com/ElonJet) I have now Expanded and run multiple accounts for multiple planes, a list of the accounts here [plane-notify Twitter List](https://twitter.com/i/lists/1307414615316467715)
 
 ### Contributing
- Im open to any help or suggestions, I realize theirs much better ways im sure to do alot of my methods, im only a noob. I'll accept pull requests. If you'd like to discuss join https://JacksTech.net/Discord
+
+ Im open to any help or suggestions, I realize theirs much better ways im sure to do alot of my methods, im only a noob. I'll accept pull requests. If you'd like to discuss join <https://JacksTech.net/Discord>
 
 ### [ How It Works](PseudoCode.md)
 
@@ -42,6 +43,7 @@ apt install python3-pip
 pip install colorama
 pip install geopy
 pip3 install ptyz
+pip3 install tabulate
 ```
 
 ### Install Selenium / ChromeDriver or setup Google Static Maps
@@ -50,15 +52,21 @@ Selenium/ChromeDriver is used to take a screenshot of the plane on globe.adsbexc
 
 #### 1. Chromium
 
-    sudo apt-get install chromium
+```
+sudo apt-get install chromium
+```
 
 #### 2. ChromeDriver
 
-    sudo apt-get install chromium-driver
+```
+sudo apt-get install chromium-driver
+```
 
 #### 3. Selenium
 
-    pip install -U selenium
+```
+pip install -U selenium
+```
 
 ### Install Pushbullet, Tweepy, and Discord optional output methods already implemented in code, only install the ones you want to use.
 
@@ -84,13 +92,18 @@ git clone -b multi --single-branch https://github.com/Jxck-S/plane-notify.git
 cd plane-notify
 ```
 
-### Configure main config file with keys and URLs (mainconf.ini)
+###  Download the latest airports.dat from OpenFlights for nearest airport lookup - https://openflights.org/data.html
+```bash
+wget https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat
+```
+
+### Configure main config file with keys and URLs (mainconf.ini) in configs directory
 
 -   edit them with nano or vi on the running machine or on your pc and transfer the config to where you will be running the bot
 
 ### Configure individual planes
 
-#### an example file is given (plane1.ini) Plane config files should be in the programs directory, the program looks for any file with a .ini exstenstion.
+#### an example file is given (plane1.ini) Plane config files should be in the configs directory, the program looks for any file in that folder with a .ini exstenstion.
 
 ### Enter and create new Screen Session
 
@@ -106,8 +119,7 @@ python3 NotifyBotMulti.py
 
 ### TODO
 
--   Possibly implement airport name, done by closest airport
+-   Clostest airport name(WORKING), but outputs to Discord currently only atm, will be adding it to the map image with PIL, Would add as text output but the closest airport is not always correct
 -   General Cleanup
--   Move all configs to own folder
 
 ### [ More Refrences / Documentation](Refrences.md)

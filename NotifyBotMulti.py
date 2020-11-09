@@ -1,6 +1,4 @@
-import requests
 import configparser
-import json
 import time
 from defADSBX import pullADSBX
 from defOpenSky import pullOpenSky

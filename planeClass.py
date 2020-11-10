@@ -47,7 +47,7 @@ class Plane:
         import platform
         from datetime import datetime
         from tabulate import tabulate
-        from defAirport import getAirport
+        from defAirport import getClosestAirport
         if self.config.get('MAP', 'OPTION') == "GOOGLESTATICMAP":
             from defMap import getMap
         elif self.config.get('MAP', 'OPTION') == "ADSBX":
@@ -304,7 +304,7 @@ class Plane:
                         raise Exception("Map option not set correctly in this planes conf")
                     #Discord
                     if self.config.getboolean('DISCORD', 'ENABLE'):
-                        nearest = getAirport(self.latitude, self.longitude)
+                        nearest = getClosestAirport(self.latitude, self.longitude)
                         self.dis_message = (self.dis_title + " "  + self.tookoff_message + nearest['icao'] + ", " + nearest["name"]).strip()
                         sendDis(self.dis_message, self.map_file_name, self.config)
                     #PushBullet
@@ -346,7 +346,7 @@ class Plane:
                         raise Exception("Map option not set correctly in this planes conf")
                     #Discord
                     if self.config.getboolean('DISCORD', 'ENABLE'):
-                        nearest = getAirport(self.last_latitude, self.last_longitude)
+                        nearest = getClosestAirport(self.last_latitude, self.last_longitude)
                         self.dis_message =  (self.dis_title + " "  +self.landed_message + nearest['icao'] + ", " + nearest["name"]).strip()
                         sendDis(self.dis_message, self.map_file_name, self.config)
                     #PushBullet

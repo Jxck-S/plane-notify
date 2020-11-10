@@ -9,7 +9,9 @@ if platform.system() == "Windows":
     init(convert=True)
 from planeClass import Plane
 from datetime import datetime
+from defAirport import DownloadAirports
 import pytz
+DownloadAirports()
 main_config = configparser.ConfigParser()
 main_config.read('./configs/mainconf.ini')
 import os
@@ -83,4 +85,3 @@ while True:
         time.sleep(1)
     sys.stdout.write(Back.RED + ('\x1b[1K\r' +"Slept for " +str(sleep_sec)) + Style.RESET_ALL)
     print()
-

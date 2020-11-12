@@ -47,6 +47,7 @@ class Plane:
         import platform
         from datetime import datetime
         from tabulate import tabulate
+        from AppendAirport import append_airport
         from defAirport import getClosestAirport
         if self.config.get('MAP', 'OPTION') == "GOOGLESTATICMAP":
             from defMap import getMap
@@ -213,11 +214,13 @@ class Plane:
                     print("Tookoff by", self.trigger_type)
         #Lookup Location of coordinates
                 if self.landed or self.tookoff:
-                    if self.landed and self.last_longitude != None and self.last_latitude != None:
-                        self.combined = f"{self.last_latitude}, {self.last_longitude}"
-                        self.has_coords = True
-                    elif self.tookoff and self.longitude != None and self.latitude != None:
+                    if self.trigger_type == "now on ground" or "data acquisition" and self.longitude != None and self.latitude != None:
                         self.combined =  f"{self.latitude} , {self.longitude}"
+                        nearest_airport_dict = getClosestAirport(self.latitude, self.longitude)
+                        self.has_coords = True
+                    elif self.trigger_type == "data loss" or "no longer on ground" and self.last_longitude != None and self.last_latitude != None:
+                        self.combined = f"{self.last_latitude}, {self.last_longitude}"
+                        nearest_airport_dict = getClosestAirport(self.last_latitude, self.last_longitude)
                         self.has_coords = True
                     else:
                         print (Fore.RED + 'No Location')
@@ -300,12 +303,12 @@ class Plane:
                         getMap((self.aera_hierarchy + ", "  + self.state + ", "  + self.country_code), self.icao)
                     elif self.config.get('MAP', 'OPTION') == "ADSBX":
                         getSS(self.icao)
+                        append_airport(self.map_file_name, nearest_airport_dict['icao'], nearest_airport_dict['name'], nearest_airport_dict['distance'])
                     else:
                         raise Exception("Map option not set correctly in this planes conf")
                     #Discord
                     if self.config.getboolean('DISCORD', 'ENABLE'):
-                        nearest = getClosestAirport(self.latitude, self.longitude)
-                        self.dis_message = (self.dis_title + " "  + self.tookoff_message + nearest['icao'] + ", " + nearest["name"]).strip()
+                        self.dis_message = (self.dis_title + " "  + self.tookoff_message + nearest_airport_dict['icao'] + ", " + nearest_airport_dict["name"]).strip()
                         sendDis(self.dis_message, self.map_file_name, self.config)
                     #PushBullet
                     if self.config.getboolean('PUSHBULLET', 'ENABLE'):
@@ -342,12 +345,13 @@ class Plane:
                         getMap((self.aera_hierarchy + ", "  + self.state + ", "  + self.country_code), self.icao)
                     elif self.config.get('MAP', 'OPTION') == "ADSBX":
                         getSS(self.icao)
+                        append_airport(self.map_file_name, nearest_airport_dict['icao'], nearest_airport_dict['name'], nearest_airport_dict['distance'])
+                        
                     else:
                         raise Exception("Map option not set correctly in this planes conf")
                     #Discord
                     if self.config.getboolean('DISCORD', 'ENABLE'):
-                        nearest = getClosestAirport(self.last_latitude, self.last_longitude)
-                        self.dis_message =  (self.dis_title + " "  +self.landed_message + nearest['icao'] + ", " + nearest["name"]).strip()
+                        self.dis_message =  (self.dis_title + " "  +self.landed_message + nearest_airport_dict['icao'] + ", " + nearest_airport_dict["name"]).strip()
                         sendDis(self.dis_message, self.map_file_name, self.config)
                     #PushBullet
                     if self.config.getboolean('PUSHBULLET', 'ENABLE'):

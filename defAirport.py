@@ -1,6 +1,6 @@
 #https://www.geeksforgeeks.org/python-calculate-distance-between-two-places-using-geopy/
 #https://openflights.org/data.html
-def DownloadAirports():
+def download_airports():
 	import os
 	if not os.path.isfile('airports.dat'):
 		print("No airports.dat file, downloading now")
@@ -44,5 +44,6 @@ def getClosestAirport(latitude, longitude):
 						elif airport_dist < closest_airport_dist:
 								closest_airport_dict = airport
 								closest_airport_dist = airport_dist
+				closest_airport_dict['distance'] = closest_airport_dist
 				print("Closest Airport:", closest_airport_dict['icao'], closest_airport_dict['name'], closest_airport_dist, "Miles Away")
 		return closest_airport_dict

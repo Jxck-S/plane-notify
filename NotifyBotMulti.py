@@ -1,7 +1,5 @@
 import configparser
 import time
-from defADSBX import pullADSBX
-from defOpenSky import pullOpenSky
 from colorama import Fore, Back, Style
 import platform
 if platform.system() == "Windows":
@@ -9,14 +7,16 @@ if platform.system() == "Windows":
     init(convert=True)
 from planeClass import Plane
 from datetime import datetime
-from defAirport import DownloadAirports
+from defAirport import download_airports
+from AppendAirport import download_font
 import pytz
-DownloadAirports()
+download_airports()
+download_font()
 main_config = configparser.ConfigParser()
 main_config.read('./configs/mainconf.ini')
 import os
 import sys
-#Setup Plane Objects off of Plane configs
+#Setup plane objects from plane configs
 planes = {}
 for filename in os.listdir("./configs"):
     if filename.endswith(".ini") and filename != "mainconf.ini":
@@ -38,6 +38,7 @@ while True:
     start_time = time.time()
     print (Back.GREEN,  Fore.BLACK, "--------", running_Count, "--------", datetime_tz.strftime("%I:%M:%S %p"), "-------------------------------------------------------", Style.RESET_ALL)
     if main_config.get('DATA', 'SOURCE') == "ADSBX":
+        from defADSBX import pullADSBX
         data, failed = pullADSBX(planes)
         if failed == False:
             if data['ac'] != None:
@@ -54,6 +55,7 @@ while True:
                 for obj in planes.values():
                     obj.run(None)
     elif main_config.get('DATA', 'SOURCE') == "OPENS":
+        from defOpenSky import pullOpenSky
         planeData, failed = pullOpenSky(planes)
         if failed == False:
             if planeData.states != []:

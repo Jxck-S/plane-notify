@@ -114,7 +114,8 @@ python3 NotifyBotMulti.py
 
 ### TODO
 
--   Clostest airport name(WORKING), but outputs to Discord currently only atm, will be adding it to the map image with PIL, Would add as text output but the closest airport is not always correct
 -   General Cleanup
+-   Add ADSBX V2 use
+-   Get rid of landing/takeoff by data loss/aqquision instead use to last contact timeout for landing. 
 
 ### [ More Refrences / Documentation](Refrences.md)

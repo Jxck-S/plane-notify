@@ -92,11 +92,6 @@ git clone -b multi --single-branch https://github.com/Jxck-S/plane-notify.git
 cd plane-notify
 ```
 
-###  Download the latest airports.dat from OpenFlights for nearest airport lookup - https://openflights.org/data.html
-```bash
-wget https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat
-```
-
 ### Configure main config file with keys and URLs (mainconf.ini) in configs directory
 
 -   edit them with nano or vi on the running machine or on your pc and transfer the config to where you will be running the bot

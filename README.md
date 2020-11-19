@@ -37,13 +37,20 @@ apt install python3
 apt install python3-pip
 ```
 
-### Install Colorama, geopy, ptyz
+### Install Colorama, geopy, ptyz, etc
 
 ```bash
 pip install colorama
 pip install geopy
 pip3 install ptyz
 pip3 install tabulate
+pip install pillow
+```
+
+### Install OpenSky Wrapper, if your going to be using OpenSky as source
+
+```bash
+pip install -e "git+https://github.com/openskynetwork/opensky-api.git#egg=python&subdirectory=python"
 ```
 
 ### Install Selenium / ChromeDriver or setup Google Static Maps
@@ -52,21 +59,15 @@ Selenium/ChromeDriver is used to take a screenshot of the plane on globe.adsbexc
 
 #### 1. Chromium
 
-```
-sudo apt-get install chromium
-```
+    sudo apt-get install chromium
 
-#### 2. ChromeDriver
+#### 2. Web Driver Manager
 
-```
-sudo apt-get install chromium-driver
-```
+    pip install webdriver-manager
 
 #### 3. Selenium
 
-```
-pip install -U selenium
-```
+    pip install -U selenium
 
 ### Install Pushbullet, Tweepy, and Discord optional output methods already implemented in code, only install the ones you want to use.
 

@@ -8,6 +8,7 @@
 ## OpenSky
 
 -   <https://opensky-network.org/apidoc/>
+-   <https://github.com/openskynetwork/opensky-api>
 
 ## GeoPy - Location Name Lookup
 
@@ -44,6 +45,10 @@
 -   <https://tecadmin.net/setup-selenium-with-chromedriver-on-debian/>
 -   <https://blog.testproject.io/2018/02/20/chrome-headless-selenium-python-linux-servers/>
 -   <https://serverfault.com/questions/172076/how-to-find-the-browser-versions-from-command-line-in-linux-windows>
+
+## Web Driver Manager
+
+<https://pypi.org/project/webdriver-manager/>
 
 ## Tabulate
 

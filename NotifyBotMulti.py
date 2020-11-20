@@ -14,6 +14,7 @@ download_airports()
 download_font()
 main_config = configparser.ConfigParser()
 main_config.read('./configs/mainconf.ini')
+source = main_config.get('DATA', 'SOURCE')
 import os
 import sys
 #Setup plane objects from plane configs
@@ -25,6 +26,7 @@ for filename in os.listdir("./configs"):
         planes[plane_config.get('DATA', 'ICAO').upper()] = Plane(plane_config.get('DATA', 'ICAO'), filename)
 
 running_Count = 0
+failed_count = 0
 try:
     tz = pytz.timezone(main_config.get('DATA', 'TZ'))
 except pytz.exceptions.UnknownTimeZoneError:
@@ -37,7 +39,7 @@ while True:
     running_Count +=1
     start_time = time.time()
     print (Back.GREEN,  Fore.BLACK, "--------", running_Count, "--------", datetime_tz.strftime("%I:%M:%S %p"), "-------------------------------------------------------", Style.RESET_ALL)
-    if main_config.get('DATA', 'SOURCE') == "ADSBX":
+    if source == "ADSBX":
         from defADSBX import pullADSBX
         data, failed = pullADSBX(planes)
         if failed == False:
@@ -46,15 +48,17 @@ while True:
                     has_data = False
                     for planeData in data['ac']:
                         if planeData['icao'] == key:
-                            obj.run(planeData)
+                            obj.run(planeData, source)
                             has_data = True
                             break
                     if has_data is False:
-                        obj.run(None)
+                        obj.run(None, source)
             else:
                 for obj in planes.values():
-                    obj.run(None)
-    elif main_config.get('DATA', 'SOURCE') == "OPENS":
+                    obj.run(None, source)
+        elif failed:
+            failed_count += 1
+    elif source == "OPENS":
         from defOpenSky import pullOpenSky
         planeData, failed = pullOpenSky(planes)
         if failed == False:
@@ -64,20 +68,22 @@ while True:
                     has_data = False
                     for dataState in planeData.states:
                         if (dataState.icao24).upper() == key:
-                            obj.run(dataState)
+                            obj.run(dataState, source)
                             has_data = True
                             break
                     if has_data is False:
-                        obj.run(None)
+                        obj.run(None, source)
             else:
                 for obj in planes.values():
-                    obj.run(None)
+                    obj.run(None, source)
+    if failed_count >= 10:
+        source = "OPENS"
     elapsed_calc_time = time.time() - start_time
     datetime_tz = datetime.now(tz)
     print (Back.GREEN,  Fore.BLACK, "--------", running_Count, "--------", datetime_tz.strftime("%I:%M:%S %p"), "------------------------Elapsed Time-", elapsed_calc_time, " -------------------------------------", Style.RESET_ALL)
 
 
-    sleep_sec = 20
+    sleep_sec = 5
     for i in range(sleep_sec,0,-1):
         if i < 10:
             i = " " + str(i)

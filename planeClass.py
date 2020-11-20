@@ -14,16 +14,17 @@ class Plane:
         self.latitude = None
         self.callsign = None
         self.takeoff_time = None
-        self.reg = None
+
         self.map_file_name = icao.upper() + "_map.png"
         self.last_latitude = None
         self.last_longitude = None
         self.recheck_needed = None
         self.last_recheck_needed = None
         self.last_contact = None
+        self.last_feed_data = None
     def getICAO(self):
         return self.icao
-    def run(self, ac_dict):
+    def run(self, ac_dict, source):
 
         #Import Modules
         #Clear Terminal
@@ -40,8 +41,6 @@ class Plane:
         import configparser
         self.config = configparser.ConfigParser()
         self.config.read(("./configs/"+ self.conf_file))
-        main_config = configparser.ConfigParser()
-        main_config.read('./configs/mainconf.ini')
 
         #Platform for determining OS for strftime
         import platform
@@ -76,8 +75,9 @@ class Plane:
         self.latitude = None
         self.on_ground = None
         self.has_location = None
+        time_since_contact = None
     #Parse OpenSky Vector
-        if main_config.get('DATA', 'SOURCE') == "OPENS":
+        if source == "OPENS":
             self.val_error = False
             if ac_dict != None:
                 #print (Fore.YELLOW + "OpenSky Sourced Data: ", ac_dict)
@@ -93,7 +93,7 @@ class Plane:
                     print(e)
 
     #Parse ADBSX Vector
-        elif main_config.get('DATA', 'SOURCE') == "ADSBX":
+        elif source == "ADSBX":
             self.val_error = False
             if ac_dict != None:
                 #print (Fore.YELLOW +"ADSBX Sourced Data: ", ac_dict, Style.RESET_ALL)
@@ -179,7 +179,7 @@ class Plane:
                         self.tookoff = True
                         self.trigger_type = "no longer on ground"
                         self.tookoff_header = "Took off from "
-                    elif self.last_feeding is False and self.feeding:
+                    elif self.last_feeding is False and self.feeding and self.last_feed_data == None:
                         self.tookoff = True
                         self.trigger_type = "data acquisition"
                         self.tookoff_header = "Took off near "
@@ -193,19 +193,26 @@ class Plane:
 
 
         #Check if Landed
-                if self.last_below_desired_ft:
-                    if self.on_ground and self.last_on_ground is False:
-                        self.landed = True
-                        self.trigger_type = "now on ground"
-                        self.landed_header = "Landed in "
-                    elif self.last_feeding and self.feeding is False and self.last_on_ground is False:
-                        self.landed = True
-                        self.trigger_type = "data loss"
-                        self.landed_header = "Landed near "
-                    else:
-                        self.landed = False
+                if self.on_ground and self.last_on_ground is False and self.last_below_desired_ft:
+                    self.landed = True
+                    self.trigger_type = "now on ground"
+                    self.landed_header = "Landed in "
+                    self.last_feed_data = None
+                #Store a dictionary when data is lost near landing conditions, 
+                elif self.last_below_desired_ft and self.last_feeding and self.feeding is False and self.last_on_ground is False:
+                    self.last_feed_data = {}
+                    self.last_feed_data.update(self.__dict__)
+                    print("Latest data stored")
+
+                elif self.last_feed_data != None and self.feeding is False and time_since_contact.seconds >= 300:
+                    self.__dict__.update(self.last_feed_data)
+                    self.last_feed_data = None
+                    self.landed = True
+                    self.trigger_type = "data loss"
+                    self.landed_header = "Landed near "
                 else:
                     self.landed = False
+
                 #self.landed = bool(self.last_below_desired_ft  and ((self.last_feeding and self.feeding is False and self.last_on_ground is False)  or (self.on_ground and self.last_on_ground is False)))
                 #print ("Landed Just Now:", self.landed)
                 if self.landed:

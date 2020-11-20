@@ -116,7 +116,7 @@ python3 NotifyBotMulti.py
 ### TODO
 
 -   General Cleanup
--   Add ADSBX V2 use
+-   Add ADSBX V2 use (not really possible unless theyd give me access, luckly if we get to keep V1 use ADSBX may be taking away Free API apparently, THANKS ALOT)
 -   Get rid of landing/takeoff by data loss/aqquision instead use to last contact timeout for landing. 
 
 ### [ More Refrences / Documentation](Refrences.md)

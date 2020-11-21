@@ -223,11 +223,11 @@ class Plane:
                 if self.landed or self.tookoff:
                     if self.trigger_type == "now on ground" or "data acquisition" and self.longitude != None and self.latitude != None:
                         self.combined =  f"{self.latitude} , {self.longitude}"
-                        nearest_airport_dict = getClosestAirport(self.latitude, self.longitude)
+                        nearest_airport_dict = getClosestAirport(self.latitude, self.longitude, self.config.get("AIRPORT", "TYPES"))
                         self.has_coords = True
                     elif self.trigger_type == "data loss" or "no longer on ground" and self.last_longitude != None and self.last_latitude != None:
                         self.combined = f"{self.last_latitude}, {self.last_longitude}"
-                        nearest_airport_dict = getClosestAirport(self.last_latitude, self.last_longitude)
+                        nearest_airport_dict = getClosestAirport(self.last_latitude, self.last_longitude, self.config.get("AIRPORT", "TYPES"))
                         self.has_coords = True
                     else:
                         print (Fore.RED + 'No Location')

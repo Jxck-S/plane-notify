@@ -21,7 +21,7 @@ def append_airport(filename, icao, airport, distance_mi):
 	distance_km = distance_mi * 1.609
 
 	# create Image object with the input image
-	 
+
 	image = Image.open(filename)
 	 
 	# initialise the drawing context with

@@ -105,7 +105,8 @@ cd plane-notify
 
 ### Configure individual planes
 
-#### an example file is given (plane1.ini) Plane config files should be in the configs directory, the program looks for any file in that folder with a .ini exstenstion.
+- an example file is given (plane1.ini) plane config files should be in the configs directory, the program looks for any file in that folder with a .ini exstenstion.
+- each plane should have its own config
 
 ### Enter and create new Screen Session
 
@@ -125,4 +126,4 @@ python3 NotifyBotMulti.py
 -   Add ADSBX V2 use (not really possible unless theyd give me access, luckly if we get to keep V1 use ADSBX may be taking away Free API apparently, THANKS ALOT)
 -   Get rid of landing/takeoff by data loss/aqquision instead use to last contact timeout for landing. 
 
-### [ More Refrences / Documentation](Refrences.md)
+### [More Refrences/Documentation](Refrences.md)

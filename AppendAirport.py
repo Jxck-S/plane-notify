@@ -7,9 +7,9 @@ def download_font():
 			import requests
 			url = 'https://github.com/google/fonts/raw/master/apache/roboto/static/Roboto-Regular.ttf'
 			font = requests.get(url)
-	
+
 			open(fontfile, 'wb').write(font.content)
-		except: 
+		except:
 			raise("Error getting font or storing")
 		else:
 			print("Successfully got font", fontfile)

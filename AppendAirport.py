@@ -39,7 +39,6 @@ def append_airport(filename, icao, airport, distance_mi):
 	black = 'rgb(0, 0, 0)' # Black
 	white = 'rgb(255, 255, 255)' # White
 	navish = 'rgb(0, 63, 75)'
-	whitish = 'rgb(248, 248, 248)'
 	#Info Box
 	draw.rectangle(((316, 760), (605, 800)), fill= white, outline=black)
 	#Header Box

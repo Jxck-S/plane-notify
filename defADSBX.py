@@ -1,7 +1,6 @@
 import requests
 import json
 import configparser
-import time
 from datetime import datetime
 from http.client import IncompleteRead
 import http.client as http

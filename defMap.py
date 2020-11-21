@@ -15,7 +15,7 @@ def getMap(mapLocation, icao):
 
     # wb mode is stand for write binary mode
     file_name = icao + "_map.png"
-    f = open('map.png', 'wb')
+    f = open(file_name, 'wb')
 
     # r.content gives content,
     # in this case gives image

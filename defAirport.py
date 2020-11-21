@@ -8,12 +8,12 @@ def download_airports():
 			import requests
 			url = 'https://ourairports.com/data/airports.csv'
 			airports = requests.get(url)
-	
+
 			open('airports.csv', 'wb').write(airports.content)
-		except: 
+		except:
 			raise("Error getting airports.dat or storing")
 		else:
-			#Writes current date to airports.dat to show when it was aqquired 
+			#Writes current date to airports.dat to show when it was aqquired
 			import datetime
 			date = datetime.datetime.now()
 			with open('airports.csv', 'a') as airports:

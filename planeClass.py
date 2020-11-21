@@ -1,5 +1,6 @@
 class Plane:
     def __init__(self, icao, conf_file):
+        '''Initializes a plane object from its config file and given icao'''
         self.icao = icao.upper()
         self.conf_file = conf_file
         self.geo_alt_ft = None
@@ -14,7 +15,6 @@ class Plane:
         self.latitude = None
         self.callsign = None
         self.takeoff_time = None
-
         self.map_file_name = icao.upper() + "_map.png"
         self.last_latitude = None
         self.last_longitude = None
@@ -25,7 +25,7 @@ class Plane:
     def getICAO(self):
         return self.icao
     def run(self, ac_dict, source):
-
+        '''Runs a check of a plane module to see if its landed or takenoff using plane data, and takes action if so'''
         #Import Modules
         #Clear Terminal
         #print("\033[H\033[J")
@@ -198,7 +198,7 @@ class Plane:
                     self.trigger_type = "now on ground"
                     self.landed_header = "Landed in "
                     self.last_feed_data = None
-                #Store a dictionary when data is lost near landing conditions, 
+                #Store a dictionary when data is lost near landing conditions,
                 elif self.last_below_desired_ft and self.last_feeding and self.feeding is False and self.last_on_ground is False:
                     self.last_feed_data = {}
                     self.last_feed_data.update(self.__dict__)
@@ -353,7 +353,7 @@ class Plane:
                     elif self.config.get('MAP', 'OPTION') == "ADSBX":
                         getSS(self.icao)
                         append_airport(self.map_file_name, nearest_airport_dict['icao'], nearest_airport_dict['name'], nearest_airport_dict['distance'])
-                        
+
                     else:
                         raise Exception("Map option not set correctly in this planes conf")
                     #Discord

@@ -5,4 +5,4 @@ def sendDis(message, map_file_name, config):
 
     with open(map_file_name, "rb") as f:
         webhook.add_file(file=f.read(), filename='map.png')
-    response = webhook.execute()
+    webhook.execute()

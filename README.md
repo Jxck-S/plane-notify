@@ -5,7 +5,7 @@
 
 Notify if configured planes have taken off or landed using Python with OpenSky or ADS-B Exchange Data, outputs location of takeoff location of landing and takeoff by reverse lookup of coordinates.
 
-### Branches
+## Branches
 
 Their are two branches of this program single is the original only supports one plane works with OpenSky and ADSBX. Multi branch is the new version supports multiple planes, mainly built around being based on ADSBX data, OpenSky data in this version may have issues, didn't test much. Your current viewing multi.
 
@@ -59,15 +59,21 @@ Selenium/ChromeDriver is used to take a screenshot of the plane on globe.adsbexc
 
 #### 1. Chromium
 
+    ```bash
     sudo apt-get install chromium
+    ```
 
 #### 2. Web Driver Manager
 
+    ```bash
     pip install webdriver-manager
+    ```
 
 #### 3. Selenium
 
+    ```bash
     pip install -U selenium
+    ```
 
 ### Install Pushbullet, Tweepy, and Discord optional output methods already implemented in code, only install the ones you want to use.
 

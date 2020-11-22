@@ -25,7 +25,7 @@ I made this program so I could track Elon Musk's Jet and share with others of hi
 
  Im open to any help or suggestions, I realize theirs much better ways im sure to do alot of my methods, im only a noob. I'll accept pull requests. If you'd like to discuss join <https://JacksTech.net/Discord>
 
-### [ How It Works](PseudoCode.md)
+### [Algorithm](PseudoCode.md)
 
 ## Setup / Install
 
@@ -75,7 +75,7 @@ Selenium/ChromeDriver is used to take a screenshot of the plane on globe.adsbexc
     pip install -U selenium
     ```
 
-### Install Pushbullet, Tweepy, and Discord optional output methods already implemented in code, only install the ones you want to use.
+### Install Pushbullet, Tweepy, and Discord optional output methods already implemented in code, only install the ones you want to use
 
 ```bash
 pip install tweepy

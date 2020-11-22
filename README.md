@@ -59,21 +59,21 @@ Selenium/ChromeDriver is used to take a screenshot of the plane on globe.adsbexc
 
 #### 1. Chromium
 
-    ```bash
-    sudo apt-get install chromium
-    ```
+```bash
+sudo apt-get install chromium
+```
 
 #### 2. Web Driver Manager
 
-    ```bash
-    pip install webdriver-manager
-    ```
+```bash
+pip install webdriver-manager
+```
 
 #### 3. Selenium
 
-    ```bash
-    pip install -U selenium
-    ```
+```bash
+pip install -U selenium
+```
 
 ### Install Pushbullet, Tweepy, and Discord optional output methods already implemented in code, only install the ones you want to use
 

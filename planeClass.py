@@ -1,6 +1,6 @@
 class Plane:
     def __init__(self, icao, conf_file):
-        '''Initializes a plane object from its config file and given icao'''
+        """Initializes a plane object from its config file and given icao"""
         self.icao = icao.upper()
         self.conf_file = conf_file
         self.geo_alt_ft = None
@@ -25,7 +25,7 @@ class Plane:
     def getICAO(self):
         return self.icao
     def run(self, ac_dict, source):
-        '''Runs a check of a plane module to see if its landed or takenoff using plane data, and takes action if so'''
+        """Runs a check of a plane module to see if its landed or takenoff using plane data, and takes action if so"""
         #Import Modules
         #Clear Terminal
         #print("\033[H\033[J")

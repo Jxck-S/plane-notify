@@ -1,6 +1,6 @@
 class Plane:
     def __init__(self, icao, conf_file):
-        """Initializes a plane object from its config file and given icao"""
+        """Initializes a plane object from its config file and given icao."""
         self.icao = icao.upper()
         self.conf_file = conf_file
         self.geo_alt_ft = None
@@ -25,7 +25,7 @@ class Plane:
     def getICAO(self):
         return self.icao
     def run(self, ac_dict, source):
-        """Runs a check of a plane module to see if its landed or takenoff using plane data, and takes action if so"""
+        """Runs a check of a plane module to see if its landed or takenoff using plane data, and takes action if so."""
         #Import Modules
         #Clear Terminal
         #print("\033[H\033[J")
@@ -238,7 +238,7 @@ class Plane:
                     if self.has_coords:
                         try:
                             self.location = geolocator.reverse(self.combined)
-                        except:
+                        except BaseException:
                             print ("Geopy API Error")
                         else:
                 #           print (Fore.YELLOW, "Geopy debug: ", location.raw, Style.RESET_ALL)
@@ -321,8 +321,8 @@ class Plane:
                     if self.config.getboolean('PUSHBULLET', 'ENABLE'):
                         with open(self.map_file_name, "rb") as pic:
                             map_data = self.pb.upload_file(pic, "Tookoff IMG")
-                        push = self.pb_channel.push_note(self.config.get('PUSHBULLET', 'TITLE'), self.tookoff_message)
-                        push = self.pb_channel.push_file(**map_data)
+                        self.pb_channel.push_note(self.config.get('PUSHBULLET', 'TITLE'), self.tookoff_message)
+                        self.pb_channel.push_file(**map_data)
                     #Twitter
                     if self.config.getboolean('TWITTER', 'ENABLE'):
                         twitter_media_map_obj = self.tweet_api.media_upload(self.map_file_name)
@@ -364,8 +364,8 @@ class Plane:
                     if self.config.getboolean('PUSHBULLET', 'ENABLE'):
                         with open(self.map_file_name, "rb") as pic:
                             map_data = self.pb.upload_file(pic, "Landed IMG")
-                        push = self.pb_channel.push_note(self.config.get('PUSHBULLET', 'TITLE'), self.landed_message)
-                        push = self.pb_channel.push_file(**map_data)
+                        self.pb_channel.push_note(self.config.get('PUSHBULLET', 'TITLE'), self.landed_message)
+                        self.pb_channel.push_file(**map_data)
                     #Twitter
                     if self.config.getboolean('TWITTER', 'ENABLE'):
                         twitter_media_map_obj = self.tweet_api.media_upload(self.map_file_name)

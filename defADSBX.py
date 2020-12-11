@@ -25,7 +25,7 @@ def pullADSBX(planes):
         print(error_message)
         failed = True
         data = None
-    except (urllib3.exceptions.RemoteDisconected,  IncompleteRead, http.IncompleteRead, ConnectionResetError, requests.ChunkEncodingError, urllib3.exceptions.ProtocolError, ValueError) as error_message:
+    except (IncompleteRead, http.IncompleteRead, ConnectionResetError, requests.ChunkEncodingError, urllib3.exceptions.ProtocolError, ValueError) as error_message:
         print("Connection Error")
         print(error_message)
         failed = True

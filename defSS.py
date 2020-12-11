@@ -10,6 +10,7 @@ from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 import time
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.common.by import By
 def getSS(icao):
     chrome_options = webdriver.ChromeOptions()
     chrome_options.headless = True
@@ -21,8 +22,19 @@ def getSS(icao):
     url = "https://globe.adsbexchange.com/?largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=9&icao=" + icao
     browser.set_page_load_timeout(80)
     browser.get(url)
-    WebDriverWait(browser, 30).until(lambda d: d.execute_script("return jQuery.active == 0"))
+    WebDriverWait(browser, 40).until(lambda d: d.execute_script("return jQuery.active == 0"))
     time.sleep(5)
+    remove_elements = ["show_trace", "credits", 'infoblock_close', 'selected_photo_link', "history_collapse"]
+    for element in remove_elements:
+        element = browser.find_element_by_id(element)
+        browser.execute_script("""var element = arguments[0];    element.parentNode.removeChild(element); """, element)
+    #Remove watermark on data
+    browser.execute_script("document.getElementById('selected_infoblock').className = 'none';")
+    #Disable slidebar
+    browser.execute_script("$('#infoblock-container').css('overflow', 'hidden');")
+    #Remove share
+    element = browser.find_element_by_xpath("//*[contains(text(), 'Share')]")
+    browser.execute_script("""var element = arguments[0];    element.parentNode.removeChild(element); """, element)
     file_name = icao + "_map.png"
     browser.save_screenshot(file_name)
     browser.quit()

@@ -21,12 +21,9 @@ def append_airport(filename, icao, airport, distance_mi):
 	distance_km = distance_mi * 1.609
 
 	# create Image object with the input image
-
 	image = Image.open(filename)
- 
 	# initialise the drawing context with
 	# the image object as background
-	 
 	draw = ImageDraw.Draw(image)
 	
 	#Setup fonts
@@ -61,6 +58,5 @@ def append_airport(filename, icao, airport, distance_mi):
 	(x, y) = (320, 783)
 	text = airport[0:56]
 	draw.text((x, y), text, fill=black, font=mini_font)
-	 
 	# save the edited image
 	image.save(filename)

@@ -102,6 +102,7 @@ cd plane-notify
 ### Configure main config file with keys and URLs (mainconf.ini) in configs directory
 
 -   edit them with nano or vi on the running machine or on your pc and transfer the config to where you will be running the bot
+-   ADSBX is only setup for V1 API access, a V2 key will not work, I don't have a V2 key their for I can't make it compatible.
 
 ### Configure individual planes
 

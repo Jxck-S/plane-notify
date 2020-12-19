@@ -11,7 +11,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 import time
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
-def getSS(icao):
+def getSS(icao, overlays):
     chrome_options = webdriver.ChromeOptions()
     chrome_options.headless = True
     chrome_options.add_argument('window-size=800,800')
@@ -19,7 +19,7 @@ def getSS(icao):
     chrome_options.add_argument("--enable-logging --v=1")
     #chrome_options.add_argument('--no-sandbox') # required when running as root user. otherwise you would get no sandbox errors.
     browser = webdriver.Chrome(ChromeDriverManager().install(), options=chrome_options)
-    url = "https://globe.adsbexchange.com/?largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=9&icao=" + icao
+    url = "https://globe.adsbexchange.com/?largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=9&icao=" + icao + "&" + overlays
     browser.set_page_load_timeout(80)
     browser.get(url)
     WebDriverWait(browser, 40).until(lambda d: d.execute_script("return jQuery.active == 0"))

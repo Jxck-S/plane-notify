@@ -19,11 +19,15 @@ import os
 import sys
 #Setup plane objects from plane configs
 planes = {}
-for filename in os.listdir("./configs"):
-    if filename.endswith(".ini") and filename != "mainconf.ini":
-        plane_config = configparser.ConfigParser()
-        plane_config.read(("./configs/" + filename))
-        planes[plane_config.get('DATA', 'ICAO').upper()] = Plane(plane_config.get('DATA', 'ICAO'), filename)
+print("Found the following configs")
+for dirpath, dirname, filename in os.walk("./configs"):
+        for filename in [f for f in filename if f.endswith(".ini") and f != "mainconf.ini"]:
+            if not "disabled" in dirpath:
+                print(os.path.join(dirpath, filename))
+                plane_config = configparser.ConfigParser()
+                plane_config.read((os.path.join(dirpath, filename)))
+                #Creates a Key labeled the ICAO of the plane, with the value being a plane object
+                planes[plane_config.get('DATA', 'ICAO').upper()] = Plane(plane_config.get('DATA', 'ICAO'), os.path.join(dirpath, filename), plane_config)
 
 running_Count = 0
 failed_count = 0
@@ -38,7 +42,8 @@ while True:
         running_Count = 0
     running_Count +=1
     start_time = time.time()
-    print (Back.GREEN,  Fore.BLACK, "--------", running_Count, "--------", datetime_tz.strftime("%I:%M:%S %p"), "-------------------------------------------------------", Style.RESET_ALL)
+    header = ("-------- " + str(running_Count) + " -------- " + str(datetime_tz.strftime("%I:%M:%S %p")) + " ---------------------------------------------------------------------------")
+    print (Back.GREEN +  Fore.BLACK + header[0:100] + Style.RESET_ALL)
     if source == "ADSBX":
         from defADSBX import pullADSBX
         data, failed = pullADSBX(planes)
@@ -48,14 +53,14 @@ while True:
                     has_data = False
                     for planeData in data['ac']:
                         if planeData['icao'] == key:
-                            obj.run(planeData, source)
+                            obj.run_ADSBX(planeData)
                             has_data = True
                             break
                     if has_data is False:
-                        obj.run(None, source)
+                        obj.run_empty()
             else:
                 for obj in planes.values():
-                    obj.run(None, source)
+                    obj.run_empty()
         elif failed:
             failed_count += 1
     elif source == "OPENS":
@@ -68,22 +73,32 @@ while True:
                     has_data = False
                     for dataState in planeData.states:
                         if (dataState.icao24).upper() == key:
-                            obj.run(dataState, source)
+                            obj.run_OPENS(dataState)
                             has_data = True
                             break
                     if has_data is False:
-                        obj.run(None, source)
+                        obj.run_empty()
             else:
                 for obj in planes.values():
-                    obj.run(None, source)
+                    obj.run_empty()
+        elif failed:
+            failed_count += 1
     if failed_count >= 10:
-        source = "OPENS"
+        if source == "OPENS":
+            source = "ADSBX"
+        elif source == "ADSBX":
+            source = "OPENS"
+        failed_count = 0
+        from discord_webhook import DiscordWebhook
+        webhook = DiscordWebhook(url= main_config.get('DISCORD', 'URL'), content=(str("Failed over to " + source)))
+        webhook.execute()
     elapsed_calc_time = time.time() - start_time
     datetime_tz = datetime.now(tz)
-    print (Back.GREEN,  Fore.BLACK, "--------", running_Count, "--------", datetime_tz.strftime("%I:%M:%S %p"), "------------------------Elapsed Time-", elapsed_calc_time, " -------------------------------------", Style.RESET_ALL)
+    footer = "-------- " + str(running_Count) + " -------- " + str(datetime_tz.strftime("%I:%M:%S %p")) + " ------------------------Elapsed Time- " + str(round(elapsed_calc_time, 3)) + " -------------------------------------"
+    print (Back.GREEN + Fore.BLACK + footer[0:100] + Style.RESET_ALL)
 
 
-    sleep_sec = 5
+    sleep_sec = 15
     for i in range(sleep_sec,0,-1):
         if i < 10:
             i = " " + str(i)

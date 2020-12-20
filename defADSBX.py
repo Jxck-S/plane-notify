@@ -57,15 +57,13 @@ def pullADSBX(planes):
     if "response" in locals():
         print ("HTTP Status Code:", response.status_code)
     if failed is False:
-        data_ctime = float(data['ctime']) / 1000.0
-        print("UTC of Data:",datetime.utcfromtimestamp(data_ctime))
-        print("Current UTC:", datetime.utcnow())
         try:
-            if data['msg'] == 'You need a key. Get a feeder or use pay API. https://rapidapi.com/adsbx/api/adsbexchange-com1':
-                print("Bad auth", data['msg'])
+            if data['msg'] != "No error":
+                raise Exception("Error from ADSBX: msg = ", data['msg'])
                 failed = True
         except KeyError:
             pass
+        data_ctime = float(data['ctime']) / 1000.0
+        print("UTC of Data:",datetime.utcfromtimestamp(data_ctime))
+        print("Current UTC:", datetime.utcnow())
     return data, failed
-
-

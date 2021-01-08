@@ -8,10 +8,22 @@ import urllib3
 main_config = configparser.ConfigParser()
 main_config.read('./configs/mainconf.ini')
 def pullADSBX(planes):
-    if len(planes) > 1:
-                url = "https://adsbexchange.com/api/aircraft/json/"
-    elif len(planes) == 1:
-                url = "https://adsbexchange.com/api/aircraft/icao/" +    str(list(planes.keys())[0]) + "/"
+    if main_config.getboolean('ADSBX', 'ENABLE_PROXY') is False:
+        api_version = int(main_config.get('ADSBX', 'API_VERSION'))
+        if api_version ==  1:
+            if len(planes) > 1:
+                        url = "https://adsbexchange.com/api/aircraft/json/"
+            elif len(planes) == 1:
+                        url = "https://adsbexchange.com/api/aircraft/icao/" +    str(list(planes.keys())[0]) + "/"
+        elif api_version == 2:
+            url = "https://adsbexchange.com/api/aircraft/v2/all"
+        else:
+            raise Exception("No API Version set")
+    else:
+        if main_config.has_option('ADSBX', 'PROXY_HOST'):
+            url = "http://" + main_config.get('ADSBX', 'PROXY_HOST') + ":8000/api/aircraft/v2/all"
+        else:
+            raise BaseException("Proxy enabled but no host")
 
     headers = {
                 'api-auth': main_config.get('ADSBX', 'API_KEY'),
@@ -25,7 +37,7 @@ def pullADSBX(planes):
         print(error_message)
         failed = True
         data = None
-    except (IncompleteRead, http.IncompleteRead, ConnectionResetError, requests.ChunkEncodingError, urllib3.exceptions.ProtocolError, ValueError) as error_message:
+    except (IncompleteRead, http.IncompleteRead, ConnectionResetError, urllib3.exceptions.ProtocolError, ValueError) as error_message:
         print("Connection Error")
         print(error_message)
         failed = True
@@ -41,7 +53,8 @@ def pullADSBX(planes):
                 data = json.loads(response.text)
             except (json.decoder.JSONDecodeError, ValueError) as error_message:
                 print("Error with JSON")
-                print (json.dumps(data, indent = 2))
+                if 'data' in locals() and data != None:
+                    print (json.dumps(data, indent = 2))
                 print(error_message)
                 failed = True
                 data = None

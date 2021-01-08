@@ -17,7 +17,9 @@ def getSS(icao, overlays):
     chrome_options.add_argument('window-size=800,800')
     chrome_options.add_argument('ignore-certificate-errors')
     chrome_options.add_argument("--enable-logging --v=1")
-    #chrome_options.add_argument('--no-sandbox') # required when running as root user. otherwise you would get no sandbox errors.
+    import os
+    if os.geteuid()==0:
+        chrome_options.add_argument('--no-sandbox') # required when running as root user. otherwise you would get no sandbox errors.
     browser = webdriver.Chrome(ChromeDriverManager().install(), options=chrome_options)
     url = "https://globe.adsbexchange.com/?largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=9&icao=" + icao + "&" + overlays
     browser.set_page_load_timeout(80)
@@ -35,6 +37,7 @@ def getSS(icao, overlays):
     #Remove share
     element = browser.find_element_by_xpath("//*[contains(text(), 'Share')]")
     browser.execute_script("""var element = arguments[0];    element.parentNode.removeChild(element); """, element)
+    #browser.execute_script("toggleFollow()")
     file_name = icao + "_map.png"
     browser.save_screenshot(file_name)
     browser.quit()

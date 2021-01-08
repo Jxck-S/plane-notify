@@ -25,7 +25,7 @@ def append_airport(filename, icao, airport, distance_mi):
 	# initialise the drawing context with
 	# the image object as background
 	draw = ImageDraw.Draw(image)
-	
+
 	#Setup fonts
 	fontfile = "Roboto-Regular.ttf"
 	font = ImageFont.truetype(fontfile, 14)
@@ -36,12 +36,21 @@ def append_airport(filename, icao, airport, distance_mi):
 	black = 'rgb(0, 0, 0)' # Black
 	white = 'rgb(255, 255, 255)' # White
 	navish = 'rgb(0, 63, 75)'
+	whitish = 'rgb(248, 248, 248)'
 	#Info Box
 	draw.rectangle(((316, 760), (605, 800)), fill= white, outline=black)
 	#Header Box
 	draw.rectangle(((387, 738), (535, 760)), fill= navish)
-
+	#ADSBX Logo
+	draw.rectangle(((658, 760), (800, 780)), fill= white)
+	adsbx = Image.open('Stealth-48x48.png')
+	adsbx = adsbx.resize((25, 25), Image.ANTIALIAS)
+	image.paste(adsbx, (632, 757), adsbx)
 	#Create Text
+	#ADSBX Credit
+	(x, y) = (660, 760)
+	text = "adsbexchange.com"
+	draw.text((x, y), text, fill=black, font=head_font)
 	#Nearest Airport Header
 	(x, y) = (408, 740)
 	text = "Nearest Airport"
@@ -58,5 +67,6 @@ def append_airport(filename, icao, airport, distance_mi):
 	(x, y) = (320, 783)
 	text = airport[0:56]
 	draw.text((x, y), text, fill=black, font=mini_font)
+	image.show()
 	# save the edited image
 	image.save(filename)

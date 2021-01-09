@@ -1,21 +1,3 @@
-def download_font():
-	import os
-	fontfile = "Roboto-Regular.ttf"
-	if not os.path.isfile(fontfile):
-		print("No font file, downloading now")
-		try:
-			import requests
-			url = 'https://github.com/google/fonts/raw/master/apache/roboto/static/Roboto-Regular.ttf'
-			font = requests.get(url)
-
-			open(fontfile, 'wb').write(font.content)
-		except:
-			raise("Error getting font or storing")
-		else:
-			print("Successfully got font", fontfile)
-	elif os.path.isfile(fontfile):
-			print("Already have font, continuing")
-
 def append_airport(filename, icao, airport, distance_mi):
 	from PIL import Image, ImageDraw, ImageFont
 	distance_km = distance_mi * 1.609

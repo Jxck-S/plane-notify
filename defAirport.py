@@ -1,26 +1,6 @@
 #https://www.geeksforgeeks.org/python-calculate-distance-between-two-places-using-geopy/
 #https://openflights.org/data.html
-def download_airports():
-	import os
-	if not os.path.isfile('airports.csv'):
-		print("No airports.csv file, downloading now")
-		try:
-			import requests
-			url = 'https://ourairports.com/data/airports.csv'
-			airports = requests.get(url)
 
-			open('airports.csv', 'wb').write(airports.content)
-		except:
-			raise("Error getting airports.dat or storing")
-		else:
-			#Writes current date to airports.dat to show when it was aqquired
-			import datetime
-			date = datetime.datetime.now()
-			with open('airports.csv', 'a') as airports:
-    				airports.write("#" + str(date))
-			print("Successfully got airports.csv")
-	elif os.path.isfile('airports.csv'):
-			print("Already Have airports.csv, continuing")
 #OLD Airport lookup
 # def getClosestAirport(latitude, longitude):
 # 	import csv

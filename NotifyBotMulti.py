@@ -8,11 +8,25 @@ if platform.system() == "Windows":
     init(convert=True)
 from planeClass import Plane
 from datetime import datetime
-from defAirport import download_airports
-from AppendAirport import download_font
 import pytz
-download_airports()
-download_font()
+import os
+required_files = [("Roboto-Regular.ttf", 'https://github.com/google/fonts/raw/master/apache/roboto/static/Roboto-Regular.ttf'), ('airports.csv', 'https://ourairports.com/data/airports.csv')]
+for file in required_files:
+	file_name = file[0]
+	url = file[1]
+	if not os.path.isfile(file_name):
+		print(file_name,  "does not exist downloading now")
+		try:
+			import requests
+			file_content = requests.get(url)
+
+			open(file_name, 'wb').write(file_content.content)
+		except:
+			raise("Error getting", file_name, "from", url)
+		else:
+			print("Successfully got", file_name)
+	elif os.path.isfile(file_name):
+		print("Already have", file_name, "continuing")
 main_config = configparser.ConfigParser()
 main_config.read('./configs/mainconf.ini')
 source = main_config.get('DATA', 'SOURCE')
@@ -21,7 +35,6 @@ webhook = DiscordWebhook(url= main_config.get('DISCORD', 'URL'), content=(str("S
 webhook.execute()
 try:
     print("Source is set to", source)
-    import os
     import sys
     #Setup plane objects from plane configs
     planes = {}

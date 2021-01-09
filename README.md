@@ -102,7 +102,9 @@ cd plane-notify
 ### Configure main config file with keys and URLs (mainconf.ini) in configs directory
 
 -   edit them with nano or vi on the running machine or on your pc and transfer the config to where you will be running the bot
--   ADSBX is only setup for V1 API access, a V2 key will not work, I don't have a V2 key their for I can't make it compatible.
+-   If you've setup multiple planes and want to use ADSB Exchange as your source you must have /all endpoint access to their API or it won't work.
+-   Pick the correct api version for ADSB Exchange
+-   Proxy is if your running multiple programs that use the ADSB Exchange, setup the proxy from lemonodor so you don't abuse the ADSB Exchange API, otherwise leave enable false.
 
 ### Configure individual planes
 
@@ -124,6 +126,6 @@ python3 NotifyBotMulti.py
 ### TODO
 
 -   General Cleanup
--   Add ADSBX V2 use (not really possible unless i get access, luckly if i to keep V1 use ADSBX may be taking away Free API possibly THANKS ALOT PPL who have to abuse)
+-   Add requirments.txt file from pip freeze to create easy dependencies install
 
 ### [More Refrences/Documentation](Refrences.md)

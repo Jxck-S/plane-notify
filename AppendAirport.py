@@ -43,7 +43,8 @@ def append_airport(filename, icao, airport, distance_mi):
 	draw.rectangle(((387, 738), (535, 760)), fill= navish)
 	#ADSBX Logo
 	draw.rectangle(((658, 760), (800, 780)), fill= white)
-	adsbx = Image.open('Stealth-48x48.png')
+	import requests
+	adsbx = Image.open(requests.get("https://www.adsbexchange.com/wp-content/uploads/cropped-Stealth-48px.png", stream=True).raw)
 	adsbx = adsbx.resize((25, 25), Image.ANTIALIAS)
 	image.paste(adsbx, (632, 757), adsbx)
 	#Create Text

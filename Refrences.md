@@ -45,6 +45,7 @@
 -   <https://tecadmin.net/setup-selenium-with-chromedriver-on-debian/>
 -   <https://blog.testproject.io/2018/02/20/chrome-headless-selenium-python-linux-servers/>
 -   <https://serverfault.com/questions/172076/how-to-find-the-browser-versions-from-command-line-in-linux-windows>
+-   <https://pypi.org/project/webdriver-manager/>
 
 ## Web Driver Manager
 

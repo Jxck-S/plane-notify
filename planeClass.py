@@ -69,9 +69,9 @@ class Plane:
         #Parse ADBSX V2 Vector
         from colorama import Fore, Back, Style
         self.printheader("head")
-        #print (Fore.YELLOW +"ADSBX Sourced Data: ", ac_dict, Style.RESET_ALL)
+        print (Fore.YELLOW +"ADSBX Sourced Data: ", ac_dict, Style.RESET_ALL)
         try:
-            self.__dict__.update({'icao' : ac_dict['hex'].upper(), 'reg' : ac_dict['r'], 'squawk' : ac_dict['squawk'], 'latitude' : float(ac_dict['lat']), 'longitude' : float(ac_dict['lon'])})
+            self.__dict__.update({'icao' : ac_dict['hex'].upper(), 'reg' : ac_dict['r'],  'latitude' : float(ac_dict['lat']), 'longitude' : float(ac_dict['lon'])})
             if 'alt_geom' in ac_dict:
                 self.geo_alt_ft = int(ac_dict['alt_geom'])
             elif 'alt_geom' not in ac_dict and 'alt_baro' in ac_dict:
@@ -86,10 +86,21 @@ class Plane:
             if'nav_modes' in ac_dict:
                 self.nav_modes = ac_dict['nav_modes']
                 for idx, mode in enumerate(self.nav_modes):
-                    if mode == ('tcas' or 'lnav' or 'vnav'):
+                    if mode.upper() in ['TCAS', 'LNAV', 'VNAV']:
                         self.nav_modes[idx] = self.nav_modes[idx].upper()
                     else:
                         self.nav_modes[idx] = self.nav_modes[idx].capitalize()
+            if 'squawk' in ac_dict:
+                self.squawk = ac_dict['squawk']
+            else:
+                self.squawk = None
+            if "nav_altitude_fms" in ac_dict:
+                self.nav_altitude = ac_dict['nav_altitude_fms']
+            if "nav_altitude_mcp" in ac_dict:
+                self.nav_altitude = ac_dict['nav_altitude_mcp']
+            else:
+                self.nav_altitude = None
+
             from datetime import datetime, timedelta
             #Create last seen timestamp from how long ago in secs a pos was rec
             now = datetime.now()
@@ -131,9 +142,6 @@ class Plane:
         #print("\033[H\033[J")
         #Ability to Remove old Map
         import os
-        #Setup Geopy
-        from geopy.geocoders import Nominatim
-        geolocator = Nominatim(user_agent="NotifyBot", timeout=5)
         import time
         from colorama import Fore, Back, Style
         #Platform for determining OS for strftime
@@ -179,13 +187,14 @@ class Plane:
             [(Fore.CYAN + "ICAO" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.icao + Style.RESET_ALL)],
             [(Fore.CYAN + "Callsign" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.callsign + Style.RESET_ALL)] if self.callsign != None else None,
             [(Fore.CYAN + "Reg" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.reg + Style.RESET_ALL)] if "reg" in self.__dict__ else None,
-            [(Fore.CYAN + "Squawk" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.squawk + Style.RESET_ALL)] if "squawk" in self.__dict__ else None,
+            [(Fore.CYAN + "Squawk" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.squawk + Style.RESET_ALL)] if "squawk" in self.__dict__ and self.squawk != None else None,
             [(Fore.CYAN + "Latitude" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str(self.latitude) + Style.RESET_ALL)],
             [(Fore.CYAN + "Longitude" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str(self.longitude) + Style.RESET_ALL)],
             [(Fore.CYAN + "Last Contact" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str(time_since_contact).split(".")[0]+ Style.RESET_ALL)],
             [(Fore.CYAN + "On Ground" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str(self.on_ground) + Style.RESET_ALL)],
             [(Fore.CYAN + "GEO Alitude" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str("{:,} ft".format(self.geo_alt_ft)) + Style.RESET_ALL)],
             [(Fore.CYAN + "Nav Modes" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + ', '.join(self.nav_modes)  + Style.RESET_ALL)] if "nav_modes" in self.__dict__ and self.nav_modes != None else None,
+            [(Fore.CYAN + "Sel Alt Ft" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str("{:,} ft".format(self.nav_altitude)) + Style.RESET_ALL)] if "nav_altitude" in self.__dict__ and self.nav_altitude != None else None
             ]
             output = list(filter(None, output))
             print(tabulate(output, [], 'fancy_grid'))
@@ -243,59 +252,29 @@ class Plane:
 #Lookup Location of coordinates
         if self.landed or self.tookoff:
             if self.trigger_type == "now on ground" or "data acquisition" and self.longitude != None and self.latitude != None:
-                combined =  f"{self.latitude} , {self.longitude}"
                 nearest_airport_dict = getClosestAirport(self.latitude, self.longitude, self.config.get("AIRPORT", "TYPES"))
                 has_coords = True
             elif self.trigger_type == "data loss" or "no longer on ground" and self.last_longitude != None and self.last_latitude != None:
-                combined = f"{self.last_latitude}, {self.last_longitude}"
                 nearest_airport_dict = getClosestAirport(self.last_latitude, self.last_longitude, self.config.get("AIRPORT", "TYPES"))
                 has_coords = True
             else:
                 print (Fore.RED + 'No Location, No coordinates')
-                invalid_Location = True
+                has_coords = False
                 print(Style.RESET_ALL)
             if has_coords:
-                try:
-                    location = geolocator.reverse(combined)
-                except BaseException:
-                    print ("Geopy API Error")
-                else:
-        #           print (Fore.YELLOW, "Geopy debug: ", location.raw, Style.RESET_ALL)
-                    #Checking for invalid location, where GeoPy doesn't find coordinates info
-                    try:
-                        geoError = location.raw['error']
-                    except KeyError:
-                        invalid_Location = False
-                        #Convert Full address to sep variables only if Valid Location
-                        address = location.raw['address']
-                        country = address.get('country', '')
-                        country_code = address.get('country_code', '').upper()
-                        state = address.get('state', '')
-                        county = address.get('county', '')
-                        city = address.get('city', '')
-                        town = address.get('town', '')
-                        hamlet = address.get('hamlet', '')
-            #           print (Fore.YELLOW)
-            #           print ("Address Fields debug: ", self.address)
-            #           print(Style.RESET_ALL)
-                        print (Fore.GREEN)
-                        print("Entire Address: ", location.address)
-                        print ("Country Code: ", country_code)
-                        print ("Country: ", country)
-                        print ("State: ", state)
-                        print ("City: ", city)
-                        print ("Town: ", town)
-                        print ("Hamlet: ", hamlet)
-                        print ("County: ", county)
-                        print(Style.RESET_ALL)
-                        #Chose city town county or hamlet for location as not all are always avalible.
-                        aera_hierarchy = city or town or county or hamlet
-                    else:
-                        invalid_Location = True
-                        print (Fore.RED)
-                        print (geoError)
-                        print ("Invalid Location, Likely Over Water ")
-                        print(Style.RESET_ALL)
+                #Convert dictionary keys to sep variables
+                country_code = nearest_airport_dict['iso_country']
+                state = nearest_airport_dict['region']
+                municipality = nearest_airport_dict['municipality']
+                print (Fore.GREEN)
+                print ("Country Code: ", country_code)
+                print ("State: ", state)
+                print ("Municipality: ", municipality)
+                print(Style.RESET_ALL)
+            else:
+                print (Fore.RED)
+                print ("Invalid Location")
+                print(Style.RESET_ALL)
 
     #Set Discord Title
         if self.config.getboolean('DISCORD', 'ENABLE'):
@@ -318,18 +297,18 @@ class Plane:
                 self.landed_time = None
             elif self.landed:
                 self.landed_time_msg = None
-            if invalid_Location is False:
-                message = (self.type_header  + aera_hierarchy + ", " + state + ", " + country_code + ".") + ((" " + self.landed_time_msg) if self.landed_time_msg != None else "")
+            if has_coords:
+                message = (self.type_header  + municipality + ", " + state + ", " + country_code + ".") + ((" " + self.landed_time_msg) if self.landed_time_msg != None else "")
             else:
                 message = ("Landed" + ((" " + self.landed_time_msg) if self.landed_time_msg != None else "") if self.landed  else "Tookoff" if self.tookoff else "")
             print (message)
             #Google Map or tar1090 screenshot
             if self.config.get('MAP', 'OPTION') == "GOOGLESTATICMAP":
-                getMap((aera_hierarchy + ", "  + state + ", "  + country_code), self.icao)
+                getMap((municipality + ", "  + state + ", "  + country_code), self.icao)
             elif self.config.get('MAP', 'OPTION') == "ADSBX":
                 getSS(self.icao, self.overlays)
                 if nearest_airport_dict != None:
-                    append_airport(self.map_file_name, nearest_airport_dict['icao'], nearest_airport_dict['name'], nearest_airport_dict['distance'])
+                    append_airport(self.map_file_name, nearest_airport_dict['icao'], nearest_airport_dict['name'], nearest_airport_dict['distance_mi'])
                     airport_string = nearest_airport_dict['icao'] + ", " + nearest_airport_dict["name"]
                 else:
                     airport_string = ""
@@ -338,11 +317,11 @@ class Plane:
             #Discord
             if self.config.getboolean('DISCORD', 'ENABLE'):
                 dis_message = (self.dis_title + " "  + message + " " + airport_string).strip()
-                sendDis(dis_message, self.map_file_name, self.config)
+                sendDis(dis_message, self.config, self.map_file_name)
             #PushBullet
             if self.config.getboolean('PUSHBULLET', 'ENABLE'):
                 with open(self.map_file_name, "rb") as pic:
-                    map_data = self.pb.upload_file(pic, "Tookoff IMG")
+                    map_data = self.pb.upload_file(pic, "Tookoff IMG" if self.tookoff else "Landed IMG")
                 self.pb_channel.push_note(self.config.get('PUSHBULLET', 'TITLE'), message)
                 self.pb_channel.push_file(**map_data)
             #Twitter
@@ -369,21 +348,23 @@ class Plane:
                     #Discord
                     if self.config.getboolean('DISCORD', 'ENABLE'):
                         dis_message =  (self.dis_title + " "  + squawk_message)
-                        sendDis(dis_message, self.map_file_name, self.config)
+                        sendDis(dis_message, self.config, self.map_file_name)
                     os.remove(self.map_file_name)
             #Nav Modes Notifications
             if self.nav_modes != None and self.last_nav_modes != None:
-                new_modes = []
                 for mode in self.nav_modes:
                     if mode not in self.last_nav_modes:
-                        new_modes.append(mode)
                         #Discord
-                if new_modes != []:
-                    modes_string = ", ".join(new_modes)
-                    if self.config.getboolean('DISCORD', 'ENABLE'):
-                        dis_message =  (self.dis_title + " "  + modes_string + " mode enabled.").strip()
-                        getSS(self.icao, self.overlays)
-                        sendDis(dis_message, self.map_file_name, self.config)
+                        print(mode, "enabled")
+                        if self.config.getboolean('DISCORD', 'ENABLE'):
+                            dis_message =  (self.dis_title + " "  + mode + " mode enabled.")
+                            if mode == "Approach":
+                                getSS(self.icao, self.overlays)
+                                sendDis(dis_message, self.config, self.map_file_name)
+                            elif mode == "Althold" and self.nav_altitude != None:
+                                sendDis((dis_message + ", Sel Alt. " + str(self.nav_altitude) + ", Current Alt. " + str(self.geo_alt_ft)), self.config)
+                            else:
+                                sendDis(dis_message, self.config)
 
 
 #Set Variables to compare to next check

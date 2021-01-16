@@ -10,7 +10,7 @@ from planeClass import Plane
 from datetime import datetime
 import pytz
 import os
-required_files = [("Roboto-Regular.ttf", 'https://github.com/google/fonts/raw/master/apache/roboto/static/Roboto-Regular.ttf'), ('airports.csv', 'https://ourairports.com/data/airports.csv')]
+required_files = [("Roboto-Regular.ttf", 'https://github.com/google/fonts/raw/master/apache/roboto/static/Roboto-Regular.ttf'), ('airports.csv', 'https://ourairports.com/data/airports.csv'), ('regions.csv', 'https://ourairports.com/data/regions.csv')]
 for file in required_files:
 	file_name = file[0]
 	url = file[1]

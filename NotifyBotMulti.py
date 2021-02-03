@@ -30,9 +30,10 @@ for file in required_files:
 main_config = configparser.ConfigParser()
 main_config.read('./configs/mainconf.ini')
 source = main_config.get('DATA', 'SOURCE')
-from discord_webhook import DiscordWebhook
-webhook = DiscordWebhook(url= main_config.get('DISCORD', 'URL'), content=(str("Started")))
-webhook.execute()
+if main_config.getboolean('DISCORD', 'ENABLE'):
+    from discord_webhook import DiscordWebhook
+    webhook = DiscordWebhook(url= main_config.get('DISCORD', 'URL'), content=(str("Started")))
+    webhook.execute()
 try:
     print("Source is set to", source)
     import sys
@@ -118,8 +119,9 @@ try:
             elif source == "ADSBX":
                 source = "OPENS"
             failed_count = 0
-            webhook = DiscordWebhook(url= main_config.get('DISCORD', 'URL'), content=(str("Failed over to " + source)))
-            webhook.execute()
+            if main_config.getboolean('DISCORD', 'ENABLE'):
+                webhook = DiscordWebhook(url= main_config.get('DISCORD', 'URL'), content=(str("Failed over to " + source)))
+                webhook.execute()
         elapsed_calc_time = time.time() - start_time
         datetime_tz = datetime.now(tz)
         footer = "-------- " + str(running_Count) + " -------- " + str(datetime_tz.strftime("%I:%M:%S %p")) + " ------------------------Elapsed Time- " + str(round(elapsed_calc_time, 3)) + " -------------------------------------"
@@ -138,10 +140,12 @@ try:
         print()
 except KeyboardInterrupt as e:
     print(e)
-    webhook = DiscordWebhook(url= main_config.get('DISCORD', 'URL'), content=(str("Manual Exit: " + str(e) )))
-    webhook.execute()
+    if main_config.getboolean('DISCORD', 'ENABLE'):
+        webhook = DiscordWebhook(url= main_config.get('DISCORD', 'URL'), content=(str("Manual Exit: " + str(e) )))
+        webhook.execute()
 except BaseException as e:
     print(e)
     print(traceback.format_exc())
-    webhook = DiscordWebhook(url= main_config.get('DISCORD', 'URL'), content=(str("Error Exiting: " + str(e) )))
-    webhook.execute()
+    if main_config.getboolean('DISCORD', 'ENABLE'):
+        webhook = DiscordWebhook(url= main_config.get('DISCORD', 'URL'), content=(str("Error Exiting: " + str(e) )))
+        webhook.execute()

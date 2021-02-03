@@ -108,7 +108,7 @@ cd plane-notify
 
 ### Configure individual planes
 
--   an example file is given (plane1.ini) plane config files should be in the configs directory, the program looks for any file in that folder with a .ini exstenstion.
+-   an example file is given (plane1.ini) plane config files should be in the configs directory, the program looks for any file in that folder with a .ini extension.
 -   each plane should have its own config
 
 ### Enter and create new Screen Session
@@ -126,6 +126,7 @@ python3 NotifyBotMulti.py
 ### TODO
 
 -   General Cleanup
+-   Restructure project to make it proper currently random files because I didn't know how to properly structure a project before.
 -   Add requirments.txt file from pip freeze to create easy dependencies install
 
 ### [More Refrences/Documentation](Refrences.md)

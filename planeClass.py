@@ -21,8 +21,7 @@ class Plane:
         self.last_longitude = None
         self.last_contact = None
         self.landing_plausible = False
-        self.last_squawk = None
-        self.squawk = None
+        self.squawks = [None, None, None, None]
         self.nav_modes = None
         self.last_nav_modes = None
     def getICAO(self):
@@ -90,10 +89,11 @@ class Plane:
                         self.nav_modes[idx] = self.nav_modes[idx].upper()
                     else:
                         self.nav_modes[idx] = self.nav_modes[idx].capitalize()
-            if 'squawk' in ac_dict:
-                self.squawk = ac_dict['squawk']
-            else:
-                self.squawk = None
+            #Insert newest sqwauk at 0, sqwuak length should be 4 long 0-3
+            self.squawks.insert(0, ac_dict.get('squawk'))
+            #Removes oldest sqwauk index 4 5th sqwauk
+            if len(self.squawks) == 5:
+                self.squawks.pop(4)
             if "nav_altitude_fms" in ac_dict:
                 self.nav_altitude = ac_dict['nav_altitude_fms']
             if "nav_altitude_mcp" in ac_dict:
@@ -187,7 +187,8 @@ class Plane:
             [(Fore.CYAN + "ICAO" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.icao + Style.RESET_ALL)],
             [(Fore.CYAN + "Callsign" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.callsign + Style.RESET_ALL)] if self.callsign != None else None,
             [(Fore.CYAN + "Reg" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.reg + Style.RESET_ALL)] if "reg" in self.__dict__ else None,
-            [(Fore.CYAN + "Squawk" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.squawk + Style.RESET_ALL)] if "squawk" in self.__dict__ and self.squawk != None else None,
+            #Squawks is current to oldest
+            [(Fore.CYAN + "Squawks" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + ', '.join("NA" if  x == None else x for x in self.squawks) + Style.RESET_ALL)],
             [(Fore.CYAN + "Latitude" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str(self.latitude) + Style.RESET_ALL)],
             [(Fore.CYAN + "Longitude" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str(self.longitude) + Style.RESET_ALL)],
             [(Fore.CYAN + "Last Contact" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str(time_since_contact).split(".")[0]+ Style.RESET_ALL)],
@@ -337,7 +338,7 @@ class Plane:
         squawks =[("7500", "Hijacking"), ("7600", "Radio Failure"), ("7700", "Emergency")]
         if self.feeding:
             for squawk in squawks:
-                if self.squawk == squawk[0] and self.squawk != self.last_squawk:
+                if all(v == squawk[0] for v in (self.squawks[0:2])) and self.squawks[2] != self.squawks[3] and None not in self.squawks:
                     squawk_message = ("Squawking " + squawk[0] + ", " + squawk[1])
                     print(squawk_message)
                     #Google Map or tar1090 screenshot
@@ -374,7 +375,6 @@ class Plane:
         self.last_below_desired_ft = self.below_desired_ft
         self.last_longitude = self.longitude
         self.last_latitude = self.latitude
-        self.last_squawk = self.squawk
         self.last_nav_modes = self.nav_modes
 
 

@@ -299,7 +299,7 @@ class Plane:
             elif self.landed:
                 self.landed_time_msg = None
             if has_coords:
-                message = (self.type_header  + municipality + ", " + state + ", " + country_code + ".") + ((" " + self.landed_time_msg) if self.landed_time_msg != None else "")
+                message = (self.type_header  + ((municipality + ", " + state) if municipality != state else state) + ", " + country_code + ".") + ((" " + self.landed_time_msg) if self.landed_time_msg != None else "")
             else:
                 message = ("Landed" + ((" " + self.landed_time_msg) if self.landed_time_msg != None else "") if self.landed  else "Tookoff" if self.tookoff else "")
             print (message)

@@ -128,5 +128,6 @@ python3 NotifyBotMulti.py
 -   General Cleanup
 -   Restructure project to make it proper currently random files because I didn't know how to properly structure a project before.
 -   Add requirments.txt file from pip freeze to create easy dependencies install
+-   On data loss/gain calculate AGL ft above nearest airport and use that altitude instead of just using baro/geo alt from ADS-B which is MSL.
 
 ### [More Refrences/Documentation](Refrences.md)

@@ -75,8 +75,7 @@ class Plane:
                 self.geo_alt_ft = int(ac_dict['alt_geom'])
             elif 'alt_geom' not in ac_dict and 'alt_baro' in ac_dict:
                 self.geo_alt_ft =int(ac_dict['alt_baro'])
-            if 'flight' in ac_dict:
-                self.callsign = ac_dict['flight']
+            self.callsign = ac_dict.get('flight')
             if ac_dict['alt_baro'] == "ground":
                 self.geo_alt_ft = 0
                 self.on_ground = True
@@ -143,10 +142,9 @@ class Plane:
         #Ability to Remove old Map
         import os
         import time
-        from colorama import Fore, Back, Style
+        from colorama import Fore, Style
         #Platform for determining OS for strftime
         import platform
-        from datetime import datetime
         from tabulate import tabulate
         from AppendAirport import append_airport
         from defAirport import getClosestAirport
@@ -159,7 +157,7 @@ class Plane:
             else:
                 self.overlays = ""
         else:
-            raise Exception("Map option not set correctly in this planes conf")
+            raise ValueError("Map option not set correctly in this planes conf")
         if self.config.getboolean('DISCORD', 'ENABLE'):
             from defDiscord import sendDis
         #Setup Tweepy
@@ -276,13 +274,17 @@ class Plane:
                 print (Fore.RED)
                 print ("Invalid Location")
                 print(Style.RESET_ALL)
-
+        title_switch = {
+        "reg": self.reg,
+        "callsign": self.callsign,
+        "icao": self.icao,
+        }
     #Set Discord Title
         if self.config.getboolean('DISCORD', 'ENABLE'):
-            self.dis_title = self.icao if self.config.get('DISCORD', 'TITLE') == "icao" else self.callsign if self.config.get('DISCORD', 'TITLE') == "callsign" else self.config.get('DISCORD', 'TITLE')
+            self.dis_title = title_switch.get(self.config.get('DISCORD', 'TITLE'), "NA") if self.config.get('DISCORD', 'TITLE') in title_switch.keys() else self.config.get('DISCORD', 'TITLE')
     #Set Twitter Title
         if self.config.getboolean('TWITTER', 'ENABLE'):
-            self.twitter_title = self.icao if self.config.get('TWITTER', 'TITLE') == "icao" else self.callsign if self.config.get('TWITTER', 'TITLE') == "callsign" else self.config.get('TWITTER', 'TITLE')
+            self.twitter_title = title_switch.get(self.config.get('TWITTER', 'TITLE'), "NA") if self.config.get('TWITTER', 'TITLE') in title_switch.keys() else self.config.get('TWITER', 'TITLE')
     #Takeoff and Land Notification
         if self.tookoff or self.landed:
             if self.tookoff:
@@ -328,7 +330,7 @@ class Plane:
             #Twitter
             if self.config.getboolean('TWITTER', 'ENABLE'):
                 twitter_media_map_obj = self.tweet_api.media_upload(self.map_file_name)
-                alt_text = "Call: " + self.callsign + " On Ground: " + str(self.on_ground) + " Alt: " + str(self.geo_alt_ft) + " Last Contact: " + str(time_since_contact) + " Trigger: " + self.trigger_type
+                alt_text = "Call: " + (self.callsign or "NA") + " On Ground: " + str(self.on_ground) + " Alt: " + str(self.geo_alt_ft) + " Last Contact: " + str(time_since_contact) + " Trigger: " + self.trigger_type
                 self.tweet_api.create_media_metadata(media_id= twitter_media_map_obj.media_id, alt_text= alt_text)
                 self.tweet_api.update_status(status = ((self.twitter_title + " " + message).strip()), media_ids=[twitter_media_map_obj.media_id])
                 #self.tweet_api.update_with_media(self.map_file_name, status = (self.twitter_title + " " + tookoff_message).strip())

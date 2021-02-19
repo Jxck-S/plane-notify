@@ -120,13 +120,13 @@ screen -R <name screen whatever you want>
 ### Start Program
 
 ```bash
-python3 NotifyBotMulti.py
+python3 plane-notify
 ```
 
 ### TODO
 
 -   General Cleanup
--   Restructure project to make it proper currently random files because I didn't know how to properly structure a project before.
+-   Restructure project to make it proper currently random files because I didn't know how to properly structure a project before. (in progress)
 -   Add requirments.txt file from pip freeze to create easy dependencies install
 -   On data loss/gain calculate AGL ft above nearest airport and use that altitude instead of just using baro/geo alt from ADS-B which is MSL.
 

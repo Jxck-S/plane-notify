@@ -2,6 +2,8 @@ class Plane:
     def __init__(self, icao, config_path, config):
         """Initializes a plane object from its config file and given icao."""
         self.icao = icao.upper()
+        self.callsign = None
+        self.reg = None
         self.config = config
         self.conf_file_path = config_path
         self.geo_alt_ft = None
@@ -14,7 +16,6 @@ class Plane:
         self.on_ground = None
         self.longitude = None
         self.latitude = None
-        self.callsign = None
         self.takeoff_time = None
         self.map_file_name = icao.upper() + "_map.png"
         self.last_latitude = None
@@ -284,7 +285,7 @@ class Plane:
             self.dis_title = title_switch.get(self.config.get('DISCORD', 'TITLE'), "NA") if self.config.get('DISCORD', 'TITLE') in title_switch.keys() else self.config.get('DISCORD', 'TITLE')
     #Set Twitter Title
         if self.config.getboolean('TWITTER', 'ENABLE'):
-            self.twitter_title = title_switch.get(self.config.get('TWITTER', 'TITLE'), "NA") if self.config.get('TWITTER', 'TITLE') in title_switch.keys() else self.config.get('TWITER', 'TITLE')
+            self.twitter_title = title_switch.get(self.config.get('TWITTER', 'TITLE'), "NA") if self.config.get('TWITTER', 'TITLE') in title_switch.keys() else self.config.get('TWITTER', 'TITLE')
     #Takeoff and Land Notification
         if self.tookoff or self.landed:
             if self.tookoff:
@@ -296,6 +297,7 @@ class Plane:
                     self.landed_time_msg = time.strftime("Apx. flt. time %-H Hours : %-M Mins. ", time.gmtime(self.landed_time))
                 elif platform.system() == "Windows":
                     self.landed_time_msg = time.strftime("Apx. flt. time %#H Hours : %#M Mins. ", time.gmtime(self.landed_time))
+                self.landed_time_msg = self.landed_time_msg.replace("0 Hours : ", "")
                 self.takeoff_time = None
                 self.landed_time = None
             elif self.landed:

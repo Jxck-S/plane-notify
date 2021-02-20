@@ -1,4 +1,4 @@
-def getMap(mapLocation, icao):
+def getMap(mapLocation, file_name):
     import requests
     import configparser
     config = configparser.ConfigParser()
@@ -14,7 +14,6 @@ def getMap(mapLocation, icao):
                                 api_key + "&sensor=false")
 
     # wb mode is stand for write binary mode
-    file_name = icao + "_map.png"
     f = open(file_name, 'wb')
 
     # r.content gives content,

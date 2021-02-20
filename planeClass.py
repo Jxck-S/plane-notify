@@ -6,8 +6,8 @@ class Plane:
         self.reg = None
         self.config = config
         self.conf_file_path = config_path
-        self.geo_alt_ft = None
-        self.last_geo_alt_ft = None
+        self.alt_ft = None
+        self.last_alt_ft = None
         self.below_desired_ft = None
         self.last_below_desired_ft = None
         self.feeding = None
@@ -34,10 +34,15 @@ class Plane:
         #print (Fore.YELLOW + "OpenSky Sourced Data: ", ac_dict)
         try:
             self.__dict__.update({'icao' : ac_dict.icao24.upper(), 'callsign' : ac_dict.callsign, 'latitude' : ac_dict.latitude, 'longitude' : ac_dict.longitude,  'on_ground' : bool(ac_dict.on_ground), 'last_contact' : ac_dict.last_contact})
-            if ac_dict.geo_altitude != None:
-                self.geo_alt_ft = round(float(ac_dict.geo_altitude)  * 3.281)
+            if ac_dict.baro_altitude != None:
+                self.alt_ft = round(float(ac_dict.baro_altitude)  * 3.281)
             elif self.on_ground:
-                self.geo_alt_ft = 0
+                self.alt_ft = 0
+            #Insert newest sqwauk at 0, sqwuak length should be 4 long 0-3
+            self.squawks.insert(0, ac_dict.squawk)
+            #Removes oldest sqwauk index 4 5th sqwauk
+            if len(self.squawks) == 5:
+                self.squawks.pop(4)
         except ValueError as e:
             print("Got data but some data is invalid!")
             print(e)
@@ -52,9 +57,14 @@ class Plane:
         #print (Fore.YELLOW +"ADSBX Sourced Data: ", ac_dict, Style.RESET_ALL)
         try:
             #postime is divided by 1000 to get seconds from milliseconds, from timestamp expects secs.
-            self.__dict__.update({'icao' : ac_dict['icao'], 'callsign' : ac_dict['call'], 'reg' : ac_dict['reg'], 'squawk' : ac_dict['sqk'], 'latitude' : float(ac_dict['lat']), 'longitude' : float(ac_dict['lon']), 'geo_alt_ft' : int(ac_dict['galt']), 'on_ground' : bool(int(ac_dict["gnd"])), 'last_contact' : round(float(ac_dict["postime"])/1000)})
+            self.__dict__.update({'icao' : ac_dict['icao'].upper(), 'callsign' : ac_dict['call'], 'reg' : ac_dict['reg'], 'latitude' : float(ac_dict['lat']), 'longitude' : float(ac_dict['lon']), 'alt_ft' : int(ac_dict['alt']), 'on_ground' : bool(int(ac_dict["gnd"])), 'last_contact' : round(float(ac_dict["postime"])/1000)})
             if self.on_ground:
-                self.geo_alt_ft = 0
+                self.alt_ft = 0
+            #Insert newest sqwauk at 0, sqwuak length should be 4 long 0-3
+            self.squawks.insert(0, ac_dict.get('sqk'))
+            #Removes oldest sqwauk index 4 5th sqwauk
+            if len(self.squawks) == 5:
+                self.squawks.pop(4)
         except ValueError as e:
 
             print("Got data but some data is invalid!")
@@ -72,16 +82,13 @@ class Plane:
         print (Fore.YELLOW +"ADSBX Sourced Data: ", ac_dict, Style.RESET_ALL)
         try:
             self.__dict__.update({'icao' : ac_dict['hex'].upper(), 'reg' : ac_dict['r'],  'latitude' : float(ac_dict['lat']), 'longitude' : float(ac_dict['lon'])})
-            if 'alt_geom' in ac_dict:
-                self.geo_alt_ft = int(ac_dict['alt_geom'])
-            elif 'alt_geom' not in ac_dict and 'alt_baro' in ac_dict:
-                self.geo_alt_ft =int(ac_dict['alt_baro'])
-            self.callsign = ac_dict.get('flight')
-            if ac_dict['alt_baro'] == "ground":
-                self.geo_alt_ft = 0
-                self.on_ground = True
-            elif ac_dict['alt_baro'] != "ground":
+            if ac_dict['alt_baro'] != "ground":
+                self.alt_ft = int(ac_dict['alt_baro'])
                 self.on_ground = False
+            elif ac_dict['alt_baro'] == "ground":
+                self.alt_ft = 0
+                self.on_ground = True
+            self.callsign = ac_dict.get('flight')
             if'nav_modes' in ac_dict:
                 self.nav_modes = ac_dict['nav_modes']
                 for idx, mode in enumerate(self.nav_modes):
@@ -138,8 +145,6 @@ class Plane:
     def run_check(self):
         """Runs a check of a plane module to see if its landed or takenoff using plane data, and takes action if so."""
         #Import Modules
-        #Clear Terminal
-        #print("\033[H\033[J")
         #Ability to Remove old Map
         import os
         import time
@@ -185,14 +190,13 @@ class Plane:
             output = [
             [(Fore.CYAN + "ICAO" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.icao + Style.RESET_ALL)],
             [(Fore.CYAN + "Callsign" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.callsign + Style.RESET_ALL)] if self.callsign != None else None,
-            [(Fore.CYAN + "Reg" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.reg + Style.RESET_ALL)] if "reg" in self.__dict__ else None,
-            #Squawks is current to oldest
+            [(Fore.CYAN + "Reg" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.reg + Style.RESET_ALL)] if self.reg != None else None,
+            #Squawks are latest to oldest
             [(Fore.CYAN + "Squawks" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + ', '.join("NA" if  x == None else x for x in self.squawks) + Style.RESET_ALL)],
-            [(Fore.CYAN + "Latitude" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str(self.latitude) + Style.RESET_ALL)],
-            [(Fore.CYAN + "Longitude" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str(self.longitude) + Style.RESET_ALL)],
+            [(Fore.CYAN + "Coordinates" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str(self.latitude) + ", " + str(self.longitude) + Style.RESET_ALL)],
             [(Fore.CYAN + "Last Contact" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str(time_since_contact).split(".")[0]+ Style.RESET_ALL)],
             [(Fore.CYAN + "On Ground" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str(self.on_ground) + Style.RESET_ALL)],
-            [(Fore.CYAN + "GEO Alitude" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str("{:,} ft".format(self.geo_alt_ft)) + Style.RESET_ALL)],
+            [(Fore.CYAN + "Baro Altitude" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str("{:,} ft".format(self.alt_ft)) + Style.RESET_ALL)],
             [(Fore.CYAN + "Nav Modes" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + ', '.join(self.nav_modes)  + Style.RESET_ALL)] if "nav_modes" in self.__dict__ and self.nav_modes != None else None,
             [(Fore.CYAN + "Sel Alt Ft" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str("{:,} ft".format(self.nav_altitude)) + Style.RESET_ALL)] if "nav_altitude" in self.__dict__ and self.nav_altitude != None else None
             ]
@@ -201,9 +205,9 @@ class Plane:
 
 #Check if below desire ft
         desired_ft = 10000
-        if self.geo_alt_ft is None or self.geo_alt_ft > desired_ft:
+        if self.alt_ft is None or self.alt_ft > desired_ft:
             self.below_desired_ft = False
-        elif self.geo_alt_ft < desired_ft:
+        elif self.alt_ft < desired_ft:
             self.below_desired_ft = True
 #Check if tookoff
         if self.below_desired_ft and self.on_ground is False:
@@ -249,7 +253,7 @@ class Plane:
             print ("Landed by", self.trigger_type)
         if self.tookoff:
             print("Tookoff by", self.trigger_type)
-#Lookup Location of coordinates
+        #Find nearest airport, and location
         if self.landed or self.tookoff:
             if self.trigger_type == "now on ground" or "data acquisition" and self.longitude != None and self.latitude != None:
                 nearest_airport_dict = getClosestAirport(self.latitude, self.longitude, self.config.get("AIRPORT", "TYPES"))
@@ -264,8 +268,8 @@ class Plane:
             if has_coords:
                 #Convert dictionary keys to sep variables
                 country_code = nearest_airport_dict['iso_country']
-                state = nearest_airport_dict['region']
-                municipality = nearest_airport_dict['municipality']
+                state = nearest_airport_dict['region'].strip()
+                municipality = nearest_airport_dict['municipality'].strip()
                 print (Fore.GREEN)
                 print ("Country Code: ", country_code)
                 print ("State: ", state)
@@ -282,10 +286,10 @@ class Plane:
         }
     #Set Discord Title
         if self.config.getboolean('DISCORD', 'ENABLE'):
-            self.dis_title = title_switch.get(self.config.get('DISCORD', 'TITLE'), "NA") if self.config.get('DISCORD', 'TITLE') in title_switch.keys() else self.config.get('DISCORD', 'TITLE')
+            self.dis_title = (title_switch.get(self.config.get('DISCORD', 'TITLE')) or "NA") if self.config.get('DISCORD', 'TITLE') in title_switch.keys() else self.config.get('DISCORD', 'TITLE')
     #Set Twitter Title
         if self.config.getboolean('TWITTER', 'ENABLE'):
-            self.twitter_title = title_switch.get(self.config.get('TWITTER', 'TITLE'), "NA") if self.config.get('TWITTER', 'TITLE') in title_switch.keys() else self.config.get('TWITTER', 'TITLE')
+            self.twitter_title = (title_switch.get(self.config.get('TWITTER', 'TITLE')) or "NA") if self.config.get('TWITTER', 'TITLE') in title_switch.keys() else self.config.get('TWITTER', 'TITLE')
     #Takeoff and Land Notification
         if self.tookoff or self.landed:
             if self.tookoff:
@@ -303,13 +307,13 @@ class Plane:
             elif self.landed:
                 self.landed_time_msg = None
             if has_coords:
-                message = (self.type_header  + ((municipality + ", " + state) if municipality != state else state) + ", " + country_code + ".") + ((" " + self.landed_time_msg) if self.landed_time_msg != None else "")
+                message = (self.type_header  + (((municipality + ", " + state) if municipality != "" else ""  ) if municipality != state else state) + ", " + country_code + ".") + ((" " + self.landed_time_msg) if self.landed_time_msg != None else "")
             else:
                 message = ("Landed" + ((" " + self.landed_time_msg) if self.landed_time_msg != None else "") if self.landed  else "Tookoff" if self.tookoff else "")
             print (message)
             #Google Map or tar1090 screenshot
             if self.config.get('MAP', 'OPTION') == "GOOGLESTATICMAP":
-                getMap((municipality + ", "  + state + ", "  + country_code), self.icao)
+                getMap((municipality + ", "  + state + ", "  + country_code), self.map_file_name)
             elif self.config.get('MAP', 'OPTION') == "ADSBX":
                 getSS(self.icao, self.overlays)
                 if nearest_airport_dict != None:
@@ -332,7 +336,7 @@ class Plane:
             #Twitter
             if self.config.getboolean('TWITTER', 'ENABLE'):
                 twitter_media_map_obj = self.tweet_api.media_upload(self.map_file_name)
-                alt_text = "Call: " + (self.callsign or "NA") + " On Ground: " + str(self.on_ground) + " Alt: " + str(self.geo_alt_ft) + " Last Contact: " + str(time_since_contact) + " Trigger: " + self.trigger_type
+                alt_text = "Call: " + (self.callsign or "NA") + " On Ground: " + str(self.on_ground) + " Alt: " + str(self.alt_ft) + " Last Contact: " + str(time_since_contact) + " Trigger: " + self.trigger_type
                 self.tweet_api.create_media_metadata(media_id= twitter_media_map_obj.media_id, alt_text= alt_text)
                 self.tweet_api.update_status(status = ((self.twitter_title + " " + message).strip()), media_ids=[twitter_media_map_obj.media_id])
                 #self.tweet_api.update_with_media(self.map_file_name, status = (self.twitter_title + " " + tookoff_message).strip())
@@ -346,8 +350,8 @@ class Plane:
                     squawk_message = ("Squawking " + squawk[0] + ", " + squawk[1])
                     print(squawk_message)
                     #Google Map or tar1090 screenshot
-                    # if self.config.get('MAP', 'OPTION') == "GOOGLESTATICMAP":
-                    #     getMap((aera_hierarchy + ", "  + state + ", "  + country_code), self.icao)
+                    if self.config.get('MAP', 'OPTION') == "GOOGLESTATICMAP":
+                        getMap((municipality + ", "  + state + ", "  + country_code), self.map_file_name)
                     if self.config.get('MAP', 'OPTION') == "ADSBX":
                         getSS(self.icao, self.overlays)
                     #Discord
@@ -367,14 +371,14 @@ class Plane:
                                 getSS(self.icao, self.overlays)
                                 sendDis(dis_message, self.config, self.map_file_name)
                             elif mode == "Althold" and self.nav_altitude != None:
-                                sendDis((dis_message + ", Sel Alt. " + str(self.nav_altitude) + ", Current Alt. " + str(self.geo_alt_ft)), self.config)
+                                sendDis((dis_message + ", Sel Alt. " + str(self.nav_altitude) + ", Current Alt. " + str(self.alt_ft)), self.config)
                             else:
                                 sendDis(dis_message, self.config)
 
 
 #Set Variables to compare to next check
         self.last_feeding = self.feeding
-        self.last_geo_alt_ft = self.geo_alt_ft
+        self.last_alt_ft = self.alt_ft
         self.last_on_ground = self.on_ground
         self.last_below_desired_ft = self.below_desired_ft
         self.last_longitude = self.longitude

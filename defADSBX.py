@@ -18,12 +18,12 @@ def pullADSBX(planes):
         elif api_version == 2:
             url = "https://adsbexchange.com/api/aircraft/v2/all"
         else:
-            raise Exception("No API Version set")
+            raise ValueError("No API Version set")
     else:
         if main_config.has_option('ADSBX', 'PROXY_HOST'):
             url = "http://" + main_config.get('ADSBX', 'PROXY_HOST') + ":8000/api/aircraft/v2/all"
         else:
-            raise BaseException("Proxy enabled but no host")
+            raise ValueError("Proxy enabled but no host")
 
     headers = {
                 'api-auth': main_config.get('ADSBX', 'API_KEY'),
@@ -37,7 +37,7 @@ def pullADSBX(planes):
         print(error_message)
         failed = True
         data = None
-    except (IncompleteRead, http.IncompleteRead, ConnectionResetError, urllib3.exceptions.ProtocolError, ValueError) as error_message:
+    except (IncompleteRead, ConnectionResetError, urllib3.Exceptions, ValueError) as error_message:
         print("Connection Error")
         print(error_message)
         failed = True
@@ -72,7 +72,7 @@ def pullADSBX(planes):
     if failed is False:
         try:
             if data['msg'] != "No error":
-                raise Exception("Error from ADSBX: msg = ", data['msg'])
+                raise ValueError("Error from ADSBX: msg = ", data['msg'])
                 failed = True
         except KeyError:
             pass

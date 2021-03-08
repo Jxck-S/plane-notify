@@ -35,9 +35,8 @@ main_config = configparser.ConfigParser()
 main_config.read('./configs/mainconf.ini')
 source = main_config.get('DATA', 'SOURCE')
 if main_config.getboolean('DISCORD', 'ENABLE'):
-    from discord_webhook import DiscordWebhook
-    webhook = DiscordWebhook(url= main_config.get('DISCORD', 'URL'), content=(str("Started")))
-    webhook.execute()
+        from defDiscord import sendDis
+        sendDis("Started", main_config)
 try:
     print("Source is set to", source)
     import sys
@@ -75,7 +74,7 @@ try:
             elif api_version == 1:
                 icao_key = 'icao'
             else:
-                raise Exception("Invalid API Version")
+                raise ValueError("Invalid API Version")
             from defADSBX import pullADSBX
             data, failed = pullADSBX(planes)
             if failed == False:
@@ -124,8 +123,8 @@ try:
                 source = "OPENS"
             failed_count = 0
             if main_config.getboolean('DISCORD', 'ENABLE'):
-                webhook = DiscordWebhook(url= main_config.get('DISCORD', 'URL'), content=(str("Failed over to " + source)))
-                webhook.execute()
+                from defDiscord import sendDis
+                sendDis(str("Failed over to " + source), main_config)
         elapsed_calc_time = time.time() - start_time
         datetime_tz = datetime.now(tz)
         footer = "-------- " + str(running_Count) + " -------- " + str(datetime_tz.strftime("%I:%M:%S %p")) + " ------------------------Elapsed Time- " + str(round(elapsed_calc_time, 3)) + " -------------------------------------"
@@ -145,11 +144,10 @@ try:
 except KeyboardInterrupt as e:
     print(e)
     if main_config.getboolean('DISCORD', 'ENABLE'):
-        webhook = DiscordWebhook(url= main_config.get('DISCORD', 'URL'), content=(str("Manual Exit: " + str(e) )))
-        webhook.execute()
-except BaseException as e:
-    print(e)
-    print(traceback.format_exc())
+        from defDiscord import sendDis
+        sendDis(str("Manual Exit: " + str(e)), main_config)
+except Exception as e:
     if main_config.getboolean('DISCORD', 'ENABLE'):
-        webhook = DiscordWebhook(url= main_config.get('DISCORD', 'URL'), content=(str("Error Exiting: " + str(e) )))
-        webhook.execute()
+        from defDiscord import sendDis
+        sendDis(str("Error Exiting: " + str(traceback.format_exc())), main_config)
+    raise e

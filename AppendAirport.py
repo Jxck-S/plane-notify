@@ -1,5 +1,8 @@
-def append_airport(filename, icao, airport, distance_mi):
+def append_airport(filename, airport):
 	from PIL import Image, ImageDraw, ImageFont
+	distance_mi = airport['distance_mi']
+	icao = airport['icao']
+	iata = airport['iata_code']
 	distance_km = distance_mi * 1.609
 
 	# create Image object with the input image
@@ -38,9 +41,9 @@ def append_airport(filename, icao, airport, distance_mi):
 	(x, y) = (408, 740)
 	text = "Nearest Airport"
 	draw.text((x, y), text, fill=white, font=head_font)
-	#ICAO
+	#ICAO | IATA
 	(x, y) = (320, 765)
-	text = icao
+	text = iata + " / " + icao
 	draw.text((x, y), text, fill=black, font=font)
 	#Distance
 	(x, y) = (432, 765)
@@ -48,7 +51,7 @@ def append_airport(filename, icao, airport, distance_mi):
 	draw.text((x, y), text, fill=black, font=font)
 	#Full name
 	(x, y) = (320, 783)
-	text = airport[0:56]
+	text = airport['name'][0:56]
 	draw.text((x, y), text, fill=black, font=mini_font)
 	image.show()
 	# save the edited image

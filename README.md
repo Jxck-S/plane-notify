@@ -128,6 +128,6 @@ python3 plane-notify
 -   General Cleanup
 -   Restructure project to make it proper currently random files because I didn't know how to properly structure a project before. (in progress)
 -   Add requirments.txt file from pip freeze to create easy dependencies install
--   On data loss/gain calculate AGL ft above nearest airport and use that altitude instead of just using baro/geo alt from ADS-B which is MSL.
+-   Add proper logging and service to run the program and remove excessive printing.
 
 ### [More Refrences/Documentation](Refrences.md)

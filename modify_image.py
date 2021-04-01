@@ -12,7 +12,7 @@ def append_airport(filename, airport):
 	draw = ImageDraw.Draw(image)
 
 	#Setup fonts
-	fontfile = "Roboto-Regular.ttf"
+	fontfile = "./dependencies/Roboto-Regular.ttf"
 	font = ImageFont.truetype(fontfile, 14)
 	mini_font = ImageFont.truetype(fontfile, 12)
 	head_font = ImageFont.truetype(fontfile, 16)
@@ -23,13 +23,12 @@ def append_airport(filename, airport):
 	navish = 'rgb(0, 63, 75)'
 	whitish = 'rgb(248, 248, 248)'
 	#Info Box
-	draw.rectangle(((316, 760), (605, 800)), fill= white, outline=black)
+	draw.rectangle(((325, 760), (624, 800)), fill= white, outline=black)
 	#Header Box
-	draw.rectangle(((387, 738), (535, 760)), fill= navish)
+	draw.rectangle(((401, 738), (549, 760)), fill= navish)
 	#ADSBX Logo
-	draw.rectangle(((658, 760), (800, 780)), fill= white)
-	import requests
-	adsbx = Image.open(requests.get("https://www.adsbexchange.com/wp-content/uploads/cropped-Stealth-48px.png", stream=True).raw)
+	draw.rectangle(((658, 762), (800, 782)), fill= white)
+	adsbx = Image.open("./dependencies/ADSBX_Logo.png")
 	adsbx = adsbx.resize((25, 25), Image.ANTIALIAS)
 	image.paste(adsbx, (632, 757), adsbx)
 	#Create Text
@@ -38,20 +37,32 @@ def append_airport(filename, airport):
 	text = "adsbexchange.com"
 	draw.text((x, y), text, fill=black, font=head_font)
 	#Nearest Airport Header
-	(x, y) = (408, 740)
+	(x, y) = (422, 740)
 	text = "Nearest Airport"
 	draw.text((x, y), text, fill=white, font=head_font)
 	#ICAO | IATA
-	(x, y) = (320, 765)
+	(x, y) = (330, 765)
 	text = iata + " / " + icao
 	draw.text((x, y), text, fill=black, font=font)
 	#Distance
-	(x, y) = (432, 765)
+	(x, y) = (460, 765)
 	text = str(round(distance_mi, 2)) + "mi / " + str(round(distance_km, 2)) + "km away"
 	draw.text((x, y), text, fill=black, font=font)
 	#Full name
-	(x, y) = (320, 783)
-	text = airport['name'][0:56]
+	(x, y) = (330, 783)
+	MAX_WIDTH = 325
+	if font.getsize(airport['name'])[0] <= MAX_WIDTH:
+		text = airport['name']
+	else:
+		text = ""
+		for char in airport['name']:
+			if font.getsize(text)[0] >= (MAX_WIDTH - 10):
+				text += "..."
+				break
+			else:
+				text += char
+
+
 	draw.text((x, y), text, fill=black, font=mini_font)
 	image.show()
 	# save the edited image

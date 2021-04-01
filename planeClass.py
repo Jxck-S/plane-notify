@@ -17,7 +17,8 @@ class Plane:
         self.longitude = None
         self.latitude = None
         self.takeoff_time = None
-        self.map_file_name = icao.upper() + "_map.png"
+        import tempfile
+        self.map_file_name = f"{tempfile.gettempdir()}\\{icao.upper()}_map.png"
         self.last_latitude = None
         self.last_longitude = None
         self.last_contact = None
@@ -28,6 +29,8 @@ class Plane:
         self.recheck_to = None
         self.speed = None
         self.nearest_airport_dict = None
+        self.acas_ra = None
+        self.last_acas_ra = None
         #Setup Tweepy
         if self.config.getboolean('TWITTER', 'ENABLE'):
             from defTweet import tweepysetup
@@ -37,9 +40,7 @@ class Plane:
             from pushbullet import Pushbullet
             self.pb = Pushbullet(self.config['PUSHBULLET']['API_KEY'])
             self.pb_channel = self.pb.get_channel(self.config.get('PUSHBULLET', 'CHANNEL_TAG'))
-    def getICAO(self):
-        return self.icao
-    def run_OPENS(self, ac_dict):
+    def run_opens(self, ac_dict):
         #Parse OpenSky Vector
         from colorama import Fore, Back, Style
         self.printheader("head")
@@ -62,7 +63,7 @@ class Plane:
         else:
             self.feeding = True
             self.run_check()
-    def run_ADSBXv1(self, ac_dict):
+    def run_adsbx_v1(self, ac_dict):
         #Parse ADBSX V1 Vector
         from colorama import Fore, Back, Style
         self.printheader("head")
@@ -87,13 +88,17 @@ class Plane:
             self.feeding = True
             self.run_check()
 
-    def run_ADSBXv2(self, ac_dict):
+    def run_adsbx_v2(self, ac_dict):
         #Parse ADBSX V2 Vector
         from colorama import Fore, Back, Style
         self.printheader("head")
         print (Fore.YELLOW +"ADSBX Sourced Data: ", ac_dict, Style.RESET_ALL)
         try:
-            self.__dict__.update({'icao' : ac_dict['hex'].upper(), 'reg' : ac_dict['r'],  'latitude' : float(ac_dict['lat']), 'longitude' : float(ac_dict['lon']), 'type' : ac_dict['t'], 'speed': ac_dict['gs']})
+            self.__dict__.update({'icao' : ac_dict['hex'].upper(), 'latitude' : float(ac_dict['lat']), 'longitude' : float(ac_dict['lon']), 'speed': ac_dict['gs']})
+            if "r" in ac_dict:
+                self.reg = ac_dict['r']
+            if "t" in ac_dict:
+                self.type = ac_dict['t']
             if ac_dict['alt_baro'] != "ground":
                 self.alt_ft = int(ac_dict['alt_baro'])
                 self.on_ground = False
@@ -101,13 +106,17 @@ class Plane:
                 self.alt_ft = 0
                 self.on_ground = True
             self.callsign = ac_dict.get('flight')
-            if'nav_modes' in ac_dict:
+            if 'nav_modes' in ac_dict:
                 self.nav_modes = ac_dict['nav_modes']
                 for idx, mode in enumerate(self.nav_modes):
                     if mode.upper() in ['TCAS', 'LNAV', 'VNAV']:
                         self.nav_modes[idx] = self.nav_modes[idx].upper()
                     else:
                         self.nav_modes[idx] = self.nav_modes[idx].capitalize()
+            if 'acas_ra_csvline' in ac_dict:
+                self.acas_ra = ac_dict['acas_ra_csvline']
+            else:
+                self.acas_ra = None
             #Insert newest sqwauk at 0, sqwuak length should be 4 long 0-3
             self.squawks.insert(0, ac_dict.get('squawk'))
             #Removes oldest sqwauk index 4 5th sqwauk
@@ -167,11 +176,11 @@ class Plane:
         #Platform for determining OS for strftime
         import platform
         from tabulate import tabulate
-        from AppendAirport import append_airport
+        from modify_image import append_airport
         from defAirport import getClosestAirport
 
         #Propritary
-        ENABLE_ROUTE_LOOKUP = False
+        ENABLE_ROUTE_LOOKUP = True
         if ENABLE_ROUTE_LOOKUP:
             from lookup_route import lookup_route
         else:
@@ -234,7 +243,6 @@ class Plane:
                 alt_above_airport = (self.alt_ft - int(nearest_airport_dict['elevation_ft']))
                 print(f"AGL nearest airport: {alt_above_airport}")
                 if alt_above_airport <= 10000:
-                    self.nearest_airport_dict = nearest_airport_dict
                     self.tookoff = True
                     self.trigger_type = "data acquisition"
                     type_header = "Took off near"
@@ -251,19 +259,21 @@ class Plane:
             self.landing_plausible = False
         #Set status for landing plausible
         elif self.below_desired_ft and self.last_feeding and self.feeding is False and self.last_on_ground is False:
+            self.landing_plausible = True
+            print("Near landing conditions, if contiuned data loss for 5 mins, and  if under 10k AGL landing true")
+
+        elif self.landing_plausible and self.feeding is False and time_since_contact.seconds >= 300:
             nearest_airport_dict = getClosestAirport(self.latitude, self.longitude, self.config.get("AIRPORT", "TYPES"))
             alt_above_airport = (self.alt_ft - int(nearest_airport_dict['elevation_ft']))
             print(f"AGL nearest airport: {alt_above_airport}")
             if alt_above_airport <= 10000:
-                self.landing_plausible = True
-                self.nearest_airport_dict = nearest_airport_dict
-                print("Near landing conditions, if contiuned data loss for 5 mins, landing true")
-
-        elif self.landing_plausible and self.feeding is False and time_since_contact.seconds >= 300:
-            self.landing_plausible = False
-            self.landed = True
-            self.trigger_type = "data loss"
-            type_header = "Landed near"
+                self.landing_plausible = False
+                self.landed = True
+                self.trigger_type = "data loss"
+                type_header = "Landed near"
+            else:
+                print("Alt greater then 10k AGL")
+                self.landing_plausible = False
         else:
             self.landed = False
 
@@ -273,9 +283,8 @@ class Plane:
             print("Tookoff by", self.trigger_type)
         #Find nearest airport, and location
         if self.landed or self.tookoff:
-            if self.nearest_airport_dict != None:
-                nearest_airport_dict = self.nearest_airport_dict
-                self.nearest_airport_dict = None
+            if "nearest_airport_dict" in globals():
+                pass #Airport already set
             elif self.trigger_type in ["now on ground", "data acquisition", "data loss"]:
                 nearest_airport_dict = getClosestAirport(self.latitude, self.longitude, self.config.get("AIRPORT", "TYPES"))
             elif self.trigger_type == "no longer on ground":
@@ -292,8 +301,8 @@ class Plane:
                 else:
                     area = ""
             else:
-                area = f"{municipality}, {state}, "
-            location_string = (area + country_code)
+                area = f"{municipality}, {state}"
+            location_string = (f"{area}, {country_code}")
             print (Fore.GREEN)
             print ("Country Code: ", country_code)
             print ("State: ", state)
@@ -338,7 +347,7 @@ class Plane:
             if self.config.get('MAP', 'OPTION') == "GOOGLESTATICMAP":
                 getMap((municipality + ", "  + state + ", "  + country_code), self.map_file_name)
             elif self.config.get('MAP', 'OPTION') == "ADSBX":
-                getSS(self.icao, self.overlays)
+                getSS(self.icao, self.map_file_name, self.overlays)
                 append_airport(self.map_file_name, nearest_airport_dict)
                 #airport_string = nearest_airport_dict['icao'] + ", " + nearest_airport_dict["name"]
             else:
@@ -384,7 +393,7 @@ class Plane:
                     if self.config.get('MAP', 'OPTION') == "GOOGLESTATICMAP":
                         getMap((municipality + ", "  + state + ", "  + country_code), self.map_file_name)
                     if self.config.get('MAP', 'OPTION') == "ADSBX":
-                        getSS(self.icao, self.overlays)
+                        getSS(self.icao, self.map_file_name, self.overlays)
                     #Discord
                     if self.config.getboolean('DISCORD', 'ENABLE'):
                         dis_message =  (self.dis_title + " "  + squawk_message)
@@ -399,20 +408,26 @@ class Plane:
                         if self.config.getboolean('DISCORD', 'ENABLE'):
                             dis_message =  (self.dis_title + " "  + mode + " mode enabled.")
                             if mode == "Approach":
-                                getSS(self.icao, self.overlays)
+                                getSS(self.icao, self.map_file_name, self.overlays)
                                 sendDis(dis_message, self.config, self.map_file_name)
                             elif mode == "Althold" and self.nav_altitude != None:
                                 sendDis((dis_message + ", Sel Alt. " + str(self.nav_altitude) + ", Current Alt. " + str(self.alt_ft)), self.config)
                             else:
                                 sendDis(dis_message, self.config)
-            #Power Up
-            if self.last_feeding == False and self.speed == 0 and self.on_ground:
+            # #Power Up
+            # if self.last_feeding == False and self.speed == 0 and self.on_ground:
+            #     if self.config.getboolean('DISCORD', 'ENABLE'):
+            #         dis_message = (self.dis_title + "Powered Up").strip()
+            #         sendDis(dis_message, self.config)
+            #TCAS/ACAS
+            if self.acas_ra != None and self.last_acas_ra != self.acas_ra:
                 if self.config.getboolean('DISCORD', 'ENABLE'):
-                    dis_message = (self.dis_title + "Powered Up").strip()
+                    dis_message = f"{self.dis_title} {self.acas_ra}"
                     sendDis(dis_message, self.config)
 
 
 #Set Variables to compare to next check
+        self.last_acas_ra = self.acas_ra
         self.last_feeding = self.feeding
         self.last_alt_ft = self.alt_ft
         self.last_on_ground = self.on_ground

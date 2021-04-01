@@ -1,4 +1,4 @@
-def pullOpenSky(planes):
+def pull_opensky(planes):
     import configparser
     main_config = configparser.ConfigParser()
     main_config.read('./configs/mainconf.ini')

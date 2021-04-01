@@ -12,24 +12,26 @@ import pytz
 import os
 if 'plane-notify' not in os.getcwd():
     os.chdir('./plane-notify')
+if not os.path.isdir("./dependencies/"):
+    os.mkdir("./dependencies/")
 import sys
 sys.path.extend([os.getcwd()])
-required_files = [("Roboto-Regular.ttf", 'https://github.com/google/fonts/raw/master/apache/roboto/static/Roboto-Regular.ttf'), ('airports.csv', 'https://ourairports.com/data/airports.csv'), ('regions.csv', 'https://ourairports.com/data/regions.csv')]
+required_files = [("Roboto-Regular.ttf", 'https://github.com/googlefonts/roboto/blob/main/src/hinted/Roboto-Regular.ttf?raw=true'), ('airports.csv', 'https://ourairports.com/data/airports.csv'), ('regions.csv', 'https://ourairports.com/data/regions.csv'), ('ADSBX_Logo.png', "https://www.adsbexchange.com/wp-content/uploads/cropped-Stealth.png")]
 for file in required_files:
 	file_name = file[0]
 	url = file[1]
-	if not os.path.isfile(file_name):
+	if not os.path.isfile("./dependencies/" + file_name):
 		print(file_name,  "does not exist downloading now")
 		try:
 			import requests
 			file_content = requests.get(url)
 
-			open(file_name, 'wb').write(file_content.content)
-		except:
-			raise("Error getting", file_name, "from", url)
+			open(("./dependencies/" + file_name), 'wb').write(file_content.content)
+		except Exception as e:
+			raise e("Error getting", file_name, "from", url)
 		else:
 			print("Successfully got", file_name)
-	elif os.path.isfile(file_name):
+	else:
 		print("Already have", file_name, "continuing")
 main_config = configparser.ConfigParser()
 main_config.read('./configs/mainconf.ini')
@@ -75,8 +77,8 @@ try:
                 icao_key = 'icao'
             else:
                 raise ValueError("Invalid API Version")
-            from defADSBX import pullADSBX
-            data, failed = pullADSBX(planes)
+            from defADSBX import pull_adsbx
+            data, failed = pull_adsbx(planes)
             if failed == False:
                 if data['ac'] != None:
                     for key, obj in planes.items():
@@ -84,9 +86,9 @@ try:
                         for planeData in data['ac']:
                             if planeData[icao_key].upper() == key:
                                 if api_version == 1:
-                                    obj.run_ADSBXv1(planeData)
+                                    obj.run_adsbx_v1(planeData)
                                 elif api_version == 2:
-                                    obj.run_ADSBXv2(planeData)
+                                    obj.run_adsbx_v2(planeData)
                                 has_data = True
                                 break
                         if has_data is False:
@@ -97,8 +99,8 @@ try:
             elif failed:
                 failed_count += 1
         elif source == "OPENS":
-            from defOpenSky import pullOpenSky
-            planeData, failed = pullOpenSky(planes)
+            from defOpenSky import pull_opensky
+            planeData, failed = pull_opensky(planes)
             if failed == False:
                 if planeData.states != []:
                     #   print(planeData.time)
@@ -106,7 +108,7 @@ try:
                         has_data = False
                         for dataState in planeData.states:
                             if (dataState.icao24).upper() == key:
-                                obj.run_OPENS(dataState)
+                                obj.run_opens(dataState)
                                 has_data = True
                                 break
                         if has_data is False:

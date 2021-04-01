@@ -7,9 +7,12 @@ import http.client as http
 import urllib3
 main_config = configparser.ConfigParser()
 main_config.read('./configs/mainconf.ini')
-def pullADSBX(planes):
+api_version = main_config.get('ADSBX', 'API_VERSION')
+def pull_adsbx(planes):
+    api_version = int(main_config.get('ADSBX', 'API_VERSION'))
+    if api_version not in [1, 2]:
+        raise ValueError("Bad ADSBX API Version")
     if main_config.getboolean('ADSBX', 'ENABLE_PROXY') is False:
-        api_version = int(main_config.get('ADSBX', 'API_VERSION'))
         if api_version ==  1:
             if len(planes) > 1:
                         url = "https://adsbexchange.com/api/aircraft/json/"
@@ -17,14 +20,17 @@ def pullADSBX(planes):
                         url = "https://adsbexchange.com/api/aircraft/icao/" +    str(list(planes.keys())[0]) + "/"
         elif api_version == 2:
             url = "https://adsbexchange.com/api/aircraft/v2/all"
-        else:
-            raise ValueError("No API Version set")
     else:
         if main_config.has_option('ADSBX', 'PROXY_HOST'):
-            url = "http://" + main_config.get('ADSBX', 'PROXY_HOST') + ":8000/api/aircraft/v2/all"
+            if api_version ==  1:
+                url = main_config.get('ADSBX', 'PROXY_HOST') + "/api/aircraft/json/all"
+            if api_version ==  2:
+                url = main_config.get('ADSBX', 'PROXY_HOST') + "/api/aircraft/v2/all"
         else:
             raise ValueError("Proxy enabled but no host")
+    return pull(url)
 
+def pull(url):
     headers = {
                 'api-auth': main_config.get('ADSBX', 'API_KEY'),
                 'Accept-Encoding': 'gzip'
@@ -32,12 +38,12 @@ def pullADSBX(planes):
     try:
         response = requests.get(url, headers = headers)
         response.raise_for_status()
-    except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError, requests.exceptions.Timeout, requests.exceptions.RequestException) as error_message:
+    except (requests.HTTPError, ConnectionError, requests.Timeout,  urllib3.exceptions.ConnectionError) as error_message:
         print("Basic Connection Error")
         print(error_message)
         failed = True
         data = None
-    except (IncompleteRead, ConnectionResetError, urllib3.Exceptions, ValueError) as error_message:
+    except (requests.RequestException, IncompleteRead, ValueError, socket.timeout, socket.gaierror) as error_message:
         print("Connection Error")
         print(error_message)
         failed = True
@@ -73,10 +79,13 @@ def pullADSBX(planes):
         try:
             if data['msg'] != "No error":
                 raise ValueError("Error from ADSBX: msg = ", data['msg'])
-                failed = True
         except KeyError:
             pass
-        data_ctime = float(data['ctime']) / 1000.0
-        print("UTC of Data:",datetime.utcfromtimestamp(data_ctime))
+        if "ctime" in data.keys():
+            data_ctime = float(data['ctime']) / 1000.0
+            print("Data ctime:",datetime.utcfromtimestamp(data_ctime))
+        if "now" in data.keys():
+            data_now = float(data['now']) / 1000.0
+            print("Data now time:",datetime.utcfromtimestamp(data_now))
         print("Current UTC:", datetime.utcnow())
     return data, failed

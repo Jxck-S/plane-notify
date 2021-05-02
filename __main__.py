@@ -6,17 +6,29 @@ import traceback
 if platform.system() == "Windows":
     from colorama import init
     init(convert=True)
+elif platform.system() == "Linux":
+    pid_file_path = "/var/run/plane-notify/plane-notify.pid"
+    def write_pid_file(filepath):
+        import os
+        pid = str(os.getpid())
+        f = open(filepath, 'w')
+        f.write(pid)
+        f.close()
+    write_pid_file(pid_file_path)
+    print("Made PIDFile")
 from planeClass import Plane
 from datetime import datetime
 import pytz
 import os
-if 'plane-notify' not in os.getcwd():
-    os.chdir('./plane-notify')
+import signal
+abspath = os.path.abspath(__file__)
+dname = os.path.dirname(abspath)
+os.chdir(dname)
 if not os.path.isdir("./dependencies/"):
     os.mkdir("./dependencies/")
 import sys
 sys.path.extend([os.getcwd()])
-required_files = [("Roboto-Regular.ttf", 'https://github.com/googlefonts/roboto/blob/main/src/hinted/Roboto-Regular.ttf?raw=true'), ('airports.csv', 'https://ourairports.com/data/airports.csv'), ('regions.csv', 'https://ourairports.com/data/regions.csv'), ('ADSBX_Logo.png', "https://www.adsbexchange.com/wp-content/uploads/cropped-Stealth.png")]
+required_files = [("Roboto-Regular.ttf", 'https://github.com/googlefonts/roboto/blob/main/src/hinted/Roboto-Regular.ttf?raw=true'), ('airports.csv', 'https://ourairports.com/data/airports.csv'), ('regions.csv', 'https://ourairports.com/data/regions.csv'), ('ADSBX_Logo.png', "https://www.adsbexchange.com/wp-content/uploads/cropped-Stealth.png"), ('Mictronics_db.zip', "https://www.mictronics.de/aircraft-database/indexedDB.php")]
 for file in required_files:
 	file_name = file[0]
 	url = file[1]
@@ -33,12 +45,26 @@ for file in required_files:
 			print("Successfully got", file_name)
 	else:
 		print("Already have", file_name, "continuing")
+if os.path.isfile("./dependencies/" + required_files[4][0]) and not os.path.isfile("./dependencies/aircrafts.json"):
+    print("Extracting Mictronics DB")
+    from zipfile import ZipFile
+    with ZipFile("./dependencies/" + required_files[4][0], 'r') as mictronics_db:
+        mictronics_db.extractall("./dependencies/")
 main_config = configparser.ConfigParser()
+print(os.getcwd())
 main_config.read('./configs/mainconf.ini')
 source = main_config.get('DATA', 'SOURCE')
 if main_config.getboolean('DISCORD', 'ENABLE'):
         from defDiscord import sendDis
         sendDis("Started", main_config)
+def service_exit(signum, frame):
+    if main_config.getboolean('DISCORD', 'ENABLE'):
+        from defDiscord import sendDis
+        sendDis("Service Stop", main_config)
+    os.remove(pid_file_path)
+    raise SystemExit("Service Stop")
+signal.signal(signal.SIGTERM, service_exit)
+
 try:
     print("Source is set to", source)
     import sys
@@ -60,7 +86,7 @@ try:
         tz = pytz.timezone(main_config.get('DATA', 'TZ'))
     except pytz.exceptions.UnknownTimeZoneError:
         tz = pytz.UTC
-
+    last_ra_count = None
     while True:
         datetime_tz = datetime.now(tz)
         if datetime_tz.hour == 0 and datetime_tz.minute == 0:
@@ -70,6 +96,38 @@ try:
         header = ("-------- " + str(running_Count) + " -------- " + str(datetime_tz.strftime("%I:%M:%S %p")) + " ---------------------------------------------------------------------------")
         print (Back.GREEN +  Fore.BLACK + header[0:100] + Style.RESET_ALL)
         if source == "ADSBX":
+            #ACAS data
+            from defADSBX import pull_date_ras
+            import ast
+            today = datetime.utcnow()
+            date = today.strftime("%Y/%m/%d")
+            ras, failed = pull_date_ras(date)
+            sorted_ras = {}
+            if failed is False and ras != None:
+                #Testing RAs
+                #if last_ra_count is not None:
+                #    with open('./testing/acastest.json') as f:
+                #        data = f.readlines()
+                #    ras += data
+                ra_count = len(ras)
+                if last_ra_count is not None and ra_count != last_ra_count:
+                    print(abs(ra_count - last_ra_count), "new Resolution Advisories")
+                    for ra_num, ra in enumerate(ras[last_ra_count:]):
+                        ra = ast.literal_eval(ra)
+                        if ra['hex'].upper() in planes.keys():
+                            if ra['hex'].upper() not in sorted_ras.keys():
+                                sorted_ras[ra['hex'].upper()] = [ra]
+                            else:
+                                sorted_ras[ra['hex'].upper()].append(ra)
+                else:
+                    print("No new Resolution Advisories")
+                last_ra_count = ra_count
+            for key, obj in planes.items():
+                if sorted_ras != {} and key in sorted_ras.keys():
+                        print(key, "has", len(sorted_ras[key]), "RAs")
+                        obj.check_new_ras(sorted_ras[key])
+                obj.expire_ra_types()
+            #Normal API data
             api_version = int(main_config.get('ADSBX', 'API_VERSION'))
             if api_version == 2:
                 icao_key = 'hex'
@@ -152,4 +210,10 @@ except Exception as e:
     if main_config.getboolean('DISCORD', 'ENABLE'):
         from defDiscord import sendDis
         sendDis(str("Error Exiting: " + str(traceback.format_exc())), main_config)
+        import logging
+        logging.basicConfig(filename='crash.log', filemode='a', format='%(asctime)s - %(message)s')
+        logging.error(e)
     raise e
+finally:
+    if platform.system() == "Linux":
+        os.remove(pid_file_path)

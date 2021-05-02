@@ -5,6 +5,7 @@ from datetime import datetime
 from http.client import IncompleteRead
 import http.client as http
 import urllib3
+import socket
 main_config = configparser.ConfigParser()
 main_config.read('./configs/mainconf.ini')
 api_version = main_config.get('ADSBX', 'API_VERSION')
@@ -88,4 +89,37 @@ def pull(url):
             data_now = float(data['now']) / 1000.0
             print("Data now time:",datetime.utcfromtimestamp(data_now))
         print("Current UTC:", datetime.utcnow())
+    return data, failed
+def pull_date_ras(date):
+    url = f"https://globe.adsbexchange.com/globe_history/{date}/acas/acas.json"
+    headers = {
+                'Accept-Encoding': 'gzip'
+    }
+    try:
+        response = requests.get(url, headers = headers)
+        response.raise_for_status()
+    except (requests.HTTPError, ConnectionError, requests.Timeout,  urllib3.exceptions.ConnectionError) as error_message:
+        print("Basic Connection Error")
+        print(error_message)
+        failed = True
+        data = None
+    except (requests.RequestException, IncompleteRead, ValueError, socket.timeout, socket.gaierror) as error_message:
+        print("Connection Error")
+        print(error_message)
+        failed = True
+        data = None
+    except Exception as error_message:
+        print("Connection Error uncaught, basic exception for all")
+        print(error_message)
+        failed = True
+        data = None
+    else:
+        if "response" in locals() and response.status_code == 200:
+            failed = False
+            data = response.text.splitlines()
+        else:
+            failed = True
+            data = None
+    if "response" in locals():
+        print ("HTTP Status Code:", response.status_code)
     return data, failed

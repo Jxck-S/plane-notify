@@ -29,8 +29,7 @@ class Plane:
         self.recheck_to = None
         self.speed = None
         self.nearest_airport_dict = None
-        self.acas_ra = None
-        self.last_acas_ra = None
+        self.recent_ra_types = {}
         #Setup Tweepy
         if self.config.getboolean('TWITTER', 'ENABLE'):
             from defTweet import tweepysetup
@@ -92,7 +91,6 @@ class Plane:
         #Parse ADBSX V2 Vector
         from colorama import Fore, Back, Style
         self.printheader("head")
-        print (Fore.YELLOW +"ADSBX Sourced Data: ", ac_dict, Style.RESET_ALL)
         try:
             self.__dict__.update({'icao' : ac_dict['hex'].upper(), 'latitude' : float(ac_dict['lat']), 'longitude' : float(ac_dict['lon']), 'speed': ac_dict['gs']})
             if "r" in ac_dict:
@@ -113,10 +111,6 @@ class Plane:
                         self.nav_modes[idx] = self.nav_modes[idx].upper()
                     else:
                         self.nav_modes[idx] = self.nav_modes[idx].capitalize()
-            if 'acas_ra_csvline' in ac_dict:
-                self.acas_ra = ac_dict['acas_ra_csvline']
-            else:
-                self.acas_ra = None
             #Insert newest sqwauk at 0, sqwuak length should be 4 long 0-3
             self.squawks.insert(0, ac_dict.get('squawk'))
             #Removes oldest sqwauk index 4 5th sqwauk
@@ -190,7 +184,7 @@ class Plane:
         if self.config.get('MAP', 'OPTION') == "GOOGLESTATICMAP":
             from defMap import getMap
         elif self.config.get('MAP', 'OPTION') == "ADSBX":
-            from defSS import getSS
+            from defSS import get_adsbx_screenshot, generate_adsbx_overlay_param
             if self.config.has_option('MAP', 'OVERLAYS'):
                 self.overlays = self.config.get('MAP', 'OVERLAYS')
             else:
@@ -240,9 +234,12 @@ class Plane:
                 type_header = "Took off from"
             elif self.last_feeding is False and self.feeding and self.landing_plausible == False:
                 nearest_airport_dict = getClosestAirport(self.latitude, self.longitude, self.config.get("AIRPORT", "TYPES"))
-                alt_above_airport = (self.alt_ft - int(nearest_airport_dict['elevation_ft']))
-                print(f"AGL nearest airport: {alt_above_airport}")
-                if alt_above_airport <= 10000:
+                if nearest_airport_dict['elevation_ft'] != "":
+                    alt_above_airport = (self.alt_ft - int(nearest_airport_dict['elevation_ft']))
+                    print(f"AGL nearest airport: {alt_above_airport}")
+                else:
+                    alt_above_airport = None
+                if (alt_above_airport != None and alt_above_airport <= 10000) or self.alt_ft <= 15000:
                     self.tookoff = True
                     self.trigger_type = "data acquisition"
                     type_header = "Took off near"
@@ -264,9 +261,12 @@ class Plane:
 
         elif self.landing_plausible and self.feeding is False and time_since_contact.seconds >= 300:
             nearest_airport_dict = getClosestAirport(self.latitude, self.longitude, self.config.get("AIRPORT", "TYPES"))
-            alt_above_airport = (self.alt_ft - int(nearest_airport_dict['elevation_ft']))
-            print(f"AGL nearest airport: {alt_above_airport}")
-            if alt_above_airport <= 10000:
+            if nearest_airport_dict['elevation_ft'] != "":
+                alt_above_airport = (self.alt_ft - int(nearest_airport_dict['elevation_ft']))
+                print(f"AGL nearest airport: {alt_above_airport}")
+            else:
+                alt_above_airport = None
+            if (alt_above_airport != None and alt_above_airport <= 10000) or self.alt_ft <= 15000:
                 self.landing_plausible = False
                 self.landed = True
                 self.trigger_type = "data loss"
@@ -347,7 +347,8 @@ class Plane:
             if self.config.get('MAP', 'OPTION') == "GOOGLESTATICMAP":
                 getMap((municipality + ", "  + state + ", "  + country_code), self.map_file_name)
             elif self.config.get('MAP', 'OPTION') == "ADSBX":
-                getSS(self.icao, self.map_file_name, self.overlays)
+                url_params = f"icao={self.icao}&zoom=9&largeMode=2&hideButtons&hideSidebar&mapDim=0" + generate_adsbx_overlay_param(self.overlays)
+                get_adsbx_screenshot(self.map_file_name, url_params)
                 append_airport(self.map_file_name, nearest_airport_dict)
                 #airport_string = nearest_airport_dict['icao'] + ", " + nearest_airport_dict["name"]
             else:
@@ -393,7 +394,8 @@ class Plane:
                     if self.config.get('MAP', 'OPTION') == "GOOGLESTATICMAP":
                         getMap((municipality + ", "  + state + ", "  + country_code), self.map_file_name)
                     if self.config.get('MAP', 'OPTION') == "ADSBX":
-                        getSS(self.icao, self.map_file_name, self.overlays)
+                        url_params = f"icao={self.icao}&zoom=9&largeMode=2&hideButtons&hideSidebar&mapDim=0" + generate_adsbx_overlay_param(self.overlays)
+                        get_adsbx_screenshot(self.map_file_name, url_params)
                     #Discord
                     if self.config.getboolean('DISCORD', 'ENABLE'):
                         dis_message =  (self.dis_title + " "  + squawk_message)
@@ -408,9 +410,10 @@ class Plane:
                         if self.config.getboolean('DISCORD', 'ENABLE'):
                             dis_message =  (self.dis_title + " "  + mode + " mode enabled.")
                             if mode == "Approach":
-                                getSS(self.icao, self.map_file_name, self.overlays)
+                                url_params = f"icao={self.icao}&zoom=9&largeMode=2&hideButtons&hideSidebar&mapDim=0" + generate_adsbx_overlay_param(self.overlays)
+                                get_adsbx_screenshot(self.map_file_name, url_params)
                                 sendDis(dis_message, self.config, self.map_file_name)
-                            elif mode == "Althold" and self.nav_altitude != None:
+                            elif mode in ["Althold", "VNAV", "LNAV"] and self.nav_altitude != None:
                                 sendDis((dis_message + ", Sel Alt. " + str(self.nav_altitude) + ", Current Alt. " + str(self.alt_ft)), self.config)
                             else:
                                 sendDis(dis_message, self.config)
@@ -419,15 +422,9 @@ class Plane:
             #     if self.config.getboolean('DISCORD', 'ENABLE'):
             #         dis_message = (self.dis_title + "Powered Up").strip()
             #         sendDis(dis_message, self.config)
-            #TCAS/ACAS
-            if self.acas_ra != None and self.last_acas_ra != self.acas_ra:
-                if self.config.getboolean('DISCORD', 'ENABLE'):
-                    dis_message = f"{self.dis_title} {self.acas_ra}"
-                    sendDis(dis_message, self.config)
 
 
 #Set Variables to compare to next check
-        self.last_acas_ra = self.acas_ra
         self.last_feeding = self.feeding
         self.last_alt_ft = self.alt_ft
         self.last_on_ground = self.on_ground
@@ -442,3 +439,39 @@ class Plane:
             time_since_tk = time.strftime("Time Since Take off  %H Hours : %M Mins : %S Secs", time.gmtime(elapsed_time))
             print(time_since_tk)
         self.printheader("foot")
+    def check_new_ras(self, ras):
+            for ra in ras:
+                if self.recent_ra_types == {} or ra['acas_ra']['advisory'] not in self.recent_ra_types.keys():
+                    self.recent_ra_types[ra['acas_ra']['advisory']] = ra['acas_ra']['unix_timestamp']
+                    ra_message = f"RA: {ra['acas_ra']['advisory']}"
+                    if ra['acas_ra']['advisory_complement'] != "":
+                        ra_message += f", {ra['acas_ra']['advisory_complement']}"
+                    if bool(int(ra['acas_ra']['MTE'])):
+                        ra_message += ", Multi threat"
+                    from defSS import get_adsbx_screenshot, generate_adsbx_screenshot_time_params, generate_adsbx_overlay_param
+                    url_params = generate_adsbx_screenshot_time_params(ra['acas_ra']['unix_timestamp']) + f"&zoom=14&largeMode=2&hideButtons&hideSidebar&mapDim=0" + generate_adsbx_overlay_param(self.overlays)
+                    if "threat_id_hex" in ra['acas_ra'].keys():
+                        from mictronics_parse import get_aircraft_by_icao
+                        threat_reg = get_aircraft_by_icao(ra['acas_ra']['threat_id_hex'])[0]
+                        threat_id = threat_reg if threat_reg is not None else "ICAO: " + ra['acas_ra']['threat_id_hex']
+                        ra_message += f", invader: {threat_id}"
+                        url_params += f"&icao={self.icao},{ra['acas_ra']['threat_id_hex']}"
+                    else:
+                        url_params += f"&icao={self.icao}&noIsolation"
+                    get_adsbx_screenshot(self.map_file_name, url_params, True, True)
+
+                    if self.config.getboolean('DISCORD', 'ENABLE'):
+                        from defDiscord import sendDis
+                        dis_message = f"{self.dis_title} {ra_message}"
+                        sendDis(dis_message, self.config, self.map_file_name)
+                    #if twitter
+    def expire_ra_types(self):
+        if self.recent_ra_types != {}:
+            for ra_type, postime in self.recent_ra_types.copy().items():
+                from datetime import datetime
+                timestamp = datetime.fromtimestamp(postime)
+                time_since_ra = datetime.now() - timestamp
+                print(time_since_ra)
+                if time_since_ra.seconds >= 600:
+                    print(ra_type)
+                    self.recent_ra_types.pop(ra_type)

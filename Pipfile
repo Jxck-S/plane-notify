@@ -1,0 +1,21 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+colorama = "*"
+geopy = "*"
+tabulate = "*"
+pytz = "*"
+pillow = "*"
+tweepy = "*"
+"pushbullet.py" = "*"
+discord-webhooks = "*"
+selenium = "*"
+opensky-api = {editable = true, git = "https://github.com/openskynetwork/opensky-api.git", subdirectory = "python"}
+
+[requires]
+python_version = "3.9"

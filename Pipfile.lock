@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "29755c65f6e3a98be10fa76d8e7175d09f79f1c8c845ed6f4b90b63991d599bf"
+            "sha256": "47aeaf96ca8a1d06f00eb9cac1333a4fcf34c676503e4c02df56c5135b3dba10"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -38,6 +38,21 @@
             ],
             "index": "pypi",
             "version": "==0.4.4"
+        },
+        "configparser": {
+            "hashes": [
+                "sha256:85d5de102cfe6d14a5172676f09d19c465ce63d6019cf0a4ef13385fc535e828",
+                "sha256:af59f2cdd7efbdd5d111c1976ecd0b82db9066653362f0962d7bf1d3ab89a1fa"
+            ],
+            "markers": "python_version >= '3.6'",
+            "version": "==5.0.2"
+        },
+        "crayons": {
+            "hashes": [
+                "sha256:bd33b7547800f2cfbd26b38431f9e64b487a7de74a947b0fafc89b45a601813f",
+                "sha256:e73ad105c78935d71fe454dd4b85c5c437ba199294e7ffd3341842bc683654b1"
+            ],
+            "version": "==0.4.0"
         },
         "discord-webhooks": {
             "hashes": [
@@ -212,6 +227,14 @@
             ],
             "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3' and python_version < '4'",
             "version": "==1.24.3"
+        },
+        "webdriver-manager": {
+            "hashes": [
+                "sha256:00bb38c91a1aee23ef09699df074f7328a3618abbe5bf23944b7e835ad561dd6",
+                "sha256:254a3c58a253785433ce0d8afd1d6a46ebf0e62137bb05a963c033958610c6da"
+            ],
+            "index": "pypi",
+            "version": "==3.4.1"
         },
         "websocket-client": {
             "hashes": [

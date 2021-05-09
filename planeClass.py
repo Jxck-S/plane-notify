@@ -347,7 +347,7 @@ class Plane:
             if self.config.get('MAP', 'OPTION') == "GOOGLESTATICMAP":
                 getMap((municipality + ", "  + state + ", "  + country_code), self.map_file_name)
             elif self.config.get('MAP', 'OPTION') == "ADSBX":
-                url_params = f"icao={self.icao}&zoom=9&largeMode=2&hideButtons&hideSidebar&mapDim=0" + generate_adsbx_overlay_param(self.overlays)
+                url_params = f"icao={self.icao}&zoom=9&largeMode=2&hideButtons&hideSidebar&mapDim=0&overlays=" + self.overlays
                 get_adsbx_screenshot(self.map_file_name, url_params)
                 append_airport(self.map_file_name, nearest_airport_dict)
                 #airport_string = nearest_airport_dict['icao'] + ", " + nearest_airport_dict["name"]
@@ -394,7 +394,7 @@ class Plane:
                     if self.config.get('MAP', 'OPTION') == "GOOGLESTATICMAP":
                         getMap((municipality + ", "  + state + ", "  + country_code), self.map_file_name)
                     if self.config.get('MAP', 'OPTION') == "ADSBX":
-                        url_params = f"icao={self.icao}&zoom=9&largeMode=2&hideButtons&hideSidebar&mapDim=0" + generate_adsbx_overlay_param(self.overlays)
+                        url_params = f"icao={self.icao}&zoom=9&largeMode=2&hideButtons&hideSidebar&mapDim=0&overlays=" + self.overlays
                         get_adsbx_screenshot(self.map_file_name, url_params)
                     #Discord
                     if self.config.getboolean('DISCORD', 'ENABLE'):
@@ -410,7 +410,7 @@ class Plane:
                         if self.config.getboolean('DISCORD', 'ENABLE'):
                             dis_message =  (self.dis_title + " "  + mode + " mode enabled.")
                             if mode == "Approach":
-                                url_params = f"icao={self.icao}&zoom=9&largeMode=2&hideButtons&hideSidebar&mapDim=0" + generate_adsbx_overlay_param(self.overlays)
+                                url_params = f"icao={self.icao}&zoom=9&largeMode=2&hideButtons&hideSidebar&mapDim=0&overlays={self.overlays}"
                                 get_adsbx_screenshot(self.map_file_name, url_params)
                                 sendDis(dis_message, self.config, self.map_file_name)
                             elif mode in ["Althold", "VNAV", "LNAV"] and self.nav_altitude != None:
@@ -449,15 +449,15 @@ class Plane:
                     if bool(int(ra['acas_ra']['MTE'])):
                         ra_message += ", Multi threat"
                     from defSS import get_adsbx_screenshot, generate_adsbx_screenshot_time_params, generate_adsbx_overlay_param
-                    url_params = generate_adsbx_screenshot_time_params(ra['acas_ra']['unix_timestamp']) + f"&zoom=14&largeMode=2&hideButtons&hideSidebar&mapDim=0" + generate_adsbx_overlay_param(self.overlays)
+                    url_params = generate_adsbx_screenshot_time_params(ra['acas_ra']['unix_timestamp']) + f"&zoom=12.5&largeMode=2&hideButtons&hideSidebar&mapDim=0&overlays={self.overlays}"
                     if "threat_id_hex" in ra['acas_ra'].keys():
                         from mictronics_parse import get_aircraft_by_icao
                         threat_reg = get_aircraft_by_icao(ra['acas_ra']['threat_id_hex'])[0]
                         threat_id = threat_reg if threat_reg is not None else "ICAO: " + ra['acas_ra']['threat_id_hex']
                         ra_message += f", invader: {threat_id}"
-                        url_params += f"&icao={self.icao},{ra['acas_ra']['threat_id_hex']}"
+                        url_params += f"&icao={self.icao.lower()},{ra['acas_ra']['threat_id_hex']}"
                     else:
-                        url_params += f"&icao={self.icao}&noIsolation"
+                        url_params += f"&icao={self.icao.lower()}&noIsolation"
                     get_adsbx_screenshot(self.map_file_name, url_params, True, True)
 
                     if self.config.getboolean('DISCORD', 'ENABLE'):

@@ -17,8 +17,6 @@ def get_adsbx_screenshot(file_path, url_params, enable_labels=False, enable_trac
     url = f"https://globe.adsbexchange.com/?{url_params}"
     browser.set_page_load_timeout(80)
     browser.get(url)
-    WebDriverWait(browser, 40).until(lambda d: d.execute_script("return jQuery.active == 0"))
-    time.sleep(5)
     remove_id_elements = ["show_trace", "credits", 'infoblock_close', 'selected_photo_link', "history_collapse"]
     for element in remove_id_elements:
         element = browser.find_element_by_id(element)
@@ -37,6 +35,8 @@ def get_adsbx_screenshot(file_path, url_params, enable_labels=False, enable_trac
         browser.find_element_by_tag_name('body').send_keys('l')
     if enable_track_labels:
         browser.find_element_by_tag_name('body').send_keys('k')
+    WebDriverWait(browser, 40).until(lambda d: d.execute_script("return jQuery.active == 0"))
+    time.sleep(5)
     browser.save_screenshot(file_path)
     browser.quit()
 def generate_adsbx_screenshot_time_params(timestamp):

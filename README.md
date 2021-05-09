@@ -90,7 +90,7 @@ screen -R <name screen whatever you want>
 ### Start Program
 
 ```bash
-python3 plane-notify
+pipenv run __main__
 ```
 
 ### TODO

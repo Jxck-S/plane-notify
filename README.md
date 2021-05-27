@@ -37,52 +37,22 @@ apt install python3
 apt install python3-pip
 ```
 
-### Install Colorama, geopy, ptyz, etc
+### Install Pipenv and Dependencies
 
 ```bash
-pip install colorama
-pip install geopy
-pip3 install ptyz
-pip3 install tabulate
-pip install pillow
-```
-
-### Install OpenSky Wrapper, if your going to be using OpenSky as source
-
-```bash
-pip install -e "git+https://github.com/openskynetwork/opensky-api.git#egg=python&subdirectory=python"
+pip install pipenv
+pipenv install
 ```
 
 ### Install Selenium / ChromeDriver or setup Google Static Maps
 
 Selenium/ChromeDriver is used to take a screenshot of the plane on globe.adsbexchange.com. Or use Google Static Maps, which can cost money if over used(No tutorial use <https://developers.google.com/maps/documentation/maps-static/get-api-key> to get to a key).
 
-#### 1. Chromium
+#### Chromium
 
 ```bash
 sudo apt-get install chromium
 ```
-
-#### 2. Web Driver Manager
-
-```bash
-pip install webdriver-manager
-```
-
-#### 3. Selenium
-
-```bash
-pip install -U selenium
-```
-
-### Install Pushbullet, Tweepy, and Discord optional output methods already implemented in code, only install the ones you want to use
-
-```bash
-pip install tweepy
-pip install pushbullet.py
-pip install discord_webhooks
-```
-
 These output methods once installed can be configured in planes config you create, using the example plane1.ini
 
 ### Install Screen to run in the background
@@ -120,14 +90,13 @@ screen -R <name screen whatever you want>
 ### Start Program
 
 ```bash
-python3 plane-notify
+pipenv run __main__
 ```
 
 ### TODO
 
 -   General Cleanup
 -   Restructure project to make it proper currently random files because I didn't know how to properly structure a project before. (in progress)
--   Add requirments.txt file from pip freeze to create easy dependencies install
 -   Add proper logging and service to run the program and remove excessive printing.
 
 ### [More Refrences/Documentation](Refrences.md)

@@ -1,3 +1,4 @@
+from datetime import datetime
 class Plane:
     def __init__(self, icao, config_path, config):
         """Initializes a plane object from its config file and given icao."""
@@ -145,17 +146,12 @@ class Plane:
             header = "----------------------------------------------------------------------------------------------------"
         print(Back.MAGENTA + header[0:100] + Style.RESET_ALL)
     def get_time_since(self, last_contact):
-        from datetime import datetime
         if last_contact != None:
             last_contact_dt = datetime.fromtimestamp(last_contact)
             time_since_contact = datetime.now() - last_contact_dt
         else:
             time_since_contact = None
         return time_since_contact
-    def time_since(self, start_time):
-        import time
-        elapsed_time = time.time() - start_time
-        return elapsed_time
     def run_empty(self):
         self.printheader("head")
         self.feeding = False
@@ -165,7 +161,6 @@ class Plane:
         #Import Modules
         #Ability to Remove old Map
         import os
-        import time
         from colorama import Fore, Style
         #Platform for determining OS for strftime
         import platform
@@ -174,7 +169,7 @@ class Plane:
         from defAirport import getClosestAirport
 
         #Propritary
-        ENABLE_ROUTE_LOOKUP = True
+        ENABLE_ROUTE_LOOKUP = False
         if ENABLE_ROUTE_LOOKUP:
             from lookup_route import lookup_route
         else:
@@ -259,7 +254,7 @@ class Plane:
             self.landing_plausible = True
             print("Near landing conditions, if contiuned data loss for 5 mins, and  if under 10k AGL landing true")
 
-        elif self.landing_plausible and self.feeding is False and time_since_contact.seconds >= 300:
+        elif self.landing_plausible and self.feeding is False and time_since_contact.total_seconds() >= 300:
             nearest_airport_dict = getClosestAirport(self.latitude, self.longitude, self.config.get("AIRPORT", "TYPES"))
             if nearest_airport_dict['elevation_ft'] != "":
                 alt_above_airport = (self.alt_ft - int(nearest_airport_dict['elevation_ft']))
@@ -323,21 +318,39 @@ class Plane:
         if self.tookoff or self.landed:
             route_to = None
             if self.tookoff:
-                self.takeoff_time = time.time()
+                self.takeoff_time = datetime.utcnow()
                 landed_time_msg = None
                 #Route Lookup | Proprietary
                 if ENABLE_ROUTE_LOOKUP:
-                    route_to = lookup_route(self.reg, (self.latitude, self.longitude), self.type, self.alt_ft)
-                    if route_to == None:
+                    extra_route_info = lookup_route(self.reg, (self.latitude, self.longitude), self.type, self.alt_ft)
+                    if extra_route_info == None:
                         self.recheck_to = True
+                        self.nearest_takeoff_airport = nearest_airport_dict
+                    else:
+                        from defAirport import get_airport_by_icao
+                        to_airport = get_airport_by_icao(extra_route_info[11])
+                        code = to_airport['iata_code'] if to_airport['iata_code'] != "" else to_airport['icao']
+                        if extra_route_info[11] != nearest_airport_dict['icao']:
+                            route_to = "Going to"
+                        else:
+                            route_to = "Will be returning to"
+                        route_to += f" {code}, {to_airport['name']}"
             elif self.landed and self.takeoff_time != None:
-                landed_time = time.time() - self.takeoff_time
+                landed_time = datetime.utcnow() - self.takeoff_time
                 if platform.system() == "Linux":
                     strftime_splitter = "-"
                 elif platform.system() == "Windows":
                     strftime_splitter = "#"
-                landed_time_msg = time.strftime(f"Apx. flt. time %{strftime_splitter}H Hours : %{strftime_splitter}M Mins. ", time.gmtime(landed_time))
-                landed_time_msg = landed_time_msg.replace("0 Hours : ", "")
+                hours, remainder = divmod(landed_time.total_seconds(), 3600)
+                minutes, seconds = divmod(remainder, 60)
+                min_syntax = "Mins" if minutes > 1 else "Min"
+                if hours > 0:
+                    hour_syntax = "Hours" if hours > 1 else "Hour"
+                    landed_time_msg = (f"Apx. flt. time {int(hours)} {hour_syntax}: {int(minutes)} {min_syntax}. ")
+                else:
+                    landed_time_msg = (f"Apx. flt. time {int(minutes)} {min_syntax}. ")
+                # landed_time_msg = time.strftime(f"Apx. flt. time %{strftime_splitter}H Hours : %{strftime_splitter}M Mins. ", time.gmtime(landed_time))
+                # landed_time_msg = landed_time_msg.replace("0 Hours : ", "")
                 self.takeoff_time = None
             elif self.landed:
                 landed_time_msg = None
@@ -371,10 +384,20 @@ class Plane:
                 self.tweet_api.update_status(status = ((self.twitter_title + " " + message).strip()), media_ids=[twitter_media_map_obj.media_id])
             os.remove(self.map_file_name)
         #To Location
-        if self.recheck_to and self.time_since(self.takeoff_time) > 60:
+        if self.recheck_to and (datetime.utcnow() - self.takeoff_time).total_seconds() > 60:
             self.recheck_to = False
-            route_to = lookup_route(self.reg, (self.latitude, self.longitude), self.type, self.alt_ft)
-            if route_to != None:
+            extra_route_info = lookup_route(self.reg, (self.latitude, self.longitude), self.type, self.alt_ft)
+            nearest_airport_dict = self.nearest_takeoff_airport
+            self.nearest_takeoff_airport = None
+            if extra_route_info != None:
+                from defAirport import get_airport_by_icao
+                to_airport = get_airport_by_icao(extra_route_info[11])
+                code = to_airport['iata_code'] if to_airport['iata_code'] != "" else to_airport['icao']
+                if extra_route_info[11] != nearest_airport_dict['icao']:
+                    route_to = "Going to"
+                else:
+                    route_to = "Will be returning to"
+                route_to += f" {code}, {to_airport['name']}"
                 if self.config.getboolean('DISCORD', 'ENABLE'):
                     dis_message = (self.dis_title + route_to).strip()
                     sendDis(dis_message, self.config)
@@ -435,21 +458,22 @@ class Plane:
 
 
         if self.takeoff_time != None:
-            elapsed_time = self.time_since(self.takeoff_time)
-            time_since_tk = time.strftime("Time Since Take off  %H Hours : %M Mins : %S Secs", time.gmtime(elapsed_time))
-            print(time_since_tk)
+            elapsed_time = datetime.utcnow() - self.takeoff_time
+            hours, remainder = divmod(elapsed_time.total_seconds(), 3600)
+            minutes, seconds = divmod(remainder, 60)
+            print((f"Time Since Take off  {int(hours)} Hours : {int(minutes)} Mins : {int(seconds)} Secs"))
         self.printheader("foot")
     def check_new_ras(self, ras):
             for ra in ras:
                 if self.recent_ra_types == {} or ra['acas_ra']['advisory'] not in self.recent_ra_types.keys():
                     self.recent_ra_types[ra['acas_ra']['advisory']] = ra['acas_ra']['unix_timestamp']
-                    ra_message = f"RA: {ra['acas_ra']['advisory']}"
+                    ra_message = f"TCAS Resolution Advisory: {ra['acas_ra']['advisory']}"
                     if ra['acas_ra']['advisory_complement'] != "":
                         ra_message += f", {ra['acas_ra']['advisory_complement']}"
                     if bool(int(ra['acas_ra']['MTE'])):
                         ra_message += ", Multi threat"
                     from defSS import get_adsbx_screenshot, generate_adsbx_screenshot_time_params, generate_adsbx_overlay_param
-                    url_params = generate_adsbx_screenshot_time_params(ra['acas_ra']['unix_timestamp']) + f"&zoom=12.5&largeMode=2&hideButtons&hideSidebar&mapDim=0&overlays={self.overlays}"
+                    url_params = generate_adsbx_screenshot_time_params(ra['acas_ra']['unix_timestamp']) + f"&zoom=11&largeMode=2&hideButtons&hideSidebar&mapDim=0&overlays={self.overlays}"
                     if "threat_id_hex" in ra['acas_ra'].keys():
                         from mictronics_parse import get_aircraft_by_icao
                         threat_reg = get_aircraft_by_icao(ra['acas_ra']['threat_id_hex'])[0]
@@ -468,7 +492,6 @@ class Plane:
     def expire_ra_types(self):
         if self.recent_ra_types != {}:
             for ra_type, postime in self.recent_ra_types.copy().items():
-                from datetime import datetime
                 timestamp = datetime.fromtimestamp(postime)
                 time_since_ra = datetime.now() - timestamp
                 print(time_since_ra)

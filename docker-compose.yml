@@ -1,8 +1,7 @@
 version: "3.9"
 services:
     plane-notify:
-        command: sh -c "sleep 500"
         build:
             context: .
         volumes: 
-            - ./:/plane
+            - ./:/plane-notify

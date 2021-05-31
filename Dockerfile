@@ -1,6 +1,6 @@
 FROM python:3
 
-WORKDIR /plane
+WORKDIR /plane-notify
 
 COPY . .
 
@@ -13,4 +13,4 @@ RUN pipenv install
 # Added needed folder for plane-notify process
 RUN mkdir /var/run/plane-notify
 
-CMD pipenv run python __main__
+CMD pipenv run python /plane-notify/__main__.py

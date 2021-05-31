@@ -5,7 +5,7 @@ WORKDIR /plane
 COPY . .
 
 # Add pipenv
-RUN pip install pipenv
+RUN pip install pipenv==2021.5.29
 
 # Install dependencies
 RUN pipenv install

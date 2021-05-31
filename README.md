@@ -97,7 +97,7 @@ pipenv run python __main__
 
 Install [docker from their website](https://docs.docker.com/get-docker/). Run the following command from the root of the project.
 
-```
+```bash
 docker-compose up -d
 ```
 

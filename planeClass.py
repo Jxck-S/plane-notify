@@ -104,7 +104,8 @@ class Plane:
             elif ac_dict['alt_baro'] == "ground":
                 self.alt_ft = 0
                 self.on_ground = True
-            self.callsign = ac_dict.get('flight')
+            if ac_dict.get('flight') is not None:
+                self.callsign = ac_dict.get('flight').strip()
             if 'nav_modes' in ac_dict:
                 self.nav_modes = ac_dict['nav_modes']
                 for idx, mode in enumerate(self.nav_modes):
@@ -158,28 +159,23 @@ class Plane:
         self.run_check()
     def run_check(self):
         """Runs a check of a plane module to see if its landed or takenoff using plane data, and takes action if so."""
-        #Import Modules
         #Ability to Remove old Map
         import os
         from colorama import Fore, Style
-        #Platform for determining OS for strftime
-        import platform
         from tabulate import tabulate
         from modify_image import append_airport
         from defAirport import getClosestAirport
 
-        #Propritary
-        ENABLE_ROUTE_LOOKUP = False
-        if ENABLE_ROUTE_LOOKUP:
+        #Proprietary Route Lookup
+        if os.path.isfile("lookup_route.py"):
             from lookup_route import lookup_route
+            ENABLE_ROUTE_LOOKUP = True
         else:
-            #Dead Place function
-            def lookup_route(*args):
-                return None
+            ENABLE_ROUTE_LOOKUP = False
         if self.config.get('MAP', 'OPTION') == "GOOGLESTATICMAP":
             from defMap import getMap
         elif self.config.get('MAP', 'OPTION') == "ADSBX":
-            from defSS import get_adsbx_screenshot, generate_adsbx_overlay_param
+            from defSS import get_adsbx_screenshot
             if self.config.has_option('MAP', 'OVERLAYS'):
                 self.overlays = self.config.get('MAP', 'OVERLAYS')
             else:
@@ -298,11 +294,7 @@ class Plane:
             else:
                 area = f"{municipality}, {state}"
             location_string = (f"{area}, {country_code}")
-            print (Fore.GREEN)
-            print ("Country Code: ", country_code)
-            print ("State: ", state)
-            print ("Municipality: ", municipality)
-            print(Style.RESET_ALL)
+            print (Fore.GREEN + "Country Code:", country_code, "State:", state, "Municipality:", municipality + Style.RESET_ALL)
         title_switch = {
         "reg": self.reg,
         "callsign": self.callsign,
@@ -320,7 +312,7 @@ class Plane:
             if self.tookoff:
                 self.takeoff_time = datetime.utcnow()
                 landed_time_msg = None
-                #Route Lookup | Proprietary
+                #Proprietary Route Lookup
                 if ENABLE_ROUTE_LOOKUP:
                     extra_route_info = lookup_route(self.reg, (self.latitude, self.longitude), self.type, self.alt_ft)
                     if extra_route_info == None:
@@ -328,29 +320,23 @@ class Plane:
                         self.nearest_takeoff_airport = nearest_airport_dict
                     else:
                         from defAirport import get_airport_by_icao
-                        to_airport = get_airport_by_icao(extra_route_info[11])
+                        to_airport = get_airport_by_icao(extra_route_info['apdstic'])
                         code = to_airport['iata_code'] if to_airport['iata_code'] != "" else to_airport['icao']
-                        if extra_route_info[11] != nearest_airport_dict['icao']:
-                            route_to = "Going to"
+                        airport_text = f" {code}, {to_airport['name']}"
+                        if extra_route_info['apdstic'] != nearest_airport_dict['icao']:
+                            route_to = "Going to" + airport_text + " arriving " + extra_route_info['arrivalRelative']
                         else:
-                            route_to = "Will be returning to"
-                        route_to += f" {code}, {to_airport['name']}"
+                            route_to = f"Will be returning to {airport_text} {extra_route_info['arrivalRelative']}"
             elif self.landed and self.takeoff_time != None:
                 landed_time = datetime.utcnow() - self.takeoff_time
-                if platform.system() == "Linux":
-                    strftime_splitter = "-"
-                elif platform.system() == "Windows":
-                    strftime_splitter = "#"
                 hours, remainder = divmod(landed_time.total_seconds(), 3600)
                 minutes, seconds = divmod(remainder, 60)
                 min_syntax = "Mins" if minutes > 1 else "Min"
                 if hours > 0:
                     hour_syntax = "Hours" if hours > 1 else "Hour"
-                    landed_time_msg = (f"Apx. flt. time {int(hours)} {hour_syntax}: {int(minutes)} {min_syntax}. ")
+                    landed_time_msg = (f"Apx. flt. time {int(hours)} {hour_syntax}" +  (f" : {int(minutes)} {min_syntax}. " if minutes > 0 else "."))
                 else:
-                    landed_time_msg = (f"Apx. flt. time {int(minutes)} {min_syntax}. ")
-                # landed_time_msg = time.strftime(f"Apx. flt. time %{strftime_splitter}H Hours : %{strftime_splitter}M Mins. ", time.gmtime(landed_time))
-                # landed_time_msg = landed_time_msg.replace("0 Hours : ", "")
+                    landed_time_msg = (f"Apx. flt. time {int(minutes)} {min_syntax}.")
                 self.takeoff_time = None
             elif self.landed:
                 landed_time_msg = None
@@ -363,13 +349,13 @@ class Plane:
                 url_params = f"icao={self.icao}&zoom=9&largeMode=2&hideButtons&hideSidebar&mapDim=0&overlays=" + self.overlays
                 get_adsbx_screenshot(self.map_file_name, url_params)
                 append_airport(self.map_file_name, nearest_airport_dict)
-                #airport_string = nearest_airport_dict['icao'] + ", " + nearest_airport_dict["name"]
             else:
                 raise ValueError("Map option not set correctly in this planes conf")
             #Discord
             if self.config.getboolean('DISCORD', 'ENABLE'):
                 dis_message = f"{self.dis_title} {message}".strip()
-                sendDis(dis_message, self.config, self.map_file_name)
+                role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') else None
+                sendDis(dis_message, self.config, self.map_file_name, role_id = role_id)
             #PushBullet
             if self.config.getboolean('PUSHBULLET', 'ENABLE'):
                 with open(self.map_file_name, "rb") as pic:
@@ -383,32 +369,35 @@ class Plane:
                 self.tweet_api.create_media_metadata(media_id= twitter_media_map_obj.media_id, alt_text= alt_text)
                 self.tweet_api.update_status(status = ((self.twitter_title + " " + message).strip()), media_ids=[twitter_media_map_obj.media_id])
             os.remove(self.map_file_name)
-        #To Location
-        if self.recheck_to and (datetime.utcnow() - self.takeoff_time).total_seconds() > 60:
+        #Recheck Proprietary Route Lookup a minute later if infomation was not available on takeoff.
+        if self.recheck_to and self.takeoff_time is not None and (datetime.utcnow() - self.takeoff_time).total_seconds() > 60:
             self.recheck_to = False
             extra_route_info = lookup_route(self.reg, (self.latitude, self.longitude), self.type, self.alt_ft)
             nearest_airport_dict = self.nearest_takeoff_airport
             self.nearest_takeoff_airport = None
             if extra_route_info != None:
                 from defAirport import get_airport_by_icao
-                to_airport = get_airport_by_icao(extra_route_info[11])
+                to_airport = get_airport_by_icao(extra_route_info['apdstic'])
                 code = to_airport['iata_code'] if to_airport['iata_code'] != "" else to_airport['icao']
-                if extra_route_info[11] != nearest_airport_dict['icao']:
-                    route_to = "Going to"
+                airport_text = f" {code}, {to_airport['name']}"
+                if extra_route_info['apdstic'] != nearest_airport_dict['icao']:
+                    route_to = "Going to" + airport_text + " arriving " + extra_route_info['arrivalRelative']
                 else:
-                    route_to = "Will be returning to"
-                route_to += f" {code}, {to_airport['name']}"
+                    route_to = f"Will be returning to {airport_text} {extra_route_info['arrivalRelative']}"
+                print(route_to)
+                #Discord
                 if self.config.getboolean('DISCORD', 'ENABLE'):
-                    dis_message = (self.dis_title + route_to).strip()
-                    sendDis(dis_message, self.config)
+                    dis_message = f"{self.dis_title} {route_to}".strip()
+                    role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') else None
+                    sendDis(dis_message, self.config, role_id = role_id)
                 #Twitter
                 if self.config.getboolean('TWITTER', 'ENABLE'):
                     tweet = self.tweet_api.user_timeline(count = 1)[0]
                     self.tweet_api.update_status(status = f"{self.twitter_title} {route_to}".strip(), in_reply_to_status_id = tweet.id)
 
-        #Squawks
-        squawks =[("7500", "Hijacking"), ("7600", "Radio Failure"), ("7700", "Emergency")]
         if self.feeding:
+            #Squawks
+            squawks =[("7500", "Hijacking"), ("7600", "Radio Failure"), ("7700", "Emergency")]
             for squawk in squawks:
                 if all(v == squawk[0] for v in (self.squawks[0:2])) and self.squawks[2] != self.squawks[3] and None not in self.squawks:
                     squawk_message = ("Squawking " + squawk[0] + ", " + squawk[1])
@@ -473,21 +462,23 @@ class Plane:
                     if bool(int(ra['acas_ra']['MTE'])):
                         ra_message += ", Multi threat"
                     from defSS import get_adsbx_screenshot, generate_adsbx_screenshot_time_params, generate_adsbx_overlay_param
-                    url_params = generate_adsbx_screenshot_time_params(ra['acas_ra']['unix_timestamp']) + f"&zoom=11&largeMode=2&hideButtons&hideSidebar&mapDim=0&overlays={self.overlays}"
+                    url_params = generate_adsbx_screenshot_time_params(ra['acas_ra']['unix_timestamp']) + f"&lat={ra['lat']}&lon={ra['lon']}&zoom=11&largeMode=2&hideButtons&hideSidebar&mapDim=0&overlays={self.overlays}&timestamp={ra['acas_ra']['unix_timestamp']}"
                     if "threat_id_hex" in ra['acas_ra'].keys():
                         from mictronics_parse import get_aircraft_by_icao
                         threat_reg = get_aircraft_by_icao(ra['acas_ra']['threat_id_hex'])[0]
                         threat_id = threat_reg if threat_reg is not None else "ICAO: " + ra['acas_ra']['threat_id_hex']
                         ra_message += f", invader: {threat_id}"
-                        url_params += f"&icao={self.icao.lower()},{ra['acas_ra']['threat_id_hex']}"
+                        url_params += f"&icao={ra['acas_ra']['threat_id_hex']},{self.icao.lower()}"
                     else:
                         url_params += f"&icao={self.icao.lower()}&noIsolation"
+                    print(url_params)
                     get_adsbx_screenshot(self.map_file_name, url_params, True, True)
 
                     if self.config.getboolean('DISCORD', 'ENABLE'):
                         from defDiscord import sendDis
                         dis_message = f"{self.dis_title} {ra_message}"
-                        sendDis(dis_message, self.config, self.map_file_name)
+                        role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') else None
+                        sendDis(dis_message, self.config, self.map_file_name, role_id = role_id)
                     #if twitter
     def expire_ra_types(self):
         if self.recent_ra_types != {}:

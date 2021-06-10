@@ -19,17 +19,27 @@ def get_adsbx_screenshot(file_path, url_params, enable_labels=False, enable_trac
     browser.get(url)
     remove_id_elements = ["show_trace", "credits", 'infoblock_close', 'selected_photo_link', "history_collapse"]
     for element in remove_id_elements:
-        element = browser.find_element_by_id(element)
-        browser.execute_script("""var element = arguments[0];    element.parentNode.removeChild(element); """, element)
-    element = browser.find_elements_by_class_name("infoHeading")
-    browser.execute_script("""var element = arguments[0];    element.parentNode.removeChild(element); """, element[19])
+        try:
+            element = browser.find_element_by_id(element)
+            browser.execute_script("""var element = arguments[0];    element.parentNode.removeChild(element); """, element)
+        except:
+            print("issue removing", element, "from map")
     #Remove watermark on data
-    browser.execute_script("document.getElementById('selected_infoblock').className = 'none';")
+    try:
+        browser.execute_script("document.getElementById('selected_infoblock').className = 'none';")
+    except:
+        print("Couldn't remove watermark from map")
     #Disable slidebar
-    browser.execute_script("$('#infoblock-container').css('overflow', 'hidden');")
+    try:
+        browser.execute_script("$('#infoblock-container').css('overflow', 'hidden');")
+    except:
+        print("Couldn't disable sidebar on map")
     #Remove share
-    element = browser.find_element_by_xpath("//*[contains(text(), 'Share')]")
-    browser.execute_script("""var element = arguments[0];    element.parentNode.removeChild(element); """, element)
+    try:
+        element = browser.find_element_by_xpath("//*[contains(text(), 'Share')]")
+        browser.execute_script("""var element = arguments[0];    element.parentNode.removeChild(element); """, element)
+    except:
+        print("Couldn't remove share button from map")
     #browser.execute_script("toggleFollow()")
     if enable_labels:
         browser.find_element_by_tag_name('body').send_keys('l')

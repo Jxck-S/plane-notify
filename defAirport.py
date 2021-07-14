@@ -1,5 +1,14 @@
+import csv
+import math
+def add_airport_region(airport_dict):
+	#Get full region/state name from iso region name
+	with open('./dependencies/regions.csv', 'r', encoding='utf-8') as regions_csv:
+		regions_csv = csv.DictReader(filter(lambda row: row[0]!='#', regions_csv))
+		for region in regions_csv:
+			if region['code'] == airport_dict['iso_region']:
+				airport_dict['region'] = region['name']
+	return airport_dict
 def getClosestAirport(latitude, longitude, allowed_types):
-	import csv
 	from geopy.distance import geodesic
 	plane = (latitude, longitude)
 	with open('./dependencies/airports.csv', 'r', encoding='utf-8') as airport_csv:
@@ -17,15 +26,9 @@ def getClosestAirport(latitude, longitude, allowed_types):
 		closest_airport_dict['distance_mi'] = closest_airport_dist
 		#Convert indent key to icao key as its labeled icao in other places not ident
 		closest_airport_dict['icao'] = closest_airport_dict.pop('gps_code')
-	#Get full region/state name from iso region name
-	with open('./dependencies/regions.csv', 'r', encoding='utf-8') as regions_csv:
-		regions_csv = csv.DictReader(filter(lambda row: row[0]!='#', regions_csv))
-		for region in regions_csv:
-			if region['code'] == closest_airport_dict['iso_region']:
-				closest_airport_dict['region'] = region['name']
+		closest_airport_dict = add_airport_region(closest_airport_dict)
 	return closest_airport_dict
 def get_airport_by_icao(icao):
-	import csv
 	with open('./dependencies/airports.csv', 'r', encoding='utf-8') as airport_csv:
 		airport_csv_reader = csv.DictReader(filter(lambda row: row[0]!='#', airport_csv))
 		for airport in airport_csv_reader:
@@ -34,4 +37,5 @@ def get_airport_by_icao(icao):
 				#Convert indent key to icao key as its labeled icao in other places not ident
 				matching_airport['icao'] = matching_airport.pop('gps_code')
 				break
+		matching_airport = add_airport_region(matching_airport)
 		return matching_airport

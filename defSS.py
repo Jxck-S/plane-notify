@@ -57,5 +57,3 @@ def generate_adsbx_screenshot_time_params(timestamp):
     start_time = timestamp_dt - timedelta(minutes=1)
     time_params = "&showTrace=" + timestamp_dt.strftime("%Y-%m-%d")  + "&startTime=" + start_time.strftime("%H:%M:%S") + "&endTime=" + timestamp_dt.strftime("%H:%M:%S")
     return time_params
-def generate_adsbx_overlay_param(overlays):
-    return "&overlays=" + ",".join(overlays)

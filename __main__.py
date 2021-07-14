@@ -7,7 +7,7 @@ if platform.system() == "Windows":
     from colorama import init
     init(convert=True)
 elif platform.system() == "Linux":
-    pid_file_path = "/var/run/plane-notify/plane-notify.pid"
+    pid_file_path = "/home/plane-notify/pid.pid"
     def write_pid_file(filepath):
         import os
         pid = str(os.getpid())

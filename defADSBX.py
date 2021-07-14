@@ -13,6 +13,7 @@ api_version = main_config.get('ADSBX', 'API_VERSION')
 def pull(url, headers):
     try:
         response = requests.get(url, headers = headers)
+        print ("HTTP Status Code:", response.status_code)
         response.raise_for_status()
     except (requests.HTTPError, ConnectionError, requests.Timeout,  urllib3.exceptions.ConnectionError) as error_message:
         print("Basic Connection Error")
@@ -26,8 +27,6 @@ def pull(url, headers):
         print("Connection Error uncaught, basic exception for all")
         print(error_message)
         response = None
-    if "response" in locals():
-        print ("HTTP Status Code:", response.status_code)
     return response
 
 def pull_adsbx(planes):
@@ -68,12 +67,12 @@ def pull_adsbx(planes):
         else:
             if "msg" in data.keys() and data['msg'] != "No error":
                 raise ValueError("Error from ADSBX: msg = ", data['msg'])
-        if "ctime" in data.keys():
-            data_ctime = float(data['ctime']) / 1000.0
-            print("Data ctime:",datetime.utcfromtimestamp(data_ctime))
-        if "now" in data.keys():
-            data_now = float(data['now']) / 1000.0
-            print("Data now time:",datetime.utcfromtimestamp(data_now))
+            if "ctime" in data.keys():
+                data_ctime = float(data['ctime']) / 1000.0
+                print("Data ctime:",datetime.utcfromtimestamp(data_ctime))
+            if "now" in data.keys():
+                data_now = float(data['now']) / 1000.0
+                print("Data now time:",datetime.utcfromtimestamp(data_now))
         print("Current UTC:", datetime.utcnow())
     else:
         data = None

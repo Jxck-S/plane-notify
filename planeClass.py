@@ -483,13 +483,13 @@ class Plane:
                     if bool(int(ra['acas_ra']['MTE'])):
                         ra_message += ", Multi threat"
                     from defSS import get_adsbx_screenshot, generate_adsbx_screenshot_time_params
-                    url_params = generate_adsbx_screenshot_time_params(ra['acas_ra']['unix_timestamp']) + f"&lat={ra['lat']}&lon={ra['lon']}&zoom=11&largeMode=2&hideButtons&hideSidebar&mapDim=0&overlays={self.get_adsbx_map_overlays()}&timestamp={ra['acas_ra']['unix_timestamp']}"
+                    url_params = f"&lat={ra['lat']}&lon={ra['lon']}&zoom=11&largeMode=2&hideButtons&hideSidebar&mapDim=0&overlays={self.get_adsbx_map_overlays()}"
                     if "threat_id_hex" in ra['acas_ra'].keys():
                         from mictronics_parse import get_aircraft_by_icao
                         threat_reg = get_aircraft_by_icao(ra['acas_ra']['threat_id_hex'])[0]
                         threat_id = threat_reg if threat_reg is not None else "ICAO: " + ra['acas_ra']['threat_id_hex']
                         ra_message += f", invader: {threat_id}"
-                        url_params += f"&icao={ra['acas_ra']['threat_id_hex']},{self.icao.lower()}"
+                        url_params += generate_adsbx_screenshot_time_params(ra['acas_ra']['unix_timestamp']) + f"&icao={ra['acas_ra']['threat_id_hex']},{self.icao.lower()}&timestamp={ra['acas_ra']['unix_timestamp']}"
                     else:
                         url_params += f"&icao={self.icao.lower()}&noIsolation"
                     print(url_params)

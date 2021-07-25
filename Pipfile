@@ -13,7 +13,7 @@ pytz = "*"
 pillow = "*"
 tweepy = "*"
 "pushbullet.py" = "*"
-discord-webhooks = "*"
+discord-webhook = "*"
 selenium = "*"
 opensky-api = {editable = true, git = "https://github.com/openskynetwork/opensky-api.git", subdirectory = "python"}
 webdriver-manager = "*"

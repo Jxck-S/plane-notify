@@ -46,6 +46,26 @@ def get_adsbx_screenshot(file_path, url_params, enable_labels=False, enable_trac
     if enable_track_labels:
         browser.find_element_by_tag_name('body').send_keys('k')
     WebDriverWait(browser, 40).until(lambda d: d.execute_script("return jQuery.active == 0"))
+    try:
+        photo_box = browser.find_element_by_id("silhouette")
+    except:
+        pass
+    else:
+        import requests, json
+        photo_list = json.loads(requests.get("https://raw.githubusercontent.com/Jxck-S/aircraft-photos/main/photo-list.json").text)
+        if "icao" in url_params:
+            import re
+
+            icao = re.search('icao=(.+?)&', url_params).group(1).lower()
+            print(icao)
+            if icao in photo_list.keys():
+                browser.execute_script("arguments[0].id = 'airplanePhoto';", photo_box) 
+                browser.execute_script(f"arguments[0].src = 'https://raw.githubusercontent.com/Jxck-S/aircraft-photos/main/images/{photo_list[icao]['reg']}.jpg';", photo_box) 
+                copyright = browser.find_element_by_id("copyrightInfo")
+                browser.execute_script("arguments[0].id = 'copyrightInfoFreeze';", copyright) 
+                browser.execute_script("$('#copyrightInfoFreeze').css('font-size', '12px');")
+                browser.execute_script(f"arguments[0].appendChild(document.createTextNode('Image © {photo_list[icao]['photographer']}'))", copyright)
+
     time.sleep(5)
     browser.save_screenshot(file_path)
     browser.quit()

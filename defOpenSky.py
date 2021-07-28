@@ -11,7 +11,7 @@ def pull_opensky(planes):
         icao_array.append(key.lower())
     try:
         planeData = opens_api.get_states(time_secs=0, icao24=icao_array)
-    except:
-            print ("OpenSky Error")
+    except Exception as e:
+            print ("OpenSky Error", e)
             failed = True
     return planeData, failed

@@ -7,7 +7,7 @@ if platform.system() == "Windows":
     from colorama import init
     init(convert=True)
 elif platform.system() == "Linux":
-    pid_file_path = "/var/run/plane-notify/plane-notify.pid"
+    pid_file_path = "/home/plane-notify/pid.pid"
     def write_pid_file(filepath):
         import os
         pid = str(os.getpid())
@@ -24,10 +24,11 @@ import signal
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 os.chdir(dname)
-if not os.path.isdir("./dependencies/"):
-    os.mkdir("./dependencies/")
 import sys
 sys.path.extend([os.getcwd()])
+#Dependency Handling
+if not os.path.isdir("./dependencies/"):
+    os.mkdir("./dependencies/")
 required_files = [("Roboto-Regular.ttf", 'https://github.com/googlefonts/roboto/blob/main/src/hinted/Roboto-Regular.ttf?raw=true'), ('airports.csv', 'https://ourairports.com/data/airports.csv'), ('regions.csv', 'https://ourairports.com/data/regions.csv'), ('ADSBX_Logo.png', "https://www.adsbexchange.com/wp-content/uploads/cropped-Stealth.png"), ('Mictronics_db.zip', "https://www.mictronics.de/aircraft-database/indexedDB.php")]
 for file in required_files:
 	file_name = file[0]
@@ -50,6 +51,7 @@ if os.path.isfile("./dependencies/" + required_files[4][0]) and not os.path.isfi
     from zipfile import ZipFile
     with ZipFile("./dependencies/" + required_files[4][0], 'r') as mictronics_db:
         mictronics_db.extractall("./dependencies/")
+
 main_config = configparser.ConfigParser()
 print(os.getcwd())
 main_config.read('./configs/mainconf.ini')
@@ -64,6 +66,10 @@ def service_exit(signum, frame):
     os.remove(pid_file_path)
     raise SystemExit("Service Stop")
 signal.signal(signal.SIGTERM, service_exit)
+if os.path.isfile("lookup_route.py"):
+    print("Route lookup is enabled")
+else:
+    print("Route lookup is disabled")
 
 try:
     print("Source is set to", source)
@@ -101,9 +107,9 @@ try:
             import ast
             today = datetime.utcnow()
             date = today.strftime("%Y/%m/%d")
-            ras, failed = pull_date_ras(date)
+            ras = pull_date_ras(date)
             sorted_ras = {}
-            if failed is False and ras != None:
+            if ras is not None:
                 #Testing RAs
                 #if last_ra_count is not None:
                 #    with open('./testing/acastest.json') as f:
@@ -136,25 +142,24 @@ try:
             else:
                 raise ValueError("Invalid API Version")
             from defADSBX import pull_adsbx
-            data, failed = pull_adsbx(planes)
-            if failed == False:
-                if data['ac'] != None:
+            data = pull_adsbx(planes)
+            if data is not None:
+                if data['ac'] is not None:
+                    data_indexed = {}
+                    for planeData in data['ac']:
+                        data_indexed[planeData[icao_key].upper()] = planeData
                     for key, obj in planes.items():
-                        has_data = False
-                        for planeData in data['ac']:
-                            if planeData[icao_key].upper() == key:
-                                if api_version == 1:
-                                    obj.run_adsbx_v1(planeData)
-                                elif api_version == 2:
-                                    obj.run_adsbx_v2(planeData)
-                                has_data = True
-                                break
-                        if has_data is False:
+                        try:
+                            if api_version == 1:
+                                obj.run_adsbx_v1(data_indexed[key.upper()])
+                            elif api_version == 2:
+                                obj.run_adsbx_v2(data_indexed[key.upper()])
+                        except KeyError:
                             obj.run_empty()
                 else:
                     for obj in planes.values():
                         obj.run_empty()
-            elif failed:
+            else:
                 failed_count += 1
         elif source == "OPENS":
             from defOpenSky import pull_opensky
@@ -190,7 +195,6 @@ try:
         footer = "-------- " + str(running_Count) + " -------- " + str(datetime_tz.strftime("%I:%M:%S %p")) + " ------------------------Elapsed Time- " + str(round(elapsed_calc_time, 3)) + " -------------------------------------"
         print (Back.GREEN + Fore.BLACK + footer[0:100] + Style.RESET_ALL)
 
-
         sleep_sec = 30
         for i in range(sleep_sec,0,-1):
             if i < 10:
@@ -208,11 +212,17 @@ except KeyboardInterrupt as e:
         sendDis(str("Manual Exit: " + str(e)), main_config)
 except Exception as e:
     if main_config.getboolean('DISCORD', 'ENABLE'):
-        from defDiscord import sendDis
-        sendDis(str("Error Exiting: " + str(traceback.format_exc())), main_config)
+        try:
+            os.remove('crash_latest.log')
+        except OSError:
+            pass
         import logging
-        logging.basicConfig(filename='crash.log', filemode='a', format='%(asctime)s - %(message)s')
+        logging.basicConfig(filename='crash_latest.log', filemode='w', format='%(asctime)s - %(message)s')
+        logging.Formatter.converter = time.gmtime
         logging.error(e)
+        logging.error(str(traceback.format_exc()))
+        from defDiscord import sendDis
+        sendDis(str("Error Exiting: " + str(e) + "Failed on " + key), main_config, "crash_latest.log")
     raise e
 finally:
     if platform.system() == "Linux":

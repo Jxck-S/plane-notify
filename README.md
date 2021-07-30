@@ -90,8 +90,18 @@ screen -R <name screen whatever you want>
 ### Start Program
 
 ```bash
-pipenv run __main__
+pipenv run python __main__
 ```
+
+## Using with Docker
+
+Install [docker from their website](https://docs.docker.com/get-docker/). Run the following command from the root of the project.
+
+```bash
+docker-compose up -d
+```
+
+After running this command, dut to the `-d` flag the container will be running in the background. To see the logs of the docker 
 
 ### TODO
 

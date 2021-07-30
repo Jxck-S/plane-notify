@@ -1,0 +1,8 @@
+version: "3.9"
+services:
+    plane-notify:
+        platform: linux/amd64
+        build:
+            context: .
+        volumes: 
+            - ./:/plane-notify

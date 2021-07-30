@@ -181,7 +181,7 @@ try:
                         obj.run_empty()
             elif failed:
                 failed_count += 1
-        if failed_count >= 10:
+        if failed_count >= 10 and main_config.getboolean('DATA', 'FAILOVER'):
             if source == "OPENS":
                 source = "ADSBX"
             elif source == "ADSBX":

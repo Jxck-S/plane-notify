@@ -57,11 +57,12 @@ class Plane:
         self.printheader("head")
         #print (Fore.YELLOW + "OpenSky Sourced Data: ", ac_dict)
         try:
-            self.__dict__.update({'icao' : ac_dict.icao24.upper(), 'callsign' : ac_dict.callsign, 'latitude' : ac_dict.latitude, 'longitude' : ac_dict.longitude,  'on_ground' : bool(ac_dict.on_ground), 'last_contact' : ac_dict.last_contact})
+            self.__dict__.update({'icao' : ac_dict.icao24.upper(), 'callsign' : ac_dict.callsign, 'latitude' : ac_dict.latitude, 'longitude' : ac_dict.longitude,  'on_ground' : bool(ac_dict.on_ground), 'squawk' : ac_dict.squawk})
             if ac_dict.baro_altitude != None:
                 self.alt_ft = round(float(ac_dict.baro_altitude)  * 3.281)
             elif self.on_ground:
                 self.alt_ft = 0
+            self.last_pos_datetime = datetime.fromtimestamp(ac_dict.time_position)
         except ValueError as e:
             print("Got data but some data is invalid!")
             print(e)
@@ -76,9 +77,10 @@ class Plane:
         #print (Fore.YELLOW +"ADSBX Sourced Data: ", ac_dict, Style.RESET_ALL)
         try:
             #postime is divided by 1000 to get seconds from milliseconds, from timestamp expects secs.
-            self.__dict__.update({'icao' : ac_dict['icao'].upper(), 'callsign' : ac_dict['call'], 'reg' : ac_dict['reg'], 'latitude' : float(ac_dict['lat']), 'longitude' : float(ac_dict['lon']), 'alt_ft' : int(ac_dict['alt']), 'on_ground' : bool(int(ac_dict["gnd"])), 'last_contact' : round(float(ac_dict["postime"])/1000)})
+            self.__dict__.update({'icao' : ac_dict['icao'].upper(), 'callsign' : ac_dict['call'], 'reg' : ac_dict['reg'], 'latitude' : float(ac_dict['lat']), 'longitude' : float(ac_dict['lon']), 'alt_ft' : int(ac_dict['alt']), 'on_ground' : bool(int(ac_dict["gnd"])), 'squawk' : ac_dict['sqk']})
             if self.on_ground:
                 self.alt_ft = 0
+            self.last_pos_datetime = datetime.fromtimestamp(int(ac_dict['postime'])/1000)
         except ValueError as e:
 
             print("Got data but some data is invalid!")
@@ -134,8 +136,31 @@ class Plane:
             print (Fore.YELLOW +"ADSBX Sourced Data: ", ac_dict, Style.RESET_ALL)
             self.printheader("foot")
         else:
-            self.feeding = True
-            self.run_check()
+            #Error Handling for bad data, sometimes it would seem to be ADSB Decode error
+            if (not self.on_ground) and self.alt_ft <= 25 and self.speed <= 10:
+                print("Not running check, appears to be bad ADSB Decode")
+            else:
+                self.feeding = True
+                self.run_check()
+    def __str__(self):
+        from colorama import Fore, Back, Style
+        from tabulate import tabulate
+        if self.last_pos_datetime is not None:
+            time_since_contact = self.get_time_since(self.last_pos_datetime)
+        output = [
+        [(Fore.CYAN + "ICAO" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.icao + Style.RESET_ALL)],
+        [(Fore.CYAN + "Callsign" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.callsign + Style.RESET_ALL)] if self.callsign is not None else None,
+        [(Fore.CYAN + "Reg" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.reg + Style.RESET_ALL)] if self.reg is not None else None,
+        [(Fore.CYAN + "Squawk" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.squawk + Style.RESET_ALL)] if self.squawk is not None else None,
+        [(Fore.CYAN + "Coordinates" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str(self.latitude) + ", " + str(self.longitude) + Style.RESET_ALL)] if self.latitude is not None and self.longitude is not None else None,
+        [(Fore.CYAN + "Last Contact" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str(time_since_contact).split(".")[0]+ Style.RESET_ALL)] if self.last_pos_datetime is not None else None,
+        [(Fore.CYAN + "On Ground" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str(self.on_ground) + Style.RESET_ALL)] if self.on_ground is not None else None,
+        [(Fore.CYAN + "Baro Altitude" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str("{:,} ft".format(self.alt_ft)) + Style.RESET_ALL)] if self.alt_ft is not None else None,
+        [(Fore.CYAN + "Nav Modes" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + ', '.join(self.nav_modes)  + Style.RESET_ALL)] if "nav_modes" in self.__dict__ and self.nav_modes != None else None,
+        [(Fore.CYAN + "Sel Alt Ft" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str("{:,} ft".format(self.sel_nav_alt)) + Style.RESET_ALL)] if "sel_nav_alt" in self.__dict__ and self.sel_nav_alt is not None else None
+        ]
+        output = list(filter(None, output))
+        return tabulate(output, [], 'fancy_grid')
     def printheader(self, type):
         from colorama import Fore, Back, Style
         if type == "head":
@@ -184,6 +209,7 @@ class Plane:
         self.run_check()
     def run_check(self):
         """Runs a check of a plane module to see if its landed or takenoff using plane data, and takes action if so."""
+        print(self)
         #Ability to Remove old Map
         import os
         from colorama import Fore, Style
@@ -196,33 +222,8 @@ class Plane:
             ENABLE_ROUTE_LOOKUP = False
         if self.config.getboolean('DISCORD', 'ENABLE'):
             from defDiscord import sendDis
-        if self.feeding == False:
+        if self.last_pos_datetime is not None:
             time_since_contact = self.get_time_since(self.last_pos_datetime)
-            output = [
-            [(Fore.CYAN + "ICAO" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.icao + Style.RESET_ALL)],
-            [(Fore.CYAN + "Last Contact" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str(time_since_contact) + Style.RESET_ALL)] if time_since_contact != None else None
-            ]
-            output = list(filter(None, output))
-            print(tabulate(output, [], 'fancy_grid'))
-            print("No Data")
-        elif self.feeding == True:
-            time_since_contact = self.get_time_since(self.last_pos_datetime)
-            output = [
-            [(Fore.CYAN + "ICAO" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.icao + Style.RESET_ALL)],
-            [(Fore.CYAN + "Callsign" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.callsign + Style.RESET_ALL)] if self.callsign != None else None,
-            [(Fore.CYAN + "Reg" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.reg + Style.RESET_ALL)] if self.reg != None else None,
-            #Squawks are latest to oldest
-            [(Fore.CYAN + "Squawk" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + (self.squawk if self.squawk is not None else "NA") + Style.RESET_ALL)],
-            [(Fore.CYAN + "Coordinates" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str(self.latitude) + ", " + str(self.longitude) + Style.RESET_ALL)],
-            [(Fore.CYAN + "Last Contact" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str(time_since_contact).split(".")[0]+ Style.RESET_ALL)],
-            [(Fore.CYAN + "On Ground" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str(self.on_ground) + Style.RESET_ALL)],
-            [(Fore.CYAN + "Baro Altitude" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str("{:,} ft".format(self.alt_ft)) + Style.RESET_ALL)],
-            [(Fore.CYAN + "Nav Modes" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + ', '.join(self.nav_modes)  + Style.RESET_ALL)] if "nav_modes" in self.__dict__ and self.nav_modes != None else None,
-            [(Fore.CYAN + "Sel Alt Ft" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str("{:,} ft".format(self.sel_nav_alt)) + Style.RESET_ALL)] if "sel_nav_alt" in self.__dict__ and self.sel_nav_alt != None else None
-            ]
-            output = list(filter(None, output))
-            print(tabulate(output, [], 'fancy_grid'))
-
 #Check if below desire ft
         desired_ft = 15000
         if self.alt_ft is None or self.alt_ft > desired_ft:
@@ -273,12 +274,14 @@ class Plane:
                 alt_above_airport = None
             if (alt_above_airport != None and alt_above_airport <= 10000) or self.alt_ft <= 15000:
                 self.landing_plausible = False
+                self.on_ground = None
                 self.landed = True
                 trigger_type = "data loss"
                 type_header = "Landed near"
             else:
                 print("Alt greater then 10k AGL")
                 self.landing_plausible = False
+                self.on_ground = None
         else:
             self.landed = False
 

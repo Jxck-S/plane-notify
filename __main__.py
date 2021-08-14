@@ -165,7 +165,7 @@ try:
             from defOpenSky import pull_opensky
             planeData, failed = pull_opensky(planes)
             if failed == False:
-                if planeData.states != []:
+                if planeData != None and planeData.states != []:
                     #   print(planeData.time)
                     for key, obj in planes.items():
                         has_data = False

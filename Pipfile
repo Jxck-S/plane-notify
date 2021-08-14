@@ -17,6 +17,7 @@ discord-webhook = "*"
 selenium = "*"
 opensky-api = {editable = true, git = "https://github.com/openskynetwork/opensky-api.git", subdirectory = "python"}
 webdriver-manager = "*"
+shapely = "*"
 
 [requires]
 python_version = "3.9"

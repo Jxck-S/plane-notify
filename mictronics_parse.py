@@ -1,11 +1,11 @@
 import json
 import os
 folder = os.getcwd() + "/dependencies"
-def get_aircraft_by_icao(icao):
+def get_aircraft_reg_by_icao(icao):
     with open(folder + '/aircrafts.json') as aircrafts_json:
         aircraft = json.load(aircrafts_json)
         try:
-            reg = aircraft[icao.upper()]
+            reg = aircraft[icao.upper()][0]
         except KeyError:
             reg = None
         return reg
@@ -20,7 +20,7 @@ def get_db_ver():
         dbver = json.load(dbver_json)
     return dbver["version"]
 def test():
-    print(get_aircraft_by_icao("A835AF"))
+    print(get_aircraft_reg_by_icao("A835AF"))
     print(get_type_desc("GLF6"))
     print(get_db_ver())
 #test()

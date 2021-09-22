@@ -213,8 +213,11 @@ class Plane:
                 elif type == "divert":
                     header = "Now diverting back to"
                 route_to = f"{header} {airport_text}" + (f" {arrival_rel}" if arrival_rel is not None else "")
-            return route_to            
-        extra_route_info = clean_data(lookup_route(self.reg, (self.latitude, self.longitude), self.type, self.alt_ft))
+            return route_to
+        if hasattr(self, "type"):
+            extra_route_info = clean_data(lookup_route(self.reg, (self.latitude, self.longitude), self.type, self.alt_ft))
+        else:
+            extra_route_info = None
         route_to = None
         if extra_route_info is None:
             pass
@@ -448,7 +451,7 @@ class Plane:
                         self.circle_history["traces"].remove(trace)
             #Expire touchngo
             if "touchngo" in self.circle_history.keys() and (datetime.now() - datetime.fromtimestamp(self.circle_history['touchngo'])).total_seconds() >= 10*60:
-                self.circle_history.pop("touchngo")  
+                self.circle_history.pop("touchngo")
         if self.feeding:
             #Squawks
             emergency_squawks ={"7500" : "Hijacking", "7600" :"Radio Failure", "7700" : "General Emergency"}
@@ -517,7 +520,7 @@ class Plane:
                     track_change = calculate_deg_change(self.track, self.last_track)
                     track_change = round(track_change, 3)
                     self.circle_history["traces"].append((time.time(), self.latitude, self.longitude, track_change))
-                    
+
                 total_change = 0
                 coords = []
                 for trace in self.circle_history["traces"]:
@@ -529,7 +532,7 @@ class Plane:
                 if abs(total_change) >= 720 and self.circle_history['triggered'] is False:
                     print("Circling Bearing Change Met")
                     from shapely.geometry import MultiPoint
-                    from geopy.distance import geodesic 
+                    from geopy.distance import geodesic
                     aircraft_coords = (self.latitude, self.longitude)
                     points = MultiPoint(coords)
                     cent =  (points.centroid) #True centroid, not necessarily an existing point
@@ -565,11 +568,11 @@ class Plane:
                             self.tweet_api.create_media_metadata(media_id= twitter_media_map_obj.media_id, alt_text= alt_text)
                             tweet = self.tweet_api.user_timeline(count = 1)[0]
                             self.tweet_api.update_status(status = f"{self.twitter_title} {message}".strip(), in_reply_to_status_id = tweet.id, media_ids=[twitter_media_map_obj.media_id])
-                            
+
                         self.circle_history['triggered'] = True
                 elif abs(total_change) <= 360 and self.circle_history["triggered"]:
                     print("No Longer Circling, trigger cleared")
-                    self.circle_history['triggered'] = False 
+                    self.circle_history['triggered'] = False
             # #Power Up
             # if self.last_feeding == False and self.speed == 0 and self.on_ground:
             #     if self.config.getboolean('DISCORD', 'ENABLE'):
@@ -606,8 +609,8 @@ class Plane:
                     from defSS import get_adsbx_screenshot, generate_adsbx_screenshot_time_params
                     url_params = f"&lat={ra['lat']}&lon={ra['lon']}&zoom=11&largeMode=2&hideButtons&hideSidebar&mapDim=0&overlays={self.get_adsbx_map_overlays()}"
                     if "threat_id_hex" in ra['acas_ra'].keys():
-                        from mictronics_parse import get_aircraft_by_icao
-                        threat_reg = get_aircraft_by_icao(ra['acas_ra']['threat_id_hex'])[0]
+                        from mictronics_parse import get_aircraft_reg_by_icao
+                        threat_reg = get_aircraft_reg_by_icao(ra['acas_ra']['threat_id_hex'])
                         threat_id = threat_reg if threat_reg is not None else "ICAO: " + ra['acas_ra']['threat_id_hex']
                         ra_message += f", invader: {threat_id}"
                         url_params += generate_adsbx_screenshot_time_params(ra['acas_ra']['unix_timestamp']) + f"&icao={ra['acas_ra']['threat_id_hex']},{self.icao.lower()}&timestamp={ra['acas_ra']['unix_timestamp']}"

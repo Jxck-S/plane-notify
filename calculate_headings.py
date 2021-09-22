@@ -1,5 +1,5 @@
 def calculate_from_bearing(frm, to):
-    '''Calculate inital bearing from one coordinate to next (two tuples of coordinates(lat/lng) in degrees in, returns single bearing)'''
+    """Calculate inital bearing from one coordinate to next (two tuples of coordinates(lat/lng) in degrees in, returns single bearing)"""
     #https://gis.stackexchange.com/questions/228656/finding-compass-direction-between-two-distant-gps-points
     from math import atan2, cos, radians, sin, degrees
     frm = (radians(frm[0]), radians(frm[1]))
@@ -11,14 +11,14 @@ def calculate_from_bearing(frm, to):
         from_bearing += 360
     return from_bearing
 def calculate_cardinal(d):
-    '''Finds cardinal direction from bearing degree'''
+    """Finds cardinal direction from bearing degree"""
     dirs = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']
     ix = int(round(d / (360. / len(dirs))))
     card = dirs[ix % len(dirs)]
     print(card)
     return card
 def calculate_deg_change(new_heading, original_heading):
-    '''Calculates change between two headings, returns negative degree if change is left, positive if right'''
+    """Calculates change between two headings, returns negative degree if change is left, positive if right"""
     normal = abs(original_heading-new_heading)
     across_inital = 360 - abs(original_heading-new_heading)
     if across_inital < normal:

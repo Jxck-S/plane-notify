@@ -25,11 +25,11 @@
         },
         "charset-normalizer": {
             "hashes": [
-                "sha256:0c8911edd15d19223366a194a513099a302055a962bca2cec0f54b8b63175d8b",
-                "sha256:f23667ebe1084be45f6ae0538e4a5a865206544097e4e8bbcacf42cd02a348f3"
+                "sha256:5d209c0a931f215cee683b6445e2d77677e7e75e159f78def0db09d68fafcaa6",
+                "sha256:5ec46d183433dcbd0ab716f2d7f29d8dee50505b3fdb40c6b985c7c4f5a3591f"
             ],
             "markers": "python_version >= '3'",
-            "version": "==2.0.4"
+            "version": "==2.0.6"
         },
         "colorama": {
             "hashes": [
@@ -96,7 +96,7 @@
         "opensky-api": {
             "editable": true,
             "git": "https://github.com/openskynetwork/opensky-api.git",
-            "ref": "6e3d9eea8a3b6723087a25fc8f195eecc6aa2d6a",
+            "ref": "d576cf260affd99156e352528ea46817273512d7",
             "subdirectory": "python"
         },
         "pillow": {
@@ -166,14 +166,6 @@
             "index": "pypi",
             "version": "==0.12.0"
         },
-        "pysocks": {
-            "hashes": [
-                "sha256:08e69f092cc6dbe92a0fdd16eeb9b9ffbc13cadfe5ca4c7bd92ffb078b293299",
-                "sha256:2725bd0a9925919b9b51739eea5f9e2bae91e83288108a9ad338b2e3a4435ee5",
-                "sha256:3f8804571ebe159c380ac6de37643bb4685970655d3bba243530d6558b799aa0"
-            ],
-            "version": "==1.7.1"
-        },
         "python-magic": {
             "hashes": [
                 "sha256:4fec8ee805fea30c07afccd1592c0f17977089895bdfaae5fec870a84e997626",
@@ -191,9 +183,7 @@
             "version": "==2021.1"
         },
         "requests": {
-            "extras": [
-                "socks"
-            ],
+            "extras": [],
             "hashes": [
                 "sha256:6c1246513ecd5ecd4528a0906f910e8f0f9c6b8ec72030dc9fd154dc1a6efd24",
                 "sha256:b8aa58f8cf793ffd8782d3d8cb19e66ef36f7aba4353eec859e74678b01b07a7"
@@ -246,14 +236,6 @@
             "index": "pypi",
             "version": "==1.7.1"
         },
-        "six": {
-            "hashes": [
-                "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926",
-                "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"
-            ],
-            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'",
-            "version": "==1.16.0"
-        },
         "tabulate": {
             "hashes": [
                 "sha256:d7c013fe7abbc5e491394e10fa845f8f32fe54f8dc60c6622c6cf482d25d47e4",
@@ -264,19 +246,19 @@
         },
         "tweepy": {
             "hashes": [
-                "sha256:5e22003441a11f6f4c2ea4d05ec5532f541e9f5d874c3908270f0c28e649b53a",
-                "sha256:76e6954b806ca470dda877f57db8792fff06a0beba0ed43efc3805771e39f06a"
+                "sha256:b28d72073b794141ad1cfdc34cb52b83b14d6b34cd4c5ea9d47bb85159b656e8",
+                "sha256:bd3af045bed9cd6a838c32a1344d48191096e5cb930012452f8397b12c89d785"
             ],
             "index": "pypi",
-            "version": "==3.10.0"
+            "version": "==4.0.0"
         },
         "urllib3": {
             "hashes": [
-                "sha256:39fb8672126159acb139a7718dd10806104dec1e2f0f6c88aab05d17df10c8d4",
-                "sha256:f57b4c16c62fa2760b7e3d97c35b255512fb6b59a259730f36ba32ce9f8e342f"
+                "sha256:4987c65554f7a2dbf30c18fd48778ef124af6fab771a377103da0585e2336ece",
+                "sha256:c4fdf4019605b6e5423637e01bc9fe4daef873709a7973e195ceba0a62bbc844"
             ],
             "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4' and python_version < '4'",
-            "version": "==1.26.6"
+            "version": "==1.26.7"
         },
         "webdriver-manager": {
             "hashes": [

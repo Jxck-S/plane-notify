@@ -65,6 +65,9 @@ class Plane:
                 self.alt_ft = round(float(ac_dict.baro_altitude)  * 3.281)
             elif self.on_ground:
                 self.alt_ft = 0
+            from mictronics_parse import get_aircraft_reg_by_icao, get_type_code_by_icao
+            self.reg = get_aircraft_reg_by_icao(self.icao)
+            self.type = get_type_code_by_icao(self.icao)
             self.last_pos_datetime = datetime.fromtimestamp(ac_dict.time_position)
         except ValueError as e:
             print("Got data but some data is invalid!")
@@ -142,7 +145,7 @@ class Plane:
             self.printheader("foot")
         else:
             #Error Handling for bad data, sometimes it would seem to be ADSB Decode error
-            if (not self.on_ground) and self.alt_ft <= 25 and self.speed <= 10:
+            if (not self.on_ground)  and self.speed <= 10:
                 print("Not running check, appears to be bad ADSB Decode")
             else:
                 self.feeding = True
@@ -512,7 +515,7 @@ class Plane:
                 if self.circle_history is None:
                     self.circle_history = {"traces" : [], "triggered" : False}
                 #Add touchngo
-                if self.on_ground or self.alt_ft <= 400:
+                if self.on_ground or self.alt_ft <= 500:
                     self.circle_history["touchngo"] = time.time()
                 #Add a Trace
                 if self.on_ground is False:
@@ -544,7 +547,7 @@ class Plane:
                     if distance_to_centroid <= 15:
                         print("Within 15 miles of centroid, CIRCLING")
                         from defAirport import getClosestAirport
-                        nearest_airport_dict = getClosestAirport(self.latitude, self.longitude, ["medium_airport", "large_airport"])
+                        nearest_airport_dict = getClosestAirport(self.latitude, self.longitude, ["small_airport", "medium_airport", "large_airport"])
                         from calculate_headings import calculate_from_bearing, calculate_cardinal
                         from_bearing = calculate_from_bearing((float(nearest_airport_dict['latitude_deg']), float(nearest_airport_dict['longitude_deg'])), (self.latitude, self.longitude))
                         cardinal = calculate_cardinal(from_bearing)

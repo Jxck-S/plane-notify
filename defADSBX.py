@@ -12,7 +12,7 @@ api_version = main_config.get('ADSBX', 'API_VERSION')
 
 def pull(url, headers):
     try:
-        response = requests.get(url, headers = headers)
+        response = requests.get(url, headers = headers, timeout=30)
         print ("HTTP Status Code:", response.status_code)
         response.raise_for_status()
     except (requests.HTTPError, ConnectionError, requests.Timeout,  urllib3.exceptions.ConnectionError) as error_message:

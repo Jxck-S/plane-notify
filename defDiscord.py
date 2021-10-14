@@ -9,5 +9,5 @@ def sendDis(message, config, file_name = None, role_id = None):
             webhook.add_file(file=f.read(), filename=file_name)
     try:
         webhook.execute()
-    except requests.Exceptions:
+    except requests.exceptions.RequestException:
         pass

@@ -423,9 +423,10 @@ class Plane:
                 twitter_media_map_obj = self.tweet_api.media_upload(self.map_file_name)
                 alt_text = f"Reg: {self.reg} On Ground: {str(self.on_ground)} Alt: {str(self.alt_ft)} Last Contact: {str(time_since_contact)} Trigger: {trigger_type}"
                 self.tweet_api.create_media_metadata(media_id= twitter_media_map_obj.media_id, alt_text= alt_text)
-                self.tweet_api.update_status(status = ((self.twitter_title + " " + message).strip()), media_ids=[twitter_media_map_obj.media_id])
+                self.latest_tweet_id = self.tweet_api.update_status(status = ((self.twitter_title + " " + message).strip()), media_ids=[twitter_media_map_obj.media_id]).id
             os.remove(self.map_file_name)
             if self.landed:
+                self.latest_tweet_id = None
                 self.recheck_route_time = None
                 self.known_to_airport = None
                 self.nearest_from_airport = None
@@ -442,8 +443,8 @@ class Plane:
                     sendDis(dis_message, self.config, role_id = role_id)
                 #Twitter
                 if self.config.getboolean('TWITTER', 'ENABLE'):
-                    tweet = self.tweet_api.user_timeline(count = 1)[0]
-                    self.tweet_api.update_status(status = f"{self.twitter_title} {route_to}".strip(), in_reply_to_status_id = tweet.id)
+                    #tweet = self.tweet_api.user_timeline(count = 1)[0]
+                    self.latest_tweet_id = self.tweet_api.update_status(status = f"{self.twitter_title} {route_to}".strip(), in_reply_to_status_id = self.latest_tweet_id).id
 
         if self.circle_history is not None:
             #Expires traces for circles
@@ -570,7 +571,7 @@ class Plane:
                             alt_text = f"Distance to centroid: {distance_to_centroid}, Total change: {total_change}"
                             self.tweet_api.create_media_metadata(media_id= twitter_media_map_obj.media_id, alt_text= alt_text)
                             tweet = self.tweet_api.user_timeline(count = 1)[0]
-                            self.tweet_api.update_status(status = f"{self.twitter_title} {message}".strip(), in_reply_to_status_id = tweet.id, media_ids=[twitter_media_map_obj.media_id])
+                            self.latest_tweet_id = self.tweet_api.update_status(status = f"{self.twitter_title} {message}".strip(), in_reply_to_status_id = self.latest_tweet_id, media_ids=[twitter_media_map_obj.media_id]).id
 
                         self.circle_history['triggered'] = True
                 elif abs(total_change) <= 360 and self.circle_history["triggered"]:

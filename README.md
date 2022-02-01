@@ -46,7 +46,7 @@ pipenv install
 
 ### Install Selenium / ChromeDriver or setup Google Static Maps
 
-Selenium/ChromeDriver is used to take a screenshot of the plane on globe.adsbexchange.com. Or use Google Static Maps, which can cost money if over used(No tutorial use <https://developers.google.com/maps/documentation/maps-static/get-api-key> to get to a key).
+Selenium/ChromeDriver is used to take a screenshot of the plane on globe.adsbexchange.com. Or use Google Static Maps, which can cost money if over used (No tutorial use <https://developers.google.com/maps/documentation/maps-static/get-api-key> to get to a key).
 
 #### Chromium
 

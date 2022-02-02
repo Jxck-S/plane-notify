@@ -6,7 +6,7 @@ import traceback
 if platform.system() == "Windows":
     from colorama import init
     init(convert=True)
-from planeClass import Plane
+from plane import Plane
 from datetime import datetime
 import pytz
 import os
@@ -47,12 +47,12 @@ print(os.getcwd())
 main_config.read('./configs/mainconf.ini')
 source = main_config.get('DATA', 'SOURCE')
 if main_config.getboolean('DISCORD', 'ENABLE'):
-        from defDiscord import sendDis
-        sendDis("Started", main_config)
+        from discord_utils import send_discord_message
+        send_discord_message("Started", main_config)
 def service_exit(signum, frame):
     if main_config.getboolean('DISCORD', 'ENABLE'):
-        from defDiscord import sendDis
-        sendDis("Service Stop", main_config)
+        from discord_utils import send_discord_message
+        send_discord_message("Service Stop", main_config)
     raise SystemExit("Service Stop")
 signal.signal(signal.SIGTERM, service_exit)
 if os.path.isfile("lookup_route.py"):
@@ -92,7 +92,7 @@ try:
         print (Back.GREEN +  Fore.BLACK + header[0:100] + Style.RESET_ALL)
         if source == "ADSBX":
             #ACAS data
-            from defADSBX import pull_date_ras
+            from ADSBX import pull_date_ras
             import ast
             today = datetime.utcnow()
             date = today.strftime("%Y/%m/%d")
@@ -130,7 +130,7 @@ try:
                 icao_key = 'icao'
             else:
                 raise ValueError("Invalid API Version")
-            from defADSBX import pull_adsbx
+            from ADSBX import pull_adsbx
             data = pull_adsbx(planes)
             if data is not None:
                 if data['ac'] is not None:
@@ -151,7 +151,7 @@ try:
             else:
                 failed_count += 1
         elif source == "OPENS":
-            from defOpenSky import pull_opensky
+            from opensky_utils import pull_opensky
             planeData, failed = pull_opensky(planes)
             if failed == False:
                 if planeData != None and planeData.states != []:
@@ -177,8 +177,8 @@ try:
                 source = "OPENS"
             failed_count = 0
             if main_config.getboolean('DISCORD', 'ENABLE'):
-                from defDiscord import sendDis
-                sendDis(str("Failed over to " + source), main_config)
+                from discord_utils import sendDis
+                send_discord_message(str("Failed over to " + source), main_config)
         elapsed_calc_time = time.time() - start_time
         datetime_tz = datetime.now(tz)
         footer = "-------- " + str(running_Count) + " -------- " + str(datetime_tz.strftime("%I:%M:%S %p")) + " ------------------------Elapsed Time- " + str(round(elapsed_calc_time, 3)) + " -------------------------------------"
@@ -197,8 +197,8 @@ try:
 except KeyboardInterrupt as e:
     print(e)
     if main_config.getboolean('DISCORD', 'ENABLE'):
-        from defDiscord import sendDis
-        sendDis(str("Manual Exit: " + str(e)), main_config)
+        from discord_utils import sendDis
+        send_discord_message(str("Manual Exit: " + str(e)), main_config)
 except Exception as e:
     if main_config.getboolean('DISCORD', 'ENABLE'):
         try:
@@ -210,6 +210,6 @@ except Exception as e:
         logging.Formatter.converter = time.gmtime
         logging.error(e)
         logging.error(str(traceback.format_exc()))
-        from defDiscord import sendDis
-        sendDis(str("Error Exiting: " + str(e) + "Failed on " + key), main_config, "crash_latest.log")
+        from discord_utils import sendDis
+        send_discord_message(str("Error Exiting: " + str(e) + "Failed on " + key), main_config, "crash_latest.log")
     raise e

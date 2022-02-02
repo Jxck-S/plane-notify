@@ -1,11 +1,11 @@
 import tempfile
 from datetime import datetime, timedelta
 
-from config import MAIN_CONFIG, PLANE_CONFIG
+from config import MAIN_CONFIG
 
 from tweet import tweepysetup
 from pushbullet import Pushbullet
-from colorama import Fore, Style
+from colorama import Fore, Style, Back
 
 from mictronics_parse import get_aircraft_reg_by_icao, get_type_code_by_icao
 from airport_utils import get_airport_by_icao, get_closest_airport
@@ -66,7 +66,7 @@ class Plane:
         if self.config.has_option("DATA", "DATA_LOSS_MINS"):
             self.data_loss_mins = self.config.getint("DATA", "DATA_LOSS_MINS")
         else:
-            self.data_loss_mins = Plane.main_config.getint("DATA", "DATA_LOSS_MINS")
+            self.data_loss_mins = MAIN_CONFIG.getint("DATA", "DATA_LOSS_MINS")
         # Setup Tweepy
         if self.config.getboolean("TWITTER", "ENABLE"):
             self.tweet_api = tweepysetup(self.config)
@@ -284,8 +284,6 @@ class Plane:
         return tabulate(output, [], "fancy_grid")
 
     def printheader(self, type):
-        from colorama import Fore, Back, Style
-
         if type == "head":
             header = str(
                 "--------- "
@@ -391,7 +389,6 @@ class Plane:
         # Ability to Remove old Map
         import os
         from colorama import Fore, Style
-        from tabulate import tabulate
 
         # Proprietary Route Lookup
         if os.path.isfile("lookup_route.py") and (

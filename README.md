@@ -3,11 +3,7 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/c4e1d839eec3468cadfe351d64dc1ac4)](https://app.codacy.com/manual/Jxck-S/plane-notify?utm_source=github.com&utm_medium=referral&utm_content=Jxck-S/plane-notify&utm_campaign=Badge_Grade_Settings)
 [![GPLv3 License](https://img.shields.io/badge/License-GPL%20v3-yellow.svg)](https://opensource.org/licenses/)
 
-Notify if configured planes have taken off or landed using Python with OpenSky or ADS-B Exchange Data, outputs location of takeoff location of landing and takeoff by reverse lookup of coordinates.
-
-## Branches
-
-Their are two branches of this program single is the original only supports one plane works with OpenSky and ADSBX. Multi branch is the new version supports multiple planes, mainly built around being based on ADSBX data, OpenSky data in this version may have issues, didn't test much. Your current viewing multi.
+Notify if configured planes have taken off or landed using Python with OpenSky(free) or ADS-B Exchange Data(paid but much better), outputs location of takeoff location of landing and takeoff by reverse lookup of coordinates.
 
 ### Discord Output Example
 
@@ -72,9 +68,13 @@ cd plane-notify
 ### Configure main config file with keys and URLs (mainconf.ini) in configs directory
 
 -   edit them with nano or vi on the running machine or on your pc and transfer the config to where you will be running the bot
+-   Pick between OpenSky and ADS-B Exchange
+-   The OpenSky API is free for everyone but the data is not as good as ADS-B Exchange. The ADS-B Exchange API is not free and this program will not work for the Rapid API from ADS-B Exchange. It only works with the API that they give when you have a partnership with ADS-B Exchange. It is not cheap to get the ADS-B Exchange full API, Don't contact them unless your ready to pay. 
+-   If you'd like to add support for ADS-B Exchanges RapidAPI feel free to work on it, and submit a merge request. 
 -   If you've setup multiple planes and want to use ADSB Exchange as your source you must have /all endpoint access to their API or it won't work.
--   Pick the correct api version for ADSB Exchange
+-   Pick the correct api version for ADS-B Exchange.
 -   Proxy is if your running multiple programs that use the ADSB Exchange, setup the proxy from lemonodor so you don't abuse the ADSB Exchange API, otherwise leave enable false.
+-   When using OpenSky theres more bugs because I mainly use ADS-B Exchange and work less on the OpenSky Implementation. 
 
 ### Configure individual planes
 
@@ -108,5 +108,6 @@ After running this command, dut to the `-d` flag the container will be running i
 -   General Cleanup
 -   Restructure project to make it proper currently random files because I didn't know how to properly structure a project before. (in progress)
 -   Add proper logging and service to run the program and remove excessive printing.
+-   Better single config YAML, or DB maybe
 
 ### [More Refrences/Documentation](Refrences.md)

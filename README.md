@@ -74,7 +74,7 @@ cd plane-notify
 -   If you've set up multiple planes and want to use ADSB Exchange as your source you must have /all endpoint access to their API or it won't work.
 -   Pick the correct API version for ADS-B Exchange.
 -   Proxy is if your running multiple programs that use the ADSB Exchange, setup the proxy from lemonodor so you don't abuse the ADSB Exchange API, otherwise leave enable false.
--   When using OpenSky there's more bugs because I mainly use ADS-B Exchange and work less on the OpenSky Implementation. 
+-   When using OpenSky there are more bugs because I mainly use ADS-B Exchange and work less on the OpenSky Implementation. 
 
 ### Configure individual planes
 

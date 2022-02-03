@@ -10,8 +10,8 @@ def getMap(mapLocation, file_name):
     zoom = 9
 
     r = requests.get(url + "center=" + center + "&zoom=" +
-                    str(zoom) + "&size=800x800 &key=" +
-                                api_key + "&sensor=false")
+                     str(zoom) + "&size=800x800 &key=" +
+                     api_key + "&sensor=false")
 
     # wb mode is stand for write binary mode
     f = open(file_name, 'wb')

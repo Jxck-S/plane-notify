@@ -10,10 +10,11 @@ main_config = configparser.ConfigParser()
 main_config.read('./configs/mainconf.ini')
 api_version = main_config.get('ADSBX', 'API_VERSION')
 
+
 def pull(url, headers):
     try:
-        response = requests.get(url, headers = headers, timeout=30)
-        print ("HTTP Status Code:", response.status_code)
+        response = requests.get(url, headers=headers, timeout=30)
+        print("HTTP Status Code:", response.status_code)
         response.raise_for_status()
     except (requests.HTTPError, ConnectionError, requests.Timeout,  urllib3.exceptions.ConnectionError) as error_message:
         print("Basic Connection Error")
@@ -29,24 +30,28 @@ def pull(url, headers):
         response = None
     return response
 
+
 def pull_adsbx(planes):
     api_version = int(main_config.get('ADSBX', 'API_VERSION'))
     if api_version not in [1, 2]:
         raise ValueError("Bad ADSBX API Version")
     if main_config.getboolean('ADSBX', 'ENABLE_PROXY') is False:
-        if api_version ==  1:
+        if api_version == 1:
             if len(planes) > 1:
-                        url = "https://adsbexchange.com/api/aircraft/json/"
+                url = "https://adsbexchange.com/api/aircraft/json/"
             elif len(planes) == 1:
-                        url = "https://adsbexchange.com/api/aircraft/icao/" +    str(list(planes.keys())[0]) + "/"
+                url = "https://adsbexchange.com/api/aircraft/icao/" + \
+                    str(list(planes.keys())[0]) + "/"
         elif api_version == 2:
             url = "https://adsbexchange.com/api/aircraft/v2/all"
     else:
         if main_config.has_option('ADSBX', 'PROXY_HOST'):
-            if api_version ==  1:
-                url = main_config.get('ADSBX', 'PROXY_HOST') + "/api/aircraft/json/all"
-            if api_version ==  2:
-                url = main_config.get('ADSBX', 'PROXY_HOST') + "/api/aircraft/v2/all"
+            if api_version == 1:
+                url = main_config.get(
+                    'ADSBX', 'PROXY_HOST') + "/api/aircraft/json/all"
+            if api_version == 2:
+                url = main_config.get(
+                    'ADSBX', 'PROXY_HOST') + "/api/aircraft/v2/all"
         else:
             raise ValueError("Proxy enabled but no host")
     headers = {
@@ -69,19 +74,20 @@ def pull_adsbx(planes):
                 raise ValueError("Error from ADSBX: msg = ", data['msg'])
             if "ctime" in data.keys():
                 data_ctime = float(data['ctime']) / 1000.0
-                print("Data ctime:",datetime.utcfromtimestamp(data_ctime))
+                print("Data ctime:", datetime.utcfromtimestamp(data_ctime))
             if "now" in data.keys():
                 data_now = float(data['now']) / 1000.0
-                print("Data now time:",datetime.utcfromtimestamp(data_now))
+                print("Data now time:", datetime.utcfromtimestamp(data_now))
         print("Current UTC:", datetime.utcnow())
     else:
         data = None
     return data
 
+
 def pull_date_ras(date):
     url = f"https://globe.adsbexchange.com/globe_history/{date}/acas/acas.json"
     headers = {
-                'Accept-Encoding': 'gzip'
+        'Accept-Encoding': 'gzip'
     }
     response = pull(url, headers)
     if response is not None:

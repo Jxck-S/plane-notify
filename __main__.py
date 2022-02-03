@@ -1,3 +1,4 @@
+import sys
 import configparser
 import time
 from colorama import Fore, Back, Style
@@ -14,28 +15,29 @@ import signal
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 os.chdir(dname)
-import sys
 sys.path.extend([os.getcwd()])
-#Dependency Handling
+# Dependency Handling
 if not os.path.isdir("./dependencies/"):
     os.mkdir("./dependencies/")
-required_files = [("Roboto-Regular.ttf", 'https://github.com/googlefonts/roboto/blob/main/src/hinted/Roboto-Regular.ttf?raw=true'), ('airports.csv', 'https://ourairports.com/data/airports.csv'), ('regions.csv', 'https://ourairports.com/data/regions.csv'), ('ADSBX_Logo.png', "https://www.adsbexchange.com/wp-content/uploads/cropped-Stealth.png"), ('Mictronics_db.zip', "https://www.mictronics.de/aircraft-database/indexedDB.php")]
+required_files = [("Roboto-Regular.ttf", 'https://github.com/googlefonts/roboto/blob/main/src/hinted/Roboto-Regular.ttf?raw=true'), ('airports.csv', 'https://ourairports.com/data/airports.csv'), ('regions.csv',
+                                                                                                                                                                                                    'https://ourairports.com/data/regions.csv'), ('ADSBX_Logo.png', "https://www.adsbexchange.com/wp-content/uploads/cropped-Stealth.png"), ('Mictronics_db.zip', "https://www.mictronics.de/aircraft-database/indexedDB.php")]
 for file in required_files:
-	file_name = file[0]
-	url = file[1]
-	if not os.path.isfile("./dependencies/" + file_name):
-		print(file_name,  "does not exist downloading now")
-		try:
-			import requests
-			file_content = requests.get(url)
+    file_name = file[0]
+    url = file[1]
+    if not os.path.isfile("./dependencies/" + file_name):
+        print(file_name,  "does not exist downloading now")
+        try:
+            import requests
+            file_content = requests.get(url)
 
-			open(("./dependencies/" + file_name), 'wb').write(file_content.content)
-		except Exception as e:
-			raise e("Error getting", file_name, "from", url)
-		else:
-			print("Successfully got", file_name)
-	else:
-		print("Already have", file_name, "continuing")
+            open(("./dependencies/" + file_name),
+                 'wb').write(file_content.content)
+        except Exception as e:
+            raise e("Error getting", file_name, "from", url)
+        else:
+            print("Successfully got", file_name)
+    else:
+        print("Already have", file_name, "continuing")
 if os.path.isfile("./dependencies/" + required_files[4][0]) and not os.path.isfile("./dependencies/aircrafts.json"):
     print("Extracting Mictronics DB")
     from zipfile import ZipFile
@@ -47,13 +49,17 @@ print(os.getcwd())
 main_config.read('./configs/mainconf.ini')
 source = main_config.get('DATA', 'SOURCE')
 if main_config.getboolean('DISCORD', 'ENABLE'):
-        from defDiscord import sendDis
-        sendDis("Started", main_config)
+    from defDiscord import sendDis
+    sendDis("Started", main_config)
+
+
 def service_exit(signum, frame):
     if main_config.getboolean('DISCORD', 'ENABLE'):
         from defDiscord import sendDis
         sendDis("Service Stop", main_config)
     raise SystemExit("Service Stop")
+
+
 signal.signal(signal.SIGTERM, service_exit)
 if os.path.isfile("lookup_route.py"):
     print("Route lookup is enabled")
@@ -63,17 +69,18 @@ else:
 try:
     print("Source is set to", source)
     import sys
-    #Setup plane objects from plane configs
+    # Setup plane objects from plane configs
     planes = {}
     print("Found the following configs")
     for dirpath, dirname, filename in os.walk("./configs"):
-            for filename in [f for f in filename if f.endswith(".ini") and f != "mainconf.ini"]:
-                if not "disabled" in dirpath:
-                    print(os.path.join(dirpath, filename))
-                    plane_config = configparser.ConfigParser()
-                    plane_config.read((os.path.join(dirpath, filename)))
-                    #Creates a Key labeled the ICAO of the plane, with the value being a plane object
-                    planes[plane_config.get('DATA', 'ICAO').upper()] = Plane(plane_config.get('DATA', 'ICAO'), os.path.join(dirpath, filename), plane_config)
+        for filename in [f for f in filename if f.endswith(".ini") and f != "mainconf.ini"]:
+            if not "disabled" in dirpath:
+                print(os.path.join(dirpath, filename))
+                plane_config = configparser.ConfigParser()
+                plane_config.read((os.path.join(dirpath, filename)))
+                # Creates a Key labeled the ICAO of the plane, with the value being a plane object
+                planes[plane_config.get('DATA', 'ICAO').upper()] = Plane(plane_config.get(
+                    'DATA', 'ICAO'), os.path.join(dirpath, filename), plane_config)
 
     running_Count = 0
     failed_count = 0
@@ -86,12 +93,13 @@ try:
         datetime_tz = datetime.now(tz)
         if datetime_tz.hour == 0 and datetime_tz.minute == 0:
             running_Count = 0
-        running_Count +=1
+        running_Count += 1
         start_time = time.time()
-        header = ("-------- " + str(running_Count) + " -------- " + str(datetime_tz.strftime("%I:%M:%S %p")) + " ---------------------------------------------------------------------------")
-        print (Back.GREEN +  Fore.BLACK + header[0:100] + Style.RESET_ALL)
+        header = ("-------- " + str(running_Count) + " -------- " + str(datetime_tz.strftime("%I:%M:%S %p")
+                                                                        ) + " ---------------------------------------------------------------------------")
+        print(Back.GREEN + Fore.BLACK + header[0:100] + Style.RESET_ALL)
         if source == "ADSBX":
-            #ACAS data
+            # ACAS data
             from defADSBX import pull_date_ras
             import ast
             today = datetime.utcnow()
@@ -99,14 +107,15 @@ try:
             ras = pull_date_ras(date)
             sorted_ras = {}
             if ras is not None:
-                #Testing RAs
-                #if last_ra_count is not None:
+                # Testing RAs
+                # if last_ra_count is not None:
                 #    with open('./testing/acastest.json') as f:
                 #        data = f.readlines()
                 #    ras += data
                 ra_count = len(ras)
                 if last_ra_count is not None and ra_count != last_ra_count:
-                    print(abs(ra_count - last_ra_count), "new Resolution Advisories")
+                    print(abs(ra_count - last_ra_count),
+                          "new Resolution Advisories")
                     for ra_num, ra in enumerate(ras[last_ra_count:]):
                         ra = ast.literal_eval(ra)
                         if ra['hex'].upper() in planes.keys():
@@ -119,10 +128,10 @@ try:
                 last_ra_count = ra_count
             for key, obj in planes.items():
                 if sorted_ras != {} and key in sorted_ras.keys():
-                        print(key, "has", len(sorted_ras[key]), "RAs")
-                        obj.check_new_ras(sorted_ras[key])
+                    print(key, "has", len(sorted_ras[key]), "RAs")
+                    obj.check_new_ras(sorted_ras[key])
                 obj.expire_ra_types()
-            #Normal API data
+            # Normal API data
             api_version = int(main_config.get('ADSBX', 'API_VERSION'))
             if api_version == 2:
                 icao_key = 'hex'
@@ -181,18 +190,23 @@ try:
                 sendDis(str("Failed over to " + source), main_config)
         elapsed_calc_time = time.time() - start_time
         datetime_tz = datetime.now(tz)
-        footer = "-------- " + str(running_Count) + " -------- " + str(datetime_tz.strftime("%I:%M:%S %p")) + " ------------------------Elapsed Time- " + str(round(elapsed_calc_time, 3)) + " -------------------------------------"
-        print (Back.GREEN + Fore.BLACK + footer[0:100] + Style.RESET_ALL)
+        footer = "-------- " + str(running_Count) + " -------- " + str(datetime_tz.strftime("%I:%M:%S %p")) + \
+            " ------------------------Elapsed Time- " + \
+            str(round(elapsed_calc_time, 3)) + \
+            " -------------------------------------"
+        print(Back.GREEN + Fore.BLACK + footer[0:100] + Style.RESET_ALL)
 
         sleep_sec = 30
-        for i in range(sleep_sec,0,-1):
+        for i in range(sleep_sec, 0, -1):
             if i < 10:
                 i = " " + str(i)
             sys.stdout.write("\r")
-            sys.stdout.write(Back.RED + "Sleep {00000000}".format(i) + Style.RESET_ALL)
+            sys.stdout.write(
+                Back.RED + "Sleep {00000000}".format(i) + Style.RESET_ALL)
             sys.stdout.flush()
             time.sleep(1)
-        sys.stdout.write(Back.RED + ('\x1b[1K\r' +"Slept for " +str(sleep_sec)) + Style.RESET_ALL)
+        sys.stdout.write(
+            Back.RED + ('\x1b[1K\r' + "Slept for " + str(sleep_sec)) + Style.RESET_ALL)
         print()
 except KeyboardInterrupt as e:
     print(e)
@@ -206,10 +220,12 @@ except Exception as e:
         except OSError:
             pass
         import logging
-        logging.basicConfig(filename='crash_latest.log', filemode='w', format='%(asctime)s - %(message)s')
+        logging.basicConfig(filename='crash_latest.log',
+                            filemode='w', format='%(asctime)s - %(message)s')
         logging.Formatter.converter = time.gmtime
         logging.error(e)
         logging.error(str(traceback.format_exc()))
         from defDiscord import sendDis
-        sendDis(str("Error Exiting: " + str(e) + "Failed on " + key), main_config, "crash_latest.log")
+        sendDis(str("Error Exiting: " + str(e) + "Failed on " + key),
+                main_config, "crash_latest.log")
     raise e

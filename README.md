@@ -9,7 +9,7 @@ Notify if configured planes have taken off or landed using Python with OpenSky(f
 
 ![Discord Output Example](./ExImages/DiscordEX.png?raw=true)
 
-#### More examples in  the ExImages folder
+#### More examples in the ExImages folder
 
 [ExImages](./ExImages)
 
@@ -19,7 +19,7 @@ I made this program so I could track Elon Musk's Jet and share with others of hi
 
 ### Contributing
 
- Im open to any help or suggestions, I realize theirs much better ways im sure to do alot of my methods, im only a noob. I'll accept pull requests. If you'd like to discuss join <https://JacksTech.net/Discord>
+Im open to any help or suggestions, I realize theirs much better ways im sure to do alot of my methods, im only a noob. I'll accept pull requests. If you'd like to discuss join <https://JacksTech.net/Discord>
 
 ### [Algorithm](PseudoCode.md)
 
@@ -49,6 +49,7 @@ Selenium/ChromeDriver is used to take a screenshot of the plane on globe.adsbexc
 ```bash
 sudo apt-get install chromium
 ```
+
 These output methods once installed can be configured in planes config you create, using the example plane1.ini
 
 ### Install Screen to run in the background
@@ -67,19 +68,19 @@ cd plane-notify
 
 ### Configure main config file with keys and URLs (mainconf.ini) in configs directory
 
--   edit them with nano or vi on the running machine or on your pc and transfer the config to where you will be running the bot
--   Pick between OpenSky and ADS-B Exchange
--   The OpenSky API is free for everyone but the data is not as good as ADS-B Exchange. The ADS-B Exchange API is not free and this program will not work for the Rapid API from ADS-B Exchange. It only works with the API that they give when you have a partnership with ADS-B Exchange. It is not cheap to get the ADS-B Exchange full API, Don't contact them unless your ready to pay. 
--   If you'd like to add support for ADS-B Exchanges RapidAPI feel free to work on it, and submit a merge request. 
--   If you've setup multiple planes and want to use ADSB Exchange as your source you must have /all endpoint access to their API or it won't work.
--   Pick the correct api version for ADS-B Exchange.
--   Proxy is if your running multiple programs that use the ADSB Exchange, setup the proxy from lemonodor so you don't abuse the ADSB Exchange API, otherwise leave enable false.
--   When using OpenSky theres more bugs because I mainly use ADS-B Exchange and work less on the OpenSky Implementation. 
+- edit them with nano or vi on the running machine or on your pc and transfer the config to where you will be running the bot
+- Pick between OpenSky and ADS-B Exchange
+- The OpenSky API is free for everyone but the data is not as good as ADS-B Exchange. The ADS-B Exchange API is not free and this program will not work for the Rapid API from ADS-B Exchange. It only works with the API that they give when you have a partnership with ADS-B Exchange. It is not cheap to get the ADS-B Exchange full API, Don't contact them unless your ready to pay.
+- If you'd like to add support for ADS-B Exchanges RapidAPI feel free to work on it, and submit a merge request.
+- If you've setup multiple planes and want to use ADSB Exchange as your source you must have /all endpoint access to their API or it won't work.
+- Pick the correct api version for ADS-B Exchange.
+- Proxy is if your running multiple programs that use the ADSB Exchange, setup the proxy from lemonodor so you don't abuse the ADSB Exchange API, otherwise leave enable false.
+- When using OpenSky theres more bugs because I mainly use ADS-B Exchange and work less on the OpenSky Implementation.
 
 ### Configure individual planes
 
--   an example file is given (plane1.ini) plane config files should be in the configs directory, the program looks for any file in that folder with a .ini extension.
--   each plane should have its own config
+- an example file is given (plane1.ini) plane config files should be in the configs directory, the program looks for any file in that folder with a .ini extension.
+- each plane should have its own config
 
 ### Enter and create new Screen Session
 
@@ -101,13 +102,13 @@ Install [docker from their website](https://docs.docker.com/get-docker/). Run th
 docker-compose up -d
 ```
 
-After running this command, dut to the `-d` flag the container will be running in the background. To see the logs of the docker 
+After running this command, dut to the `-d` flag the container will be running in the background. To see the logs of the docker
 
 ### TODO
 
--   General Cleanup
--   Restructure project to make it proper currently random files because I didn't know how to properly structure a project before. (in progress)
--   Add proper logging and service to run the program and remove excessive printing.
--   Better single config YAML, or DB maybe
+- General Cleanup
+- Restructure project to make it proper currently random files because I didn't know how to properly structure a project before. (in progress)
+- Add proper logging and service to run the program and remove excessive printing.
+- Better single config YAML, or DB maybe
 
 ### [More Refrences/Documentation](Refrences.md)

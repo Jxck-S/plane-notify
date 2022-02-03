@@ -3,7 +3,7 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/c4e1d839eec3468cadfe351d64dc1ac4)](https://app.codacy.com/manual/Jxck-S/plane-notify?utm_source=github.com&utm_medium=referral&utm_content=Jxck-S/plane-notify&utm_campaign=Badge_Grade_Settings)
 [![GPLv3 License](https://img.shields.io/badge/License-GPL%20v3-yellow.svg)](https://opensource.org/licenses/)
 
-Notify if configured planes have taken off or landed using Python with OpenSky(free) or ADS-B Exchange Data(paid but much better), outputs location of takeoff location of landing and takeoff by reverse lookup of coordinates.
+Notify if configured planes have taken off or landed using Python with <a href="https://opensky-network.org/">OpenSky</a>(free) or ADS-B Exchange Data(paid but much better), outputs location of takeoff location of landing and takeoff by reverse lookup of coordinates.
 
 ### Discord Output Example
 
@@ -19,7 +19,7 @@ I made this program so I could track Elon Musk's Jet and share with others of hi
 
 ### Contributing
 
- Im open to any help or suggestions, I realize theirs much better ways im sure to do alot of my methods, im only a noob. I'll accept pull requests. If you'd like to discuss join <https://JacksTech.net/Discord>
+ Im open to any help or suggestions, I realize there are many better ways to improve this program. I'm sure to do alot of my methods, Im only a noob. I'll accept pull requests. If you'd like to discuss join <https://JacksTech.net/Discord>
 
 ### [Algorithm](PseudoCode.md)
 
@@ -67,7 +67,7 @@ cd plane-notify
 
 ### Configure main config file with keys and URLs (mainconf.ini) in configs directory
 
--   edit them with nano or vi on the running machine or on your pc and transfer the config to where you will be running the bot
+-   Edit them with nano or vi on the running machine or on your pc and transfer the config to where you will be running the bot
 -   Pick between OpenSky and ADS-B Exchange
 -   The OpenSky API is free for everyone but the data is not as good as ADS-B Exchange. The ADS-B Exchange API is not free and this program will not work for the Rapid API from ADS-B Exchange. It only works with the API that they give when you have a partnership with ADS-B Exchange. It is not cheap to get the ADS-B Exchange full API, Don't contact them unless your ready to pay. 
 -   If you'd like to add support for ADS-B Exchanges RapidAPI feel free to work on it, and submit a merge request. 
@@ -78,8 +78,8 @@ cd plane-notify
 
 ### Configure individual planes
 
--   an example file is given (plane1.ini) plane config files should be in the configs directory, the program looks for any file in that folder with a .ini extension.
--   each plane should have its own config
+-   An example file is given (plane1.ini) plane config files should be in the configs directory, the program looks for any file in that folder with a .ini extension.
+-   Each plane should have its own config
 
 ### Enter and create new Screen Session
 

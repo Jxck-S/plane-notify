@@ -19,7 +19,7 @@ I made this program so I could track Elon Musk's Jet and share with others of hi
 
 ### Contributing
 
- Im open to any help or suggestions, I realize theirs much better ways im sure to do alot of my methods, im only a noob. I'll accept pull requests. If you'd like to discuss join <https://JacksTech.net/Discord>
+ I'm open to any help or suggestions, I realize there's much better ways I'm sure to do a lot of my methods, I'm only a noob. I'll accept pull requests. If you'd like to discuss, join <https://JacksTech.net/Discord>
 
 ### [Algorithm](PseudoCode.md)
 
@@ -67,19 +67,19 @@ cd plane-notify
 
 ### Configure main config file with keys and URLs (mainconf.ini) in configs directory
 
--   edit them with nano or vi on the running machine or on your pc and transfer the config to where you will be running the bot
+-   Edit them with nano or vi on the running machine or on your pc and transfer the config to where you will be running the bot
 -   Pick between OpenSky and ADS-B Exchange
--   The OpenSky API is free for everyone but the data is not as good as ADS-B Exchange. The ADS-B Exchange API is not free and this program will not work for the Rapid API from ADS-B Exchange. It only works with the API that they give when you have a partnership with ADS-B Exchange. It is not cheap to get the ADS-B Exchange full API, Don't contact them unless your ready to pay. 
--   If you'd like to add support for ADS-B Exchanges RapidAPI feel free to work on it, and submit a merge request. 
+-   The OpenSky API is free for everyone, but the data is not as good as ADS-B Exchange. The ADS-B Exchange API is not free, and this program will not work for the Rapid API from ADS-B Exchange. It only works with the API that they give when you have a partnership with ADS-B Exchange. It is not cheap to get the ADS-B Exchange full API. Don't contact them unless you're ready to pay. 
+-   If you'd like to add support for ADS-B Exchanges RapidAPI, feel free to work on it and submit a merge request. 
 -   If you've setup multiple planes and want to use ADSB Exchange as your source you must have /all endpoint access to their API or it won't work.
 -   Pick the correct api version for ADS-B Exchange.
 -   Proxy is if your running multiple programs that use the ADSB Exchange, setup the proxy from lemonodor so you don't abuse the ADSB Exchange API, otherwise leave enable false.
--   When using OpenSky theres more bugs because I mainly use ADS-B Exchange and work less on the OpenSky Implementation. 
+-   When using OpenSky there's more bugs because I mainly use ADS-B Exchange and work less on the OpenSky Implementation. 
 
 ### Configure individual planes
 
--   an example file is given (plane1.ini) plane config files should be in the configs directory, the program looks for any file in that folder with a .ini extension.
--   each plane should have its own config
+-   An example file is given (plane1.ini) plane config files should be in the configs directory. The program looks for any file in that folder with a .ini extension.
+-   Each plane should have its own config
 
 ### Enter and create new Screen Session
 

@@ -68,19 +68,19 @@ cd plane-notify
 
 ### Configure main config file with keys and URLs (mainconf.ini) in configs directory
 
-- edit them with nano or vi on the running machine or on your pc and transfer the config to where you will be running the bot
-- Pick between OpenSky and ADS-B Exchange
-- The OpenSky API is free for everyone but the data is not as good as ADS-B Exchange. The ADS-B Exchange API is not free and this program will not work for the Rapid API from ADS-B Exchange. It only works with the API that they give when you have a partnership with ADS-B Exchange. It is not cheap to get the ADS-B Exchange full API, Don't contact them unless your ready to pay.
-- If you'd like to add support for ADS-B Exchanges RapidAPI feel free to work on it, and submit a merge request.
-- If you've setup multiple planes and want to use ADSB Exchange as your source you must have /all endpoint access to their API or it won't work.
-- Pick the correct api version for ADS-B Exchange.
-- Proxy is if your running multiple programs that use the ADSB Exchange, setup the proxy from lemonodor so you don't abuse the ADSB Exchange API, otherwise leave enable false.
-- When using OpenSky theres more bugs because I mainly use ADS-B Exchange and work less on the OpenSky Implementation.
+-   edit them with nano or vi on the running machine or on your pc and transfer the config to where you will be running the bot
+-   Pick between OpenSky and ADS-B Exchange
+-   The OpenSky API is free for everyone but the data is not as good as ADS-B Exchange. The ADS-B Exchange API is not free and this program will not work for the Rapid API from ADS-B Exchange. It only works with the API that they give when you have a partnership with ADS-B Exchange. It is not cheap to get the ADS-B Exchange full API, Don't contact them unless your ready to pay.
+-   If you'd like to add support for ADS-B Exchanges RapidAPI feel free to work on it, and submit a merge request.
+-   If you've setup multiple planes and want to use ADSB Exchange as your source you must have /all endpoint access to their API or it won't work.
+-   Pick the correct api version for ADS-B Exchange.
+-   Proxy is if your running multiple programs that use the ADSB Exchange, setup the proxy from lemonodor so you don't abuse the ADSB Exchange API, otherwise leave enable false.
+-   When using OpenSky theres more bugs because I mainly use ADS-B Exchange and work less on the OpenSky Implementation.
 
 ### Configure individual planes
 
-- an example file is given (plane1.ini) plane config files should be in the configs directory, the program looks for any file in that folder with a .ini extension.
-- each plane should have its own config
+-   an example file is given (plane1.ini) plane config files should be in the configs directory, the program looks for any file in that folder with a .ini extension.
+-   each plane should have its own config
 
 ### Enter and create new Screen Session
 
@@ -106,9 +106,9 @@ After running this command, dut to the `-d` flag the container will be running i
 
 ### TODO
 
-- General Cleanup
-- Restructure project to make it proper currently random files because I didn't know how to properly structure a project before. (in progress)
-- Add proper logging and service to run the program and remove excessive printing.
-- Better single config YAML, or DB maybe
+-   General Cleanup
+-   Restructure project to make it proper currently random files because I didn't know how to properly structure a project before. (in progress)
+-   Add proper logging and service to run the program and remove excessive printing.
+-   Better single config YAML, or DB maybe
 
 ### [More Refrences/Documentation](Refrences.md)

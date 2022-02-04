@@ -22,7 +22,7 @@ def append_airport(filename, airport):
     black = "rgb(0, 0, 0)"  # Black
     white = "rgb(255, 255, 255)"  # White
     navish = "rgb(0, 63, 75)"
-    whitish = "rgb(248, 248, 248)"
+    # whitish = "rgb(248, 248, 248)"
     # Info Box
     draw.rectangle(((325, 760), (624, 800)), fill=white, outline=black)
     # Header Box

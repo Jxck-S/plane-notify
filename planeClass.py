@@ -895,7 +895,7 @@ class Plane:
                                 media_id=twitter_media_map_obj.media_id,
                                 alt_text=alt_text,
                             )
-                            tweet = self.tweet_api.user_timeline(count=1)[0]
+                            # tweet = self.tweet_api.user_timeline(count=1)[0]
                             self.latest_tweet_id = self.tweet_api.update_status(
                                 status=f"{self.twitter_title} {message}".strip(),
                                 in_reply_to_status_id=self.latest_tweet_id,

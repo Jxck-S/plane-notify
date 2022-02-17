@@ -15,16 +15,14 @@ def add_airport_region(airport_dict):
 def getClosestAirport(latitude, longitude, allowed_types):
     from geopy.distance import geodesic
     plane = (latitude, longitude)
+    closest_airport_dict = dict()
     with open('./dependencies/airports.csv', 'r', encoding='utf-8') as airport_csv:
         airport_csv_reader = csv.DictReader(filter(lambda row: row[0] != '#', airport_csv))
         for airport in airport_csv_reader:
             if airport['type'] in allowed_types:
                 airport_coord = float(airport['latitude_deg']), float(airport['longitude_deg'])
                 airport_dist = float((geodesic(plane, airport_coord).mi))
-                if "closest_airport_dict" not in locals():
-                    closest_airport_dict = airport
-                    closest_airport_dist = airport_dist
-                elif airport_dist < closest_airport_dist:
+                if not closest_airport_dict or airport_dist < closest_airport_dist:
                     closest_airport_dict = airport
                     closest_airport_dist = airport_dist
         closest_airport_dict['distance_mi'] = closest_airport_dist

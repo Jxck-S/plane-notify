@@ -67,7 +67,7 @@ cd plane-notify
 
 ### Configure main config file with keys and URLs (mainconf.ini) in the configs directory
 
--   edit them with nano or vi on the running machine or on your pc and transfer the config to where you will be running the bot
+-   Edit them with nano or vi on the running machine or on your pc and transfer the config to where you will be running the bot
 -   Pick between OpenSky and ADS-B Exchange
 -   The OpenSky API is free for everyone but the data is not as good as ADS-B Exchange. The ADS-B Exchange API is not free and this program will not work for the Rapid API from ADS-B Exchange. It only works with the API that they give when you have a partnership with ADS-B Exchange. It is not cheap to get the ADS-B Exchange full API, Don't contact them unless you are ready to pay. 
 -   If you'd like to add support for ADS-B Exchanges RapidAPI feel free to work on it and submit a merge request. 
@@ -76,10 +76,11 @@ cd plane-notify
 -   Proxy is if your running multiple programs that use the ADSB Exchange, setup the proxy from lemonodor so you don't abuse the ADSB Exchange API, otherwise leave enable false.
 -   When using OpenSky there are more bugs because I mainly use ADS-B Exchange and work less on the OpenSky Implementation. 
 
+
 ### Configure individual planes
 
--   an example file is given (plane1.ini) plane config files should be in the configs directory, the program looks for any file in that folder with a .ini extension.
--   each plane should have its own config
+-   An example file is given (plane1.ini) plane config files should be in the configs directory. The program looks for any file in that folder with a .ini extension.
+-   Each plane should have its own config
 
 ### Enter and create a new Screen Session
 
@@ -101,7 +102,7 @@ Install [docker from their website](https://docs.docker.com/get-docker/). Run th
 docker-compose up -d
 ```
 
-After running this command, dut to the `-d` flag the container will be running in the background. To see the logs of the docker 
+After running this command, due to the `-d` flag the container will be running in the background. To see the logs of the docker container use `docker logs CONTAINER` (add `-f` to continue streaming the containers output)
 
 ### TODO
 

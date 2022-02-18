@@ -3,7 +3,7 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/c4e1d839eec3468cadfe351d64dc1ac4)](https://app.codacy.com/manual/Jxck-S/plane-notify?utm_source=github.com&utm_medium=referral&utm_content=Jxck-S/plane-notify&utm_campaign=Badge_Grade_Settings)
 [![GPLv3 License](https://img.shields.io/badge/License-GPL%20v3-yellow.svg)](https://opensource.org/licenses/)
 
-Notify if configured planes have taken off or landed using Python with OpenSky(free) or ADS-B Exchange Data(paid but much better), outputs location of takeoff location of landing and takeoff by a reverse lookup of coordinates.
+Notify if configured planes have taken off or landed using Python with <a href="https://opensky-network.org/">OpenSky</a>(free) or <a href="https://www.adsbexchange.com/">ADSBExchange</a> Data(paid but much better), outputs location of takeoff location of landing and takeoff by reverse lookup of coordinates.
 
 ### Discord Output Example
 
@@ -19,7 +19,7 @@ I made this program so I could track Elon Musk's Jet and share with others of hi
 
 ### Contributing
 
- I'm open to any help or suggestions, I realize theirs much better ways I'm sure to do a lot of my methods, I'm only a noob. I'll accept pull requests. If you'd like to discuss join <https://JacksTech.net/Discord>
+ I'm open to any help or suggestions, I realize there are many better ways to improve this program and better ways to get this program to work properly, Im only a noob. I'll accept pull requests. If you'd like to discuss join <https://JacksTech.net/Discord>
 
 ### [Algorithm](PseudoCode.md)
 
@@ -79,7 +79,7 @@ cd plane-notify
 
 ### Configure individual planes
 
--   An example file is given (plane1.ini) plane config files should be in the configs directory. The program looks for any file in that folder with a .ini extension.
+-   An example file is given (plane1.ini) plane config files should be in the configs directory, the program looks for any file in that folder with a .ini extension.
 -   Each plane should have its own config
 
 ### Enter and create a new Screen Session

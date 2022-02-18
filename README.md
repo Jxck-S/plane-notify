@@ -101,7 +101,7 @@ Install [docker from their website](https://docs.docker.com/get-docker/). Run th
 docker-compose up -d
 ```
 
-After running this command, dut to the `-d` flag the container will be running in the background. To see the logs of the docker 
+After running this command, due to the `-d` flag the container will be running in the background. To see the logs of the docker container use `docker logs CONTAINER` (add `-f` to continue streaming the containers output)
 
 ### TODO
 

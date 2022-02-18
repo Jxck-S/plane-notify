@@ -1,4 +1,5 @@
 ### How It works
+
 -   Takes data about every (x seconds configurable) from OpenSky Network or ADS-B Exchange and compares it to previous data with what I've defined as a landing or takeoff event.
 -   A takeoff event is the plane is not on the ground, below 10k feet and ((previously no data and now getting data) or was previously on the ground).
 -   A landing event is previously below 10k feet and (previously getting data, no longer getting data and previously not on the ground) or (now on the ground and previously not on the ground).

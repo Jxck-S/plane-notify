@@ -111,4 +111,4 @@ After running this command, due to the `-d` flag the container will be running i
 -   Add proper logging and service to run the program and remove excessive printing.
 -   Better single config YAML, or DB maybe
 
-### [More References/Documentation](Refrences.md)
+### [More References/Documentation](References.md)

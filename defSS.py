@@ -34,6 +34,12 @@ def get_adsbx_screenshot(file_path, url_params, enable_labels=False, enable_trac
         browser.execute_script("$('#infoblock-container').css('overflow', 'hidden');")
     except:
         print("Couldn't disable sidebar on map")
+    #Remove Google Ads
+    try:
+        element = browser.find_element_by_xpath("//*[contains(@id, 'FIOnDemandWrapper_')]")
+        browser.execute_script("""var element = arguments[0];    element.parentNode.removeChild(element); """, element)
+    except:
+        print("Couldn't remove Google Ads")
     #Remove share
     try:
         element = browser.find_element_by_xpath("//*[contains(text(), 'Share')]")

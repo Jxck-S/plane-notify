@@ -66,3 +66,7 @@
 ### OurAirports / airports.csv / regions.csv
 
 -   <https://ourairports.com/data/>
+
+### Telegram Bot
+
+-   <https://github.com/python-telegram-bot/python-telegram-bot>

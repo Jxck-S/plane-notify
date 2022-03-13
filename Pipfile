@@ -18,6 +18,7 @@ selenium = "*"
 opensky-api = {editable = true, git = "https://github.com/openskynetwork/opensky-api.git", subdirectory = "python"}
 webdriver-manager = "*"
 shapely = "*"
+python-telegram-bot = "*"
 
 [requires]
 python_version = "3.9"

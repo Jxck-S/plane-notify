@@ -120,7 +120,7 @@ Getting channel or chat (contact) ID
 -   It will reply with a json with information from the message;
 -   Go to the channel or chat you want the id and forward a message from there to JsonDumpBot;
 -   Find the id in the reply. It'll look something like this:
-```
+```bash
    {...
     "forward_from_chat": {
           "id": xxxxxxxxx,
@@ -132,9 +132,9 @@ Getting a group ID
 -   Open [Telegram web](https://web.telegram.org);
 -   Go to group and check the url on address bar of browser;
 -   That's the group ID (-xxxxxxxxx), it'll look something like this:
- ```
+```bash
   https://web.telegram.org/z/#-xxxxxxxxx
- ```
+```
 
 ### TODO
 

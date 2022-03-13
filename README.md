@@ -120,10 +120,10 @@ Getting channel or chat (contact) ID
 -   It will reply with a json with information from the message;
 -   Go to the channel or chat you want the id and forward a message from there to JsonDumpBot;
 -   Find the id in the reply. It'll look something like this:
- ```
+```
    {...
-"forward_from_chat": {
-      "id": xxxxxxxxx,
+    "forward_from_chat": {
+          "id": xxxxxxxxx,
    ...}
 ```
 -   Don't forget to add the bot as admin in channel so messages can be sent.

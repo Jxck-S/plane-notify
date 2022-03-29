@@ -3,7 +3,7 @@ def sendDis(message, config, file_name = None, role_id = None):
     from discord_webhook import DiscordWebhook
     if role_id != None:
         message += f" <@&{role_id}>"
-    webhook = DiscordWebhook(url=config.get('DISCORD', 'URL'), content=message[0:1999], username=config.get('DISCORD', 'USERNAME'))
+    webhook = DiscordWebhook(url=config.get('DISCORD', 'URL'), content=message[0:1999], username=config.get('DISCORD', 'USERNAME'), avatar_url=config.get('DISCORD', 'AVATAR_URL'))
     if file_name != None:
         with open(file_name, "rb") as f:
             webhook.add_file(file=f.read(), filename=file_name)

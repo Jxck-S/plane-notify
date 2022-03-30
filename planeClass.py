@@ -408,7 +408,7 @@ class Plane:
             else:
                 raise ValueError("Map option not set correctly in this planes conf")
             #Telegram
-            if self.config.getboolean('TELEGRAM', 'ENABLE'):
+            if self.config.has_section('TELEGRAM') and self.config.getboolean('TELEGRAM', 'ENABLE'):
                 from defTelegram import sendTeleg
                 photo = open(self.map_file_name, "rb")
                 sendTeleg(photo, message, self.config)
@@ -442,7 +442,7 @@ class Plane:
             if route_to != None:
                 print(route_to)
                 #Telegram
-                if self.config.getboolean('TELEGRAM', 'ENABLE'):
+                if self.config.has_section('TELEGRAM') and self.config.getboolean('TELEGRAM', 'ENABLE'):
                     message = f"{self.dis_title} {route_to}".strip()
                     photo = open(self.map_file_name, "rb")
                     sendTeleg(photo, message, self.config)
@@ -574,7 +574,7 @@ class Plane:
                             message =  f"Circling {round(nearest_airport_dict['distance_mi'], 2)}mi {cardinal} of {nearest_airport_dict['icao']}, {nearest_airport_dict['name']}  at {self.alt_ft}ft"
                         print(message)
                         #Telegram
-                        if self.config.getboolean('TELEGRAM', 'ENABLE'):
+                        if self.config.has_section('TELEGRAM') and self.config.getboolean('TELEGRAM', 'ENABLE'):
                             photo = open(self.map_file_name, "rb")
                             sendTeleg(photo, message, self.config)
                         if self.config.getboolean('DISCORD', 'ENABLE'):

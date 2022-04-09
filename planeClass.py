@@ -383,10 +383,10 @@ class Plane:
                     landed_time -= timedelta(seconds=time_since_contact.total_seconds())
                 hours, remainder = divmod(landed_time.total_seconds(), 3600)
                 minutes, seconds = divmod(remainder, 60)
-                min_syntax = "Mins" if minutes > 1 else "Min"
+                min_syntax = "min"
                 if hours > 0:
-                    hour_syntax = "Hours" if hours > 1 else "Hour"
-                    landed_time_msg = (f"Apx. flt. time {int(hours)} {hour_syntax}" +  (f" : {int(minutes)} {min_syntax}. " if minutes > 0 else "."))
+                    hour_syntax = "h"
+                    landed_time_msg = (f"Apx. flt. time {int(hours)} {hour_syntax}" +  (f" {int(minutes)} {min_syntax}. " if minutes > 0 else "."))
                 else:
                     landed_time_msg = (f"Apx. flt. time {int(minutes)} {min_syntax}.")
                 self.takeoff_time = None

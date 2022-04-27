@@ -28,13 +28,10 @@ RUN set -ex && \
 
 
 
-# Add pipenv
-RUN pip install pipenv==2021.5.29
-
-# Install dependencies
-RUN pipenv install
+RUN pip3 install --upgrade pip && \
+    pip3 install -U --no-cache-dir -r ./requirements.txt 
 
 # Added needed folder for plane-notify process
-RUN mkdir  /home/plane-notify
+RUN mkdir -p /home/plane-notify
 
-CMD pipenv run python /plane-notify/__main__.py
+CMD python3 /plane-notify/__main__.py

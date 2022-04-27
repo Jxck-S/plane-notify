@@ -1,3 +1,5 @@
+# PyCharm
+.idea
 .vscode/settings.json
 pythonenv3.8/
 __pycache__

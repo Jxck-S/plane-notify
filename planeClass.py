@@ -69,7 +69,7 @@ class Plane:
             self.reg = get_aircraft_reg_by_icao(self.icao)
             self.type = get_type_code_by_icao(self.icao)
             self.last_pos_datetime = datetime.fromtimestamp(ac_dict.time_position)
-        except ValueError as e:
+        except Exception as e:
             print("Got data but some data is invalid!")
             print(e)
             self.printheader("foot")
@@ -407,6 +407,11 @@ class Plane:
                 append_airport(self.map_file_name, nearest_airport_dict)
             else:
                 raise ValueError("Map option not set correctly in this planes conf")
+            #Telegram
+            if self.config.has_section('TELEGRAM') and self.config.getboolean('TELEGRAM', 'ENABLE'):
+                from defTelegram import sendTeleg
+                photo = open(self.map_file_name, "rb")
+                sendTeleg(photo, message, self.config)
             #Discord
             if self.config.getboolean('DISCORD', 'ENABLE'):
                 dis_message = f"{self.dis_title} {message}".strip()
@@ -436,6 +441,11 @@ class Plane:
             route_to = self.route_info()
             if route_to != None:
                 print(route_to)
+                #Telegram
+                if self.config.has_section('TELEGRAM') and self.config.getboolean('TELEGRAM', 'ENABLE'):
+                    message = f"{self.dis_title} {route_to}".strip()
+                    photo = open(self.map_file_name, "rb")
+                    sendTeleg(photo, message, self.config)
                 #Discord
                 if self.config.getboolean('DISCORD', 'ENABLE'):
                     dis_message = f"{self.dis_title} {route_to}".strip()
@@ -563,6 +573,10 @@ class Plane:
                         else:
                             message =  f"Circling {round(nearest_airport_dict['distance_mi'], 2)}mi {cardinal} of {nearest_airport_dict['icao']}, {nearest_airport_dict['name']}  at {self.alt_ft}ft"
                         print(message)
+                        #Telegram
+                        if self.config.has_section('TELEGRAM') and self.config.getboolean('TELEGRAM', 'ENABLE'):
+                            photo = open(self.map_file_name, "rb")
+                            sendTeleg(photo, message, self.config)
                         if self.config.getboolean('DISCORD', 'ENABLE'):
                             role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') else None
                             sendDis(message, self.config, self.map_file_name, role_id)

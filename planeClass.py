@@ -83,7 +83,7 @@ class Plane:
         #print (Fore.YELLOW +"ADSBX Sourced Data: ", ac_dict, Style.RESET_ALL)
         try:
             #postime is divided by 1000 to get seconds from milliseconds, from timestamp expects secs.
-            self.__dict__.update({'icao' : ac_dict['icao'].upper(), 'callsign' : ac_dict['call'], 'reg' : ac_dict['reg'], 'latitude' : float(ac_dict['lat']), 'longitude' : float(ac_dict['lon']), 'alt_ft' : int(ac_dict['alt']), 'on_ground' : bool(int(ac_dict["gnd"])), 'squawk' : ac_dict['sqk'], 'track' : float(ac_dict["trak"])})
+            self.__dict__.update({'icao' : ac_dict['icao'].upper(), 'callsign' : ac_dict['call'], 'reg' : ac_dict['reg'], 'latitude' : float(ac_dict['lat']), 'longitude' : float(ac_dict['lon']), 'alt_ft' : int(ac_dict['alt']), 'on_ground' : bool(int(ac_dict["gnd"])), 'squawk' : ac_dict['sqk'], 'track' : float(ac_dict["true_trackrak"])})
             if self.on_ground:
                 self.alt_ft = 0
             self.last_pos_datetime = datetime.fromtimestamp(int(ac_dict['postime'])/1000)

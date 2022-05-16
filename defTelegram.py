@@ -5,7 +5,7 @@ def sendTeleg(photo, message, config):
     while sent == False:
         try:
             bot = telegram.Bot(token=config.get('TELEGRAM', 'BOT_TOKEN'), request=telegram.utils.request.Request(connect_timeout=20, read_timeout=20))
-            sent = bot.send_photo(chat_id=config.get('TELEGRAM', 'ROOM_ID'), photo=photo, caption=message, parse_mode=telegram.ParseMode.MARKDOWN, timeout=20, )
+            sent = bot.send_photo(chat_id=config.get('TELEGRAM', 'ROOM_ID'), photo=photo, caption=message, parse_mode=telegram.ParseMode.MARKDOWN, timeout=20)
         except Exception as err:
             print('err.args:')
             print(err.args)

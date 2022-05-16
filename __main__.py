@@ -1,4 +1,5 @@
 import configparser
+from logging import DEBUG
 import time
 from colorama import Fore, Back, Style
 import platform
@@ -48,11 +49,11 @@ main_config.read('./configs/mainconf.ini')
 source = main_config.get('DATA', 'SOURCE')
 if main_config.getboolean('DISCORD', 'ENABLE'):
         from defDiscord import sendDis
-        sendDis("Started", main_config)
+        sendDis("Started", main_config, role_id = main_config.get('DISCORD', 'ROLE_ID'))
 def service_exit(signum, frame):
     if main_config.getboolean('DISCORD', 'ENABLE'):
         from defDiscord import sendDis
-        sendDis("Service Stop", main_config)
+        sendDis("Service Stop", main_config, role_id = main_config.get('DISCORD', 'ROLE_ID'))
     raise SystemExit("Service Stop")
 signal.signal(signal.SIGTERM, service_exit)
 if os.path.isfile("lookup_route.py"):
@@ -82,6 +83,7 @@ try:
     except pytz.exceptions.UnknownTimeZoneError:
         tz = pytz.UTC
     last_ra_count = None
+    print(len(planes), "Planes configured")
     while True:
         datetime_tz = datetime.now(tz)
         if datetime_tz.hour == 0 and datetime_tz.minute == 0:
@@ -138,12 +140,12 @@ try:
                     for planeData in data['ac']:
                         data_indexed[planeData[icao_key].upper()] = planeData
                     for key, obj in planes.items():
-                        try:
+                        if key in data_indexed.keys():
                             if api_version == 1:
                                 obj.run_adsbx_v1(data_indexed[key.upper()])
                             elif api_version == 2:
                                 obj.run_adsbx_v2(data_indexed[key.upper()])
-                        except KeyError:
+                        else:
                             obj.run_empty()
                 else:
                     for obj in planes.values():
@@ -206,10 +208,10 @@ except Exception as e:
         except OSError:
             pass
         import logging
-        logging.basicConfig(filename='crash_latest.log', filemode='w', format='%(asctime)s - %(message)s')
+        logging.basicConfig(filename='crash_latest.log', filemode='w', format='%(asctime)s - %(message)s',level=logging.DEBUG)
         logging.Formatter.converter = time.gmtime
         logging.error(e)
         logging.error(str(traceback.format_exc()))
         from defDiscord import sendDis
-        sendDis(str("Error Exiting: " + str(e) + "Failed on " + key), main_config, "crash_latest.log")
+        sendDis(str("Error Exiting: " + str(e) + " Failed on " + "https://globe.adsbexchange.com/?icao=" + key), main_config, main_config.get('DISCORD', 'ROLE_ID'), "crash_latest.log")
     raise e

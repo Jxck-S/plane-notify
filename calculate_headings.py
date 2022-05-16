@@ -15,7 +15,6 @@ def calculate_cardinal(d):
     dirs = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']
     ix = int(round(d / (360. / len(dirs))))
     card = dirs[ix % len(dirs)]
-    print(card)
     return card
 def calculate_deg_change(new_heading, original_heading):
     """Calculates change between two headings, returns negative degree if change is left, positive if right"""
@@ -29,6 +28,7 @@ def calculate_deg_change(new_heading, original_heading):
         track_change = normal
     if direction == "left":
         track_change *= -1
+    track_change = round(track_change, 2)
     print(f"Track change of {track_change}° which is {direction}")
     return track_change
 

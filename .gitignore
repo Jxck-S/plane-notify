@@ -6,3 +6,6 @@ __pycache__
 dependencies
 testing
 lookup_route.py
+icao_url_gen.py
+install.sh
+coul_icao_gen.py

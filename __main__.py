@@ -46,6 +46,7 @@ main_config = configparser.ConfigParser()
 print(os.getcwd())
 main_config.read('./configs/mainconf.ini')
 source = main_config.get('DATA', 'SOURCE')
+sleep_seconds_config = main_config.get('SYSTEM', 'SLEEPTIME')
 if main_config.getboolean('DISCORD', 'ENABLE'):
         from defDiscord import sendDis
         sendDis("Started", main_config)
@@ -184,7 +185,7 @@ try:
         footer = "-------- " + str(running_Count) + " -------- " + str(datetime_tz.strftime("%I:%M:%S %p")) + " ------------------------Elapsed Time- " + str(round(elapsed_calc_time, 3)) + " -------------------------------------"
         print (Back.GREEN + Fore.BLACK + footer[0:100] + Style.RESET_ALL)
 
-        sleep_sec = 30
+        sleep_sec = int(sleep_seconds_config)
         for i in range(sleep_sec,0,-1):
             if i < 10:
                 i = " " + str(i)

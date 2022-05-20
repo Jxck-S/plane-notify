@@ -7,8 +7,22 @@ class Plane:
         """Initializes a plane object from its config file and given icao."""
         self.icao = icao.upper()
         self.callsign = None
-        self.reg = None
         self.config = config
+        self.overrides = {}
+        if self.config.has_option('DATA', 'OVERRIDE_REG'):
+            self.reg = self.config.get('DATA', 'OVERRIDE_REG')
+            self.overrides['reg'] = self.reg
+        else:
+            self.reg = None
+        if self.config.has_option('DATA', 'OVERRIDE_ICAO_TYPE'):
+            self.type = self.config.get('DATA', 'OVERRIDE_ICAO_TYPE')
+            self.overrides['type'] = self.type
+        else:
+            self.type = None
+        if self.config.has_option('DATA', 'OVERRIDE_ICAO_TYPE'):
+            self.overrides['typelong'] = self.config.get('DATA', 'OVERRIDE_TYPELONG')
+        if self.config.has_option('DATA', 'OVERRIDE_OWNER'):
+            self.overrides['ownop'] = self.config.get('DATA', 'OVERRIDE_OWNER')
         self.conf_file_path = config_path
         self.alt_ft = None
         self.below_desired_ft = None
@@ -41,7 +55,6 @@ class Plane:
         self.track = None
         self.last_track = None
         self.circle_history = None
-        self.type = None
         if self.config.has_option('DATA', 'DATA_LOSS_MINS'):
             self.data_loss_mins = self.config.getint('DATA', 'DATA_LOSS_MINS')
         else:
@@ -67,7 +80,7 @@ class Plane:
         self.print_header("BEGIN")
         #print (Fore.YELLOW + "OpenSky Sourced Data: ", ac_dict)
         try:
-            self.__dict__.update({'icao' : ac_dict.icao24.upper(), 'callsign' : ac_dict.callsign, 'latitude' : ac_dict.latitude, 'longitude' : ac_dict.longitude,  'on_ground' : bool(ac_dict.on_ground), 'squawk' : ac_dict.squawk, 'track' : float(ac_dict.true_track)})
+            self.__dict__.update({'icao' : ac_dict.icao24.upper(), 'callsign' : ac_dict.callsign, 'latitude' : ac_dict.latitude, 'longitude' : ac_dict.longitude,  'on_ground' : bool(ac_dict.on_ground), 'squawk' : ac_dict.squawk, 'track' : float(ac_dict.heading)})
             if ac_dict.baro_altitude != None:
                 self.alt_ft = round(float(ac_dict.baro_altitude)  * 3.281)
             elif self.on_ground:
@@ -76,7 +89,7 @@ class Plane:
             self.reg = get_aircraft_reg_by_icao(self.icao)
             self.type = get_type_code_by_icao(self.icao)
             self.last_pos_datetime = datetime.fromtimestamp(ac_dict.time_position)
-        except Exception as e:
+        except ValueError as e:
             print("Got data but some data is invalid!")
             print(e)
             self.print_header("END")
@@ -423,8 +436,8 @@ class Plane:
                 getMap((municipality + ", "  + state + ", "  + country_code), self.map_file_name)
             elif Plane.main_config.get('MAP', 'OPTION') == "ADSBX":
                 from defSS import get_adsbx_screenshot
-                url_params = f"icao={self.icao}&zoom=9&largeMode=2&hideButtons&hideSidebar&mapDim=0&overlays=" + self.get_adsbx_map_overlays()
-                get_adsbx_screenshot(self.map_file_name, url_params)
+                url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}" 
+                get_adsbx_screenshot(self.map_file_name, url_params, overrides=self.overrides)
                 from modify_image import append_airport
                 text_credit = self.config.get('MAP', 'TEXT_CREDIT') if self.config.has_option('MAP', 'TEXT_CREDIT') else None
                 append_airport(self.map_file_name, nearest_airport_dict, text_credit)
@@ -545,8 +558,8 @@ class Plane:
                         getMap((municipality + ", "  + state + ", "  + country_code), self.map_file_name)
                     if Plane.main_config.get('MAP', 'OPTION') == "ADSBX":
                         from defSS import get_adsbx_screenshot
-                        url_params = f"icao={self.icao}&zoom=9&largeMode=2&hideButtons&hideSidebar&mapDim=0&overlays=" + self.get_adsbx_map_overlays()
-                        get_adsbx_screenshot(self.map_file_name, url_params)
+                        url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}" 
+                        get_adsbx_screenshot(self.map_file_name, url_params, overrides=self.overrides)
                     if self.config.getboolean('DISCORD', 'ENABLE'):
                         dis_message =  (self.dis_title + " "  + squawk_message)
                         sendDis(dis_message, self.config, None, self.map_file_name)
@@ -568,8 +581,8 @@ class Plane:
                             dis_message =  (self.dis_title + " "  + mode + " mode enabled.")
                             if mode == "Approach":
                                 from defSS import get_adsbx_screenshot
-                                url_params = f"icao={self.icao}&zoom=9&largeMode=2&hideButtons&hideSidebar&mapDim=0&overlays={self.get_adsbx_map_overlays()}"
-                                get_adsbx_screenshot(self.map_file_name, url_params)
+                                url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}" 
+                                get_adsbx_screenshot(self.map_file_name, url_params, overrides=self.overrides)
                                 sendDis(dis_message, self.config, None, self.map_file_name)
                             #elif mode in ["Althold", "VNAV", "LNAV"] and self.sel_nav_alt != None:
                             #    sendDis((dis_message + ", Sel Alt. " + str(self.sel_nav_alt) + ", Current Alt. " + str(self.alt_ft)), self.config)
@@ -748,8 +761,9 @@ class Plane:
                             return tfr_map_filename
 
                         from defSS import get_adsbx_screenshot
-                        url_params = f"icao={self.icao}&zoom=10&largeMode=2&hideButtons&hideSidebar&mapDim=0&overlays={self.get_adsbx_map_overlays()}"
-                        get_adsbx_screenshot(self.map_file_name, url_params)
+                        
+                        url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}" 
+                        get_adsbx_screenshot(self.map_file_name, url_params, overrides=self.overrides)
                         if nearest_airport_dict['distance_mi'] < 3:
                             if "touchngo" in self.circle_history.keys():
                                 message = f"Doing touch and goes at {nearest_airport_dict['icao']}"
@@ -842,7 +856,7 @@ class Plane:
                     else:
                         url_params += f"&icao={self.icao.lower()}&noIsolation"
                     print(url_params)
-                    get_adsbx_screenshot(self.map_file_name, url_params, True, True)
+                    get_adsbx_screenshot(self.map_file_name, url_params, True, True, overrides=self.overrides)
 
                     if self.config.getboolean('DISCORD', 'ENABLE'):
                         from defDiscord import sendDis

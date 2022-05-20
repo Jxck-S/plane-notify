@@ -5,6 +5,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 import time
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
+from selenium.common.exceptions import NoSuchElementException
 
 def get_adsbx_screenshot(file_path, url_params, enable_labels=False, enable_track_labels=False, overrides={}):
     chrome_options = webdriver.ChromeOptions()
@@ -67,30 +68,28 @@ def get_adsbx_screenshot(file_path, url_params, enable_labels=False, enable_trac
     else:
         try: 
             reg = browser.find_element_by_id("selected_registration").get_attribute("innerHTML")
-            print(reg)
+            print("Reg from tar1090 is", reg)
         except Exception as e:
             print("Couldn't find reg in tar1090", e)
             reg = None 
     if reg is not None:
         try:
             try:
-                myElem = WebDriverWait(browser, 150).until(EC.presence_of_element_located((By.ID, 'silhouette')))
                 photo_box = browser.find_element_by_id("silhouette")
-            except:
+            except NoSuchElementException:
                 photo_box = browser.find_element_by_id("airplanePhoto")
             finally:
                 import requests, json
                 photo_list = json.loads(requests.get("https://raw.githubusercontent.com/Jxck-S/aircraft-photos/main/photo-list.json").text)
                 if reg in photo_list.keys():
-                    browser.execute_script("arguments[0].id = 'airplanePhoto';", photo_box) 
-                    browser.execute_script(f"arguments[0].src = 'https://raw.githubusercontent.com/Jxck-S/aircraft-photos/main/images/{reg}.jpg';", photo_box) 
-                    copyright = browser.find_element_by_id("copyrightInfo")
-                    browser.execute_script("arguments[0].id = 'copyrightInfoFreeze';", copyright) 
-                    browser.execute_script("$('#copyrightInfoFreeze').css('font-size', '12px');")
-                    #browser.execute_script("""var element = arguments[0]; 
-                    #element.parentNode.removeChild(element.firstChild);""", copyright)
-                    browser.execute_script(f"arguments[0].appendChild(document.createTextNode('Image © {photo_list[reg]['photographer']}'))", copyright)
-
+                    browser.execute_script("arguments[0].id = 'airplanePhoto';", photo_box)
+                    browser.execute_script("arguments[0].removeAttribute('width')", photo_box)
+                    browser.execute_script("arguments[0].style.width = 'inherit';", photo_box)
+                    browser.execute_script("arguments[0].style.float = 'left';", photo_box)
+                    browser.execute_script(f"arguments[0].src = 'https://raw.githubusercontent.com/Jxck-S/aircraft-photos/main/images/{reg}.jpg';", photo_box)
+                    image_copy_right = browser.find_element_by_id("copyrightInfo")
+                    browser.execute_cdp_cmd('Emulation.setScriptExecutionDisabled', {'value': True})
+                    browser.execute_script(f"arguments[0].appendChild(document.createTextNode('Image © {photo_list[reg]['photographer']}'))", image_copy_right)
         except Exception as e:
             print("Error on changing photo", e)
     if 'type' in overrides.keys():
@@ -99,9 +98,11 @@ def get_adsbx_screenshot(file_path, url_params, enable_labels=False, enable_trac
     if 'typelong' in overrides.keys():
         element = browser.find_element_by_id("selected_typelong")
         browser.execute_script(f"arguments[0].innerText = '* {overrides['typelong']}'", element)
+    if 'ownop' in overrides.keys():
+        element = browser.find_element_by_id("selected_ownop")
+        browser.execute_script(f"arguments[0].innerText = '* {overrides['ownop']}'", element)
     time.sleep(5)
     browser.save_screenshot(file_path)
-    browser.quit()
 def generate_adsbx_screenshot_time_params(timestamp):
     from datetime import datetime
     from datetime import timedelta

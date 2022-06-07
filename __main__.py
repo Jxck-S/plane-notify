@@ -12,10 +12,10 @@ from datetime import datetime
 import pytz
 import os
 import signal
+import sys
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 os.chdir(dname)
-import sys
 sys.path.extend([os.getcwd()])
 #Dependency Handling
 if not os.path.isdir("./dependencies/"):

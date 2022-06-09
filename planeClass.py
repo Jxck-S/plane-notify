@@ -485,7 +485,7 @@ class Plane:
                     to_coord =  (known_to_airport['latitude_deg'], known_to_airport['longitude_deg'])
                     distance_mi = float(geodesic(from_coord, to_coord).mi)
                     distance_nm = distance_mi / 1.150779448
-                    distance_message = f"{'{:,}'.format(round(distance_mi))} mile ({'{:,}'.format(round(distance_nm))} NM) flight from {nearest_from_airport['iata_code']} to {nearest_airport_dict['iata_code']}\n"
+                    distance_message = f"{'{:,}'.format(round(distance_mi))} mile ({'{:,}'.format(round(distance_nm))} NM) flight from {nearest_from_airport['iata_code'] if nearest_from_airport['iata_code'] != '' else  nearest_from_airport['ident']} to {nearest_airport_dict['iata_code'] if nearest_airport_dict['iata_code'] != '' else nearest_airport_dict['ident']}\n"
                 else:
                     distance_message = ""
                 if landed_time is not None and self.type is not None:
@@ -644,121 +644,124 @@ class Plane:
                         from shapely.geometry.polygon import Polygon
                         from shapely.geometry import Point
                         import requests, json
-                        tfr_url = Plane.main_config.get("TFRS", "URL")
-                        response = requests.get(tfr_url, timeout=30)
-                        tfrs = json.loads(response.text)
                         closest_tfr = None
                         in_tfr = None
-                        for tfr in tfrs:
-                            if in_tfr is not None:
-                                break
-                            elif tfr['details'] is not None and 'shapes' in tfr['details'].keys():
-                                for index, shape in enumerate(tfr['details']['shapes']):
-                                    if 'txtName' not in shape.keys():
-                                        shape['txtName'] = 'shape_'+str(index)
-                                    polygon = None
-                                    if shape['type'] == "poly":
-                                        points = shape['points']
-                                    elif shape['type'] == "circle":
-                                        from functools import partial
-                                        import pyproj
-                                        from shapely.ops import transform
-                                        from shapely.geometry import Point
-                                        proj_wgs84 = pyproj.Proj('+proj=longlat +datum=WGS84')
-                                        def geodesic_point_buffer(lat, lon, km):
-                                            # Azimuthal equidistant projection
-                                            aeqd_proj = '+proj=aeqd +lat_0={lat} +lon_0={lon} +x_0=0 +y_0=0'
-                                            project = partial(
-                                                pyproj.transform,
-                                                pyproj.Proj(aeqd_proj.format(lat=lat, lon=lon)),
-                                                proj_wgs84)
-                                            buf = Point(0, 0).buffer(km * 1000)  # distance in metres
-                                            return transform(project, buf).exterior.coords[:]
-                                        radius_km = float(shape['radius']) *  1.852
-                                        b = geodesic_point_buffer(shape['lat'], shape['lon'], radius_km)
-                                        points = []
-                                        for coordinate in b:
-                                            points.append([coordinate[1], coordinate[0]])
-                                    elif shape['type'] in ["polyarc", "polyexclude"]:
-                                        points = shape['all_points']
-                                    aircraft_location = Point(self.latitude, self.longitude)
-                                    if polygon is None:
-                                        polygon = Polygon(points)
-                                    if polygon.contains(aircraft_location):
-                                        in_tfr = {'info': tfr, 'closest_shape_name' : shape['txtName']}
-                                        break
-                                    else:
-                                        point_dists = []
-                                        for point in points:
-                                            from geopy.distance import geodesic
-                                            point = tuple(point)
-                                            point_dists.append(float((geodesic((self.latitude, self.longitude), point).mi)))
-                                        distance = min(point_dists)
-                                        if closest_tfr is None:
-                                            closest_tfr = {'info': tfr, 'closest_shape_name' : shape['txtName'], 'distance' : round(distance)}
-                                        elif distance < closest_tfr['distance']:
-                                            closest_tfr = {'info': tfr, 'closest_shape_name' : shape['txtName'], 'distance' : round(distance)}
-                        if in_tfr is not None:
-                            for shape in in_tfr['info']['details']['shapes']:
-                                if shape['txtName'] == in_tfr['closest_shape_name']:
-                                    valDistVerUpper, valDistVerLower = int(shape['valDistVerUpper']), int(shape['valDistVerLower'])
-                                    print("In TFR based off location checking alt next", in_tfr)
+                        if Plane.main_config.getboolean("TFRS", "ENABLE"):
+                            tfr_url = Plane.main_config.get("TFRS", "URL")
+                            response = requests.get(tfr_url, timeout=30)
+                            tfrs = json.loads(response.text)
+                            for tfr in tfrs:
+                                if in_tfr is not None:
                                     break
-                            if not (self.alt_ft >= valDistVerLower and self.alt_ft <= valDistVerUpper):
-                                print("But not in alt of TFR")
-                                closest_tfr = in_tfr
-                                closest_tfr['distance'] = 0
-                                in_tfr = None
-                        if in_tfr is None:
-                            print("Closest TFR", closest_tfr)
-                        #Generate Map
-                        import staticmaps
-                        context = staticmaps.Context()
-                        context.set_tile_provider(staticmaps.tile_provider_OSM)
-                        if in_tfr is not None:
-                            shapes = in_tfr['info']['details']['shapes']
-                        else:
-                            shapes = closest_tfr['info']['details']['shapes']
-                        def draw_poly(context, pairs):
-                            pairs.append(pairs[0])
-                            context.add_object(
-                                staticmaps.Area(
-                                    [staticmaps.create_latlng(lat, lng) for lat, lng in pairs],
-                                    fill_color=staticmaps.parse_color("#FF000033"),
-                                    width=2,
-                                    color=staticmaps.parse_color("#8B0000"),
+                                elif tfr['details'] is not None and 'shapes' in tfr['details'].keys():
+                                    for index, shape in enumerate(tfr['details']['shapes']):
+                                        if 'txtName' not in shape.keys():
+                                            shape['txtName'] = 'shape_'+str(index)
+                                        polygon = None
+                                        if shape['type'] == "poly":
+                                            points = shape['points']
+                                        elif shape['type'] == "circle":
+                                            from functools import partial
+                                            import pyproj
+                                            from shapely.ops import transform
+                                            from shapely.geometry import Point
+                                            proj_wgs84 = pyproj.Proj('+proj=longlat +datum=WGS84')
+                                            def geodesic_point_buffer(lat, lon, km):
+                                                # Azimuthal equidistant projection
+                                                aeqd_proj = '+proj=aeqd +lat_0={lat} +lon_0={lon} +x_0=0 +y_0=0'
+                                                project = partial(
+                                                    pyproj.transform,
+                                                    pyproj.Proj(aeqd_proj.format(lat=lat, lon=lon)),
+                                                    proj_wgs84)
+                                                buf = Point(0, 0).buffer(km * 1000)  # distance in metres
+                                                return transform(project, buf).exterior.coords[:]
+                                            radius_km = float(shape['radius']) *  1.852
+                                            b = geodesic_point_buffer(shape['lat'], shape['lon'], radius_km)
+                                            points = []
+                                            for coordinate in b:
+                                                points.append([coordinate[1], coordinate[0]])
+                                        elif shape['type'] in ["polyarc", "polyexclude"]:
+                                            points = shape['all_points']
+                                        aircraft_location = Point(self.latitude, self.longitude)
+                                        if polygon is None:
+                                            polygon = Polygon(points)
+                                        if polygon.contains(aircraft_location):
+                                            in_tfr = {'info': tfr, 'closest_shape_name' : shape['txtName']}
+                                            break
+                                        else:
+                                            point_dists = []
+                                            for point in points:
+                                                from geopy.distance import geodesic
+                                                point = tuple(point)
+                                                point_dists.append(float((geodesic((self.latitude, self.longitude), point).mi)))
+                                            distance = min(point_dists)
+                                            if closest_tfr is None:
+                                                closest_tfr = {'info': tfr, 'closest_shape_name' : shape['txtName'], 'distance' : round(distance)}
+                                            elif distance < closest_tfr['distance']:
+                                                closest_tfr = {'info': tfr, 'closest_shape_name' : shape['txtName'], 'distance' : round(distance)}
+                            if in_tfr is not None:
+                                for shape in in_tfr['info']['details']['shapes']:
+                                    if shape['txtName'] == in_tfr['closest_shape_name']:
+                                        valDistVerUpper, valDistVerLower = int(shape['valDistVerUpper']), int(shape['valDistVerLower'])
+                                        print("In TFR based off location checking alt next", in_tfr)
+                                        break
+                                if not (self.alt_ft >= valDistVerLower and self.alt_ft <= valDistVerUpper):
+                                    if self.alt_ft > valDistVerUpper:
+                                        in_tfr['context'] = "above"
+                                    elif self.alt_ft < valDistVerLower:
+                                        in_tfr['context'] = "below"
+                                    print("But not in alt of TFR", in_tfr['context'])
+
+                            if in_tfr is None:
+                                print("Closest TFR", closest_tfr)
+                            #Generate Map
+                            import staticmaps
+                            context = staticmaps.Context()
+                            context.set_tile_provider(staticmaps.tile_provider_OSM)
+                            if in_tfr is not None:
+                                shapes = in_tfr['info']['details']['shapes']
+                            else:
+                                shapes = closest_tfr['info']['details']['shapes']
+                            def draw_poly(context, pairs):
+                                pairs.append(pairs[0])
+                                context.add_object(
+                                    staticmaps.Area(
+                                        [staticmaps.create_latlng(lat, lng) for lat, lng in pairs],
+                                        fill_color=staticmaps.parse_color("#FF000033"),
+                                        width=2,
+                                        color=staticmaps.parse_color("#8B0000"),
+                                    )
                                 )
-                            )
-                            return context
-                        for shape in shapes:
-                            if shape['type'] == "poly":
-                                pairs = shape['points']
-                                context = draw_poly(context, pairs)
-                            elif shape['type'] == "polyarc" or shape['type'] == "polyexclude":
-                                pairs = shape['all_points']
-                                context = draw_poly(context, pairs)
-                            elif shape['type'] =="circle":
-                                center = [shape['lat'], shape['lon']]
-                                center1 = staticmaps.create_latlng(center[0], center[1])
-                                context.add_object(staticmaps.Circle(center1, (float(shape['radius']) * 1.852), fill_color=staticmaps.parse_color("#FF000033"), color=staticmaps.parse_color("#8B0000"), width=2))
-                                context.add_object(staticmaps.Marker(center1, color=staticmaps.RED))
-                        def tfr_image(context, aircraft_coords):
-                            from PIL import Image
-                            heading = self.track
-                            heading *= -1
-                            im = Image.open('./dependencies/ac.png')
-                            im_rotate = im.rotate(heading, resample=Image.BICUBIC)
-                            import tempfile
-                            rotated_file = f"{tempfile.gettempdir()}/rotated_ac.png"
-                            im_rotate.save(rotated_file)
-                            pos = staticmaps.create_latlng(aircraft_coords[0], aircraft_coords[1])
-                            marker = staticmaps.ImageMarker(pos, rotated_file, origin_x=35, origin_y=35)
-                            context.add_object(marker)
-                            image = context.render_cairo(1000, 1000)
-                            os.remove(rotated_file)
-                            tfr_map_filename = f"{tempfile.gettempdir()}/{self.icao}_TFR_.png"
-                            image.write_to_png(tfr_map_filename)
-                            return tfr_map_filename
+                                return context
+                            for shape in shapes:
+                                if shape['type'] == "poly":
+                                    pairs = shape['points']
+                                    context = draw_poly(context, pairs)
+                                elif shape['type'] == "polyarc" or shape['type'] == "polyexclude":
+                                    pairs = shape['all_points']
+                                    context = draw_poly(context, pairs)
+                                elif shape['type'] =="circle":
+                                    center = [shape['lat'], shape['lon']]
+                                    center1 = staticmaps.create_latlng(center[0], center[1])
+                                    context.add_object(staticmaps.Circle(center1, (float(shape['radius']) * 1.852), fill_color=staticmaps.parse_color("#FF000033"), color=staticmaps.parse_color("#8B0000"), width=2))
+                                    context.add_object(staticmaps.Marker(center1, color=staticmaps.RED))
+                            def tfr_image(context, aircraft_coords):
+                                from PIL import Image
+                                heading = self.track
+                                heading *= -1
+                                im = Image.open('./dependencies/ac.png')
+                                im_rotate = im.rotate(heading, resample=Image.BICUBIC)
+                                import tempfile
+                                rotated_file = f"{tempfile.gettempdir()}/rotated_ac.png"
+                                im_rotate.save(rotated_file)
+                                pos = staticmaps.create_latlng(aircraft_coords[0], aircraft_coords[1])
+                                marker = staticmaps.ImageMarker(pos, rotated_file, origin_x=35, origin_y=35)
+                                context.add_object(marker)
+                                image = context.render_cairo(1000, 1000)
+                                os.remove(rotated_file)
+                                tfr_map_filename = f"{tempfile.gettempdir()}/{self.icao}_TFR_.png"
+                                image.write_to_png(tfr_map_filename)
+                                return tfr_map_filename
 
                         from defSS import get_adsbx_screenshot
                         
@@ -773,12 +776,13 @@ class Plane:
                             message =  f"Circling {round(nearest_airport_dict['distance_mi'], 2)}mi {cardinal} of {nearest_airport_dict['icao']}, {nearest_airport_dict['name']} at {self.alt_ft}ft. "
                         tfr_map_filename = None
                         if in_tfr is not None:
-                            message += f" Inside TFR {in_tfr['info']['NOTAM']}, a TFR for {in_tfr['info']['Type'].title()}"
+                            context = "Inside" if 'context' not in in_tfr.keys() else "Above" if in_tfr['context'] == 'above' else "Below"
+                            message += f" {context} TFR {in_tfr['info']['NOTAM']}, a TFR for {in_tfr['info']['Type'].title()}"
                             tfr_map_filename = tfr_image(context, (self.latitude, self.longitude))
-                        elif in_tfr is None and "distance" in closest_tfr.keys() and closest_tfr["distance"] <= 20:
+                        elif in_tfr is None and closest_tfr is not None and "distance" in closest_tfr.keys() and closest_tfr["distance"] <= 20:
                             message += f" {closest_tfr['distance']} miles from TFR {closest_tfr['info']['NOTAM']}, a TFR for {closest_tfr['info']['Type']}"
                             tfr_map_filename = tfr_image(context, (self.latitude, self.longitude))
-                        elif in_tfr is None and "distance" not in closest_tfr.keys():
+                        elif in_tfr is None and closest_tfr is not None and "distance" not in closest_tfr.keys():
                             message += f" near TFR {closest_tfr['info']['NOTAM']}, a TFR for {closest_tfr['info']['Type']}"
                             raise Exception(message)
 

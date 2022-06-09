@@ -80,16 +80,20 @@ def get_adsbx_screenshot(file_path, url_params, enable_labels=False, enable_trac
                 photo_box = browser.find_element_by_id("airplanePhoto")
             finally:
                 import requests, json
-                photo_list = json.loads(requests.get("https://raw.githubusercontent.com/Jxck-S/aircraft-photos/main/photo-list.json").text)
+                photo_list = json.loads(requests.get("https://raw.githubusercontent.com/Jxck-S/aircraft-photos/main/photo-list.json", timeout=20).text)
                 if reg in photo_list.keys():
                     browser.execute_script("arguments[0].id = 'airplanePhoto';", photo_box)
                     browser.execute_script("arguments[0].removeAttribute('width')", photo_box)
-                    browser.execute_script("arguments[0].style.width = 'inherit';", photo_box)
+                    browser.execute_script("arguments[0].style.width = '200px';", photo_box)
                     browser.execute_script("arguments[0].style.float = 'left';", photo_box)
                     browser.execute_script(f"arguments[0].src = 'https://raw.githubusercontent.com/Jxck-S/aircraft-photos/main/images/{reg}.jpg';", photo_box)
                     image_copy_right = browser.find_element_by_id("copyrightInfo")
                     browser.execute_cdp_cmd('Emulation.setScriptExecutionDisabled', {'value': True})
-                    browser.execute_script(f"arguments[0].appendChild(document.createTextNode('Image © {photo_list[reg]['photographer']}'))", image_copy_right)
+                    copy_right_children = image_copy_right.find_elements(By.XPATH, "*")
+                    if len(copy_right_children) > 0:
+                        browser.execute_script(f"arguments[0].innerText = 'Image © {photo_list[reg]['photographer']}'", copy_right_children[0])
+                    else:
+                        browser.execute_script(f"arguments[0].appendChild(document.createTextNode('Image © {photo_list[reg]['photographer']}'))", image_copy_right)
         except Exception as e:
             print("Error on changing photo", e)
     if 'type' in overrides.keys():

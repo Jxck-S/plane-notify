@@ -25,7 +25,7 @@ for file in required_files:
 	file_name = file[0]
 	url = file[1]
 	if not os.path.isfile("./dependencies/" + file_name):
-		print(f'{file_name} does not exist downloading now")
+		print(f"{file_name} does not exist downloading now")
 		try:
 			import requests
 			file_content = requests.get(url)

@@ -437,7 +437,7 @@ class Plane:
                 getMap((municipality + ", "  + state + ", "  + country_code), self.map_file_name)
             elif Plane.main_config.get('MAP', 'OPTION') == "ADSBX":
                 from defSS import get_adsbx_screenshot
-                url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}"
+                url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}" 
                 get_adsbx_screenshot(self.map_file_name, url_params, overrides=self.overrides)
                 from modify_image import append_airport
                 text_credit = self.config.get('MAP', 'TEXT_CREDIT') if self.config.has_option('MAP', 'TEXT_CREDIT') else None
@@ -559,7 +559,7 @@ class Plane:
                         getMap((municipality + ", "  + state + ", "  + country_code), self.map_file_name)
                     if Plane.main_config.get('MAP', 'OPTION') == "ADSBX":
                         from defSS import get_adsbx_screenshot
-                        url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}"
+                        url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}" 
                         get_adsbx_screenshot(self.map_file_name, url_params, overrides=self.overrides)
                     if self.config.getboolean('DISCORD', 'ENABLE'):
                         dis_message =  (self.dis_title + " "  + squawk_message)
@@ -582,7 +582,7 @@ class Plane:
                             dis_message =  (self.dis_title + " "  + mode + " mode enabled.")
                             if mode == "Approach":
                                 from defSS import get_adsbx_screenshot
-                                url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}"
+                                url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}" 
                                 get_adsbx_screenshot(self.map_file_name, url_params, overrides=self.overrides)
                                 sendDis(dis_message, self.config, None, self.map_file_name)
                             #elif mode in ["Althold", "VNAV", "LNAV"] and self.sel_nav_alt != None:
@@ -765,8 +765,7 @@ class Plane:
                                 return tfr_map_filename
 
                         from defSS import get_adsbx_screenshot
-
-                        url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}"
+                        url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}" 
                         get_adsbx_screenshot(self.map_file_name, url_params, overrides=self.overrides)
                         if nearest_airport_dict['distance_mi'] < 3:
                             if "touchngo" in self.circle_history.keys():
@@ -777,8 +776,8 @@ class Plane:
                             message =  f"Circling {round(nearest_airport_dict['distance_mi'], 2)}mi {cardinal} of {nearest_airport_dict['icao']}, {nearest_airport_dict['name']} at {self.alt_ft}ft. "
                         tfr_map_filename = None
                         if in_tfr is not None:
-                            context = "Inside" if 'context' not in in_tfr.keys() else "Above" if in_tfr['context'] == 'above' else "Below"
-                            message += f" {context} TFR {in_tfr['info']['NOTAM']}, a TFR for {in_tfr['info']['Type'].title()}"
+                            wording_context = "Inside" if 'context' not in in_tfr.keys() else "Above" if in_tfr['context'] == 'above' else "Below"
+                            message += f" {wording_context} TFR {in_tfr['info']['NOTAM']}, a TFR for {in_tfr['info']['Type'].title()}"
                             tfr_map_filename = tfr_image(context, (self.latitude, self.longitude))
                         elif in_tfr is None and closest_tfr is not None and "distance" in closest_tfr.keys() and closest_tfr["distance"] <= 20:
                             message += f" {closest_tfr['distance']} miles from TFR {closest_tfr['info']['NOTAM']}, a TFR for {closest_tfr['info']['Type']}"
@@ -795,7 +794,7 @@ class Plane:
                             sendTeleg(photo, message, self.config)
                         if self.config.getboolean('DISCORD', 'ENABLE'):
                             role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') else None
-                            if tfr_map_filename is not None:
+                            if tfr_map_filename is not None: 
                                 sendDis(message, self.config, role_id, self.map_file_name, tfr_map_filename)
                             elif tfr_map_filename is None:
                                 sendDis(message, self.config, role_id, self.map_file_name)

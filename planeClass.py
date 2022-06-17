@@ -432,10 +432,10 @@ class Plane:
                 dirty_message = (f"{type_header} {location_string}.") + ("" if route_to is None else f" {route_to}.") + ((f" {landed_time_msg}") if landed_time_msg != None else "")
             print (message)
             #Google Map or tar1090 screenshot
-            if Plane.main_config.get('MAP', 'OPTION') == "GOOGLESTATICMAP":
+            if self.config.get('MAP', 'OPTION') == "GOOGLESTATICMAP":
                 from defMap import getMap
                 getMap((municipality + ", "  + state + ", "  + country_code), self.map_file_name)
-            elif Plane.main_config.get('MAP', 'OPTION') == "ADSBX":
+            elif self.config.get('MAP', 'OPTION') == "ADSBX":
                 from defSS import get_adsbx_screenshot
                 url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}" 
                 get_adsbx_screenshot(self.map_file_name, url_params, overrides=self.overrides)
@@ -555,9 +555,9 @@ class Plane:
                     squawk_message = (f"{self.dis_title} Squawking {self.last_emergency[1]} {emergency_squawks[self.squawk]}").strip()
                     print(squawk_message)
                     #Google Map or tar1090 screenshot
-                    if Plane.main_config.get('MAP', 'OPTION') == "GOOGLESTATICMAP":
+                    if self.config.get('MAP', 'OPTION') == "GOOGLESTATICMAP":
                         getMap((municipality + ", "  + state + ", "  + country_code), self.map_file_name)
-                    if Plane.main_config.get('MAP', 'OPTION') == "ADSBX":
+                    if self.config.get('MAP', 'OPTION') == "ADSBX":
                         from defSS import get_adsbx_screenshot
                         url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}" 
                         get_adsbx_screenshot(self.map_file_name, url_params, overrides=self.overrides)

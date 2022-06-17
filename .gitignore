@@ -1,3 +1,5 @@
+configs/*.ini
+
 # PyCharm
 .idea
 .vscode/settings.json

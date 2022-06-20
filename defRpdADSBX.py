@@ -3,31 +3,10 @@ import json
 import configparser
 from datetime import datetime
 from http.client import IncompleteRead
-import http.client as http
-import urllib3
-import socket
+
 main_config = configparser.ConfigParser()
 main_config.read('./configs/mainconf.ini')
 api_version = main_config.get('RpdADSBX', 'API_VERSION')
-
-# def pull(url, headers):
-#     try:
-#         response = requests.get(url, headers = headers, timeout=30)
-#         print ("HTTP Status Code:", response.status_code)
-#         response.raise_for_status()
-#     except (requests.HTTPError, ConnectionError, requests.Timeout,  urllib3.exceptions.ConnectionError) as error_message:
-#         print("Basic Connection Error")
-#         print(error_message)
-#         response = None
-#     except (requests.RequestException, IncompleteRead, ValueError, socket.timeout, socket.gaierror) as error_message:
-#         print("Connection Error")
-#         print(error_message)
-#         response = None
-#     except Exception as error_message:
-#         print("Connection Error uncaught, basic exception for all")
-#         print(error_message)
-#         response = None
-#     return response
 
 def pull_rpdadsbx(planes):
     api_version = int(main_config.get('RpdADSBX', 'API_VERSION'))
@@ -66,15 +45,3 @@ def pull_rpdadsbx(planes):
     else:
         data = None
     return data
-
-# def pull_date_ras(date):
-#     url = f"https://globe.adsbexchange.com/globe_history/{date}/acas/acas.json"
-#     headers = {
-#                 'Accept-Encoding': 'gzip'
-#     }
-#     response = pull(url, headers)
-#     if response is not None:
-#         data = response.text.splitlines()
-#     else:
-#         data = None
-#     return data

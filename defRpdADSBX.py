@@ -2,7 +2,6 @@ import requests
 import json
 import configparser
 from datetime import datetime
-from http.client import IncompleteRead
 
 main_config = configparser.ConfigParser()
 main_config.read('./configs/mainconf.ini')

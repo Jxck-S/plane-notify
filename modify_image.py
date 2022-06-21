@@ -44,8 +44,13 @@ def append_airport(filename, airport, text_credit=None):
 	draw.text((x, y), text, fill=white, font=head_font)
 	#ICAO | IATA
 	(x, y) = (330, 765)
-	text = iata + " / " + icao
-	draw.text((x, y), text, fill=black, font=font)
+	if airport['iata_code'] != '' and airport['icao'] != '':
+		airport_codes = airport['iata_code'] + " / " + airport['icao']
+	elif airport['icao'] != '':
+		airport_codes = airport['icao']
+	else:
+		airport_codes = airport['ident']
+	draw.text((x, y), airport_codes, fill=black, font=font)
 	#Distance
 	(x, y) = (460, 765)
 	text = str(round(distance_mi, 2)) + "mi / " + str(round(distance_km, 2)) + "km away"

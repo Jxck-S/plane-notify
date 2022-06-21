@@ -12,7 +12,7 @@ RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key
 RUN apt-get update && apt-get -y install google-chrome-stable
 
 # Install python-dev
-RUN apt-get -y install python3-dev
+RUN apt-get -y install python3-dev=3.9.2-3 --no-install-recommends
 
 # Add pipenv
 RUN pip install pipenv==2021.5.29

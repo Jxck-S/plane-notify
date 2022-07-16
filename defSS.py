@@ -27,7 +27,7 @@ def get_adsbx_screenshot(file_path, url_params, enable_labels=False, enable_trac
     remove_id_elements = ["show_trace", "credits", 'infoblock_close', 'selected_photo_link', "history_collapse"]
     for element in remove_id_elements:
         try:
-            element = browser.find_element_by_id(element)
+            element = browser.find_element(By.ID, element)
             browser.execute_script("""var element = arguments[0];    element.parentNode.removeChild(element); """, element)
         except:
             print("issue removing", element, "from map")
@@ -43,7 +43,7 @@ def get_adsbx_screenshot(file_path, url_params, enable_labels=False, enable_trac
         print("Couldn't disable sidebar on map")
     #Remove Google Ads
     try:
-        element = browser.find_element_by_xpath("//*[contains(@id, 'FIOnDemandWrapper_')]")
+        element = browser.find_element(By.XPATH, "//*[contains(@id, 'FIOnDemandWrapper_')]")
         browser.execute_script("""var element = arguments[0];    element.parentNode.removeChild(element); """, element)
     except:
         print("Couldn't remove Google Ads")
@@ -55,29 +55,29 @@ def get_adsbx_screenshot(file_path, url_params, enable_labels=False, enable_trac
     #     print("Couldn't remove share button from map", e)
     #browser.execute_script("toggleFollow()")
     if enable_labels:
-        browser.find_element_by_tag_name('body').send_keys('l')
+        browser.find_element(By.TAG_NAME, 'body').send_keys('l')
     if enable_track_labels:
-        browser.find_element_by_tag_name('body').send_keys('k')
+        browser.find_element(By.TAG_NAME, 'body').send_keys('k')
     from selenium.webdriver.support import expected_conditions as EC
     time.sleep(15)
 
     if 'reg' in overrides.keys():
-        element = browser.find_element_by_id("selected_registration")
+        element = browser.find_element(By.ID, "selected_registration")
         browser.execute_script(f"arguments[0].innerText = '* {overrides['reg']}'", element)
         reg = overrides['reg']
     else:
-        try: 
-            reg = browser.find_element_by_id("selected_registration").get_attribute("innerHTML")
+        try:
+            reg = browser.find_element(By.ID, "selected_registration").get_attribute("innerHTML")
             print("Reg from tar1090 is", reg)
         except Exception as e:
             print("Couldn't find reg in tar1090", e)
-            reg = None 
+            reg = None
     if reg is not None:
         try:
             try:
-                photo_box = browser.find_element_by_id("silhouette")
+                photo_box = browser.find_element(By.ID, "silhouette")
             except NoSuchElementException:
-                photo_box = browser.find_element_by_id("airplanePhoto")
+                photo_box = browser.find_element(By.ID, "airplanePhoto")
             finally:
                 import requests, json
                 photo_list = json.loads(requests.get("https://raw.githubusercontent.com/Jxck-S/aircraft-photos/main/photo-list.json", timeout=20).text)
@@ -87,7 +87,7 @@ def get_adsbx_screenshot(file_path, url_params, enable_labels=False, enable_trac
                     browser.execute_script("arguments[0].style.width = '200px';", photo_box)
                     browser.execute_script("arguments[0].style.float = 'left';", photo_box)
                     browser.execute_script(f"arguments[0].src = 'https://raw.githubusercontent.com/Jxck-S/aircraft-photos/main/images/{reg}.jpg';", photo_box)
-                    image_copy_right = browser.find_element_by_id("copyrightInfo")
+                    image_copy_right = browser.find_element(By.ID, "copyrightInfo")
                     browser.execute_cdp_cmd('Emulation.setScriptExecutionDisabled', {'value': True})
                     copy_right_children = image_copy_right.find_elements(By.XPATH, "*")
                     if len(copy_right_children) > 0:
@@ -97,13 +97,13 @@ def get_adsbx_screenshot(file_path, url_params, enable_labels=False, enable_trac
         except Exception as e:
             print("Error on changing photo", e)
     if 'type' in overrides.keys():
-        element = browser.find_element_by_id("selected_icaotype")
+        element = browser.find_element(By.ID, "selected_icaotype")
         browser.execute_script(f"arguments[0].innerText = '* {overrides['type']}'", element)
     if 'typelong' in overrides.keys():
-        element = browser.find_element_by_id("selected_typelong")
+        element = browser.find_element(By.ID, "selected_typelong")
         browser.execute_script(f"arguments[0].innerText = '* {overrides['typelong']}'", element)
     if 'ownop' in overrides.keys():
-        element = browser.find_element_by_id("selected_ownop")
+        element = browser.find_element(By.ID, "selected_ownop")
         browser.execute_script(f"arguments[0].innerText = '* {overrides['ownop']}'", element)
     time.sleep(5)
     browser.save_screenshot(file_path)

@@ -437,7 +437,7 @@ class Plane:
                 getMap((municipality + ", "  + state + ", "  + country_code), self.map_file_name)
             elif Plane.main_config.get('MAP', 'OPTION') == "ADSBX":
                 from defSS import get_adsbx_screenshot
-                url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}" 
+                url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}&limitupdates=0"
                 get_adsbx_screenshot(self.map_file_name, url_params, overrides=self.overrides)
                 from modify_image import append_airport
                 text_credit = self.config.get('MAP', 'TEXT_CREDIT') if self.config.has_option('MAP', 'TEXT_CREDIT') else None
@@ -559,7 +559,7 @@ class Plane:
                         getMap((municipality + ", "  + state + ", "  + country_code), self.map_file_name)
                     if Plane.main_config.get('MAP', 'OPTION') == "ADSBX":
                         from defSS import get_adsbx_screenshot
-                        url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}" 
+                        url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}&limitupdates=0"
                         get_adsbx_screenshot(self.map_file_name, url_params, overrides=self.overrides)
                     if self.config.getboolean('DISCORD', 'ENABLE'):
                         dis_message =  (self.dis_title + " "  + squawk_message)
@@ -582,7 +582,7 @@ class Plane:
                             dis_message =  (self.dis_title + " "  + mode + " mode enabled.")
                             if mode == "Approach":
                                 from defSS import get_adsbx_screenshot
-                                url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}" 
+                                url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}&limitupdates=0"
                                 get_adsbx_screenshot(self.map_file_name, url_params, overrides=self.overrides)
                                 sendDis(dis_message, self.config, None, self.map_file_name)
                             #elif mode in ["Althold", "VNAV", "LNAV"] and self.sel_nav_alt != None:
@@ -765,7 +765,7 @@ class Plane:
                                 return tfr_map_filename
 
                         from defSS import get_adsbx_screenshot
-                        url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}" 
+                        url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}&limitupdates=0"
                         get_adsbx_screenshot(self.map_file_name, url_params, overrides=self.overrides)
                         if nearest_airport_dict['distance_mi'] < 3:
                             if "touchngo" in self.circle_history.keys():
@@ -850,7 +850,7 @@ class Plane:
                     if bool(int(ra['acas_ra']['MTE'])):
                         ra_message += ", Multi threat"
                     from defSS import get_adsbx_screenshot, generate_adsbx_screenshot_time_params
-                    url_params = f"&lat={ra['lat']}&lon={ra['lon']}&zoom=11&largeMode=2&hideButtons&hideSidebar&mapDim=0&overlays={self.get_adsbx_map_overlays()}"
+                    url_params = f"&lat={ra['lat']}&lon={ra['lon']}&zoom=11&largeMode=2&hideButtons&hideSidebar&mapDim=0&overlays={self.get_adsbx_map_overlays()}&limitupdates=0"
                     if "threat_id_hex" in ra['acas_ra'].keys():
                         from mictronics_parse import get_aircraft_reg_by_icao
                         threat_reg = get_aircraft_reg_by_icao(ra['acas_ra']['threat_id_hex'])

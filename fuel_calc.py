@@ -24,15 +24,15 @@ def fuel_calculation(aircraft_icao_type, minutes):
 	if aircraft_icao_type in fuellist.keys():
 		avg_fuel_price_per_gallon = get_avg_fuel_price()
 		galph = fuellist[aircraft_icao_type]["galph"]
-		fuel_used_gal = round(galph * (minutes/60), 2)
+		fuel_used_gal = galph * (minutes/60)
 		fuel_flight_info["fuel_price"] = round(fuel_used_gal * avg_fuel_price_per_gallon)
 		fuel_used_kg = fuel_used_gal * 3.04
-		c02_tons = round((fuel_used_kg * 3.15 ) / 907.185)
+		c02_tons = (fuel_used_kg * 3.15 ) / 907.185
 		fuel_flight_info['fuel_used_kg'] = round(fuel_used_kg)
 		fuel_flight_info["fuel_used_gal"] = round(fuel_used_gal)
 		fuel_flight_info['fuel_used_lters'] = round(fuel_used_gal*3.78541)
-		fuel_flight_info["fuel_used_lbs"] = round(fuel_used_kg * 2.20462)
-		fuel_flight_info["c02_tons"] = c02_tons
+		fuel_flight_info["fuel_used_lbs"] = round(fuel_used_kg * 2.20462) 
+		fuel_flight_info["c02_tons"] = round(c02_tons) if c02_tons > 1 else round(c02_tons, 4)
 		print ("Fuel info", fuel_flight_info)
 		return fuel_flight_info
 	else:
@@ -45,7 +45,7 @@ def fuel_message(fuel_info):
 	lters = "{:,}".format(fuel_info['fuel_used_lters'])
 	lbs = "{:,  }".format(fuel_info['fuel_used_lbs'])
 	kgs = "{:,}".format(fuel_info['fuel_used_kg'])
-	fuel_message = f"~ {gallons} gallons ({lters} liters). \n~ {lbs} lbs ({kgs} kg) of jet fuel used. \n~ ${cost} cost of fuel. \n~ {fuel_info['c02_tons']} tons of CO2 emissions."
+	fuel_message = f"\n~ {gallons} gallons ({lters} liters). \n~ {lbs} lbs ({kgs} kg) of jet fuel used. \n~ ${cost} cost of fuel. \n~ {fuel_info['c02_tons']} tons of CO2 emissions."
 	print(fuel_message)
 	return fuel_message
 #fuel_info = fuel_calculation("GLF6", 548.1)

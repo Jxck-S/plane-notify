@@ -8,11 +8,10 @@ def pull_apiFachaDev(planes):
     planeData = []
     token = None
     headers = None
-    if main_config.has_option('API-FACHA-DEV', 'token'):
-        token = main_config.get('API-FACHA-DEV', 'token') + "/api/aircraft/json/all"
+    if main_config.has_option('FACHADEV', 'TOKEN'):
+        token = main_config.get('FACHADEV', 'TOKEN')
         headers = {
-            'Authorization': token,
-            'Accept-Encoding': 'gzip'
+            'Authorization': token
         }
     failed = False
     icao_array = []

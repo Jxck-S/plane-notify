@@ -103,12 +103,12 @@ class Plane:
         self.print_header("BEGIN")
         # print (Fore.YELLOW + "Api.facha.Dev Sourced Data: ", ac_dict)
         try:
-            self.__dict__.update({'icao' : ac_dict['icao'].upper(), 'callsign' : ac_dict['callsign'], 'latitude' : ac_dict['lat'], 'longitude' : ac_dict['lon'],  'on_ground' : bool(ac_dict['ground']), 'squawk' : ac_dict['squawk'], 'track' : float(ac_dict['heading'])})
-            if ac_dict['geometricAltitude'] != None:
-                self.alt_ft = round(float(ac_dict['geometricAltitude']) * 3.281)
+            self.__dict__.update({'icao' : ac_dict['icao'].upper(), 'callsign' : ac_dict['callsign'], 'latitude' : ac_dict['lat'], 'longitude' : ac_dict['lon'],  'on_ground' : bool(ac_dict['onGround']), 'squawk' : ac_dict['squawk'], 'track' : float(ac_dict['heading'])})
+            if ac_dict['baroAltitude'] != None:
+                self.alt_ft = round(float(ac_dict['baroAltitude']) * 3.281)
             elif self.on_ground:
                 self.alt_ft = 0
-            self.last_pos_datetime = datetime.now()
+            self.last_pos_datetime = datetime.fromtimestamp(ac_dict['positionTime']/1000)
             from mictronics_parse import get_aircraft_reg_by_icao, get_type_code_by_icao
             self.reg = get_aircraft_reg_by_icao(self.icao)
             self.type = get_type_code_by_icao(self.icao)

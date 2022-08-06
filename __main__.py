@@ -172,6 +172,26 @@ try:
                         obj.run_empty()
             elif failed:
                 failed_count += 1
+        elif source == "FACHADEV":
+            from defApiFachaDev import pull_apiFachaDev
+            planeData, failed = pull_apiFachaDev(planes)
+            if failed == False:
+                if planeData != None and planeData != []:
+                    for key, obj in planes.items():
+                        has_data = False
+                        for dataState in planeData:
+                            if (dataState['icao']).upper() == key:
+                                # print(dataState)
+                                obj.run_fachadev(dataState)
+                                has_data = True
+                                break
+                        if has_data is False:
+                            obj.run_empty()
+                else:
+                    for obj in planes.values():
+                        obj.run_empty()
+            elif failed:
+                failed_count += 1
         if failed_count >= 10 and main_config.getboolean('DATA', 'FAILOVER'):
             if source == "OPENS":
                 source = "ADSBX"

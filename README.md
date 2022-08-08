@@ -67,6 +67,7 @@ cd plane-notify
 
 ### Configure main config file with keys and URLs (mainconf.ini) in the configs directory
 
+-   Copy `mainconf.ini.example` to `mainconf.ini` andCopy `plane1.ini.example` to `plane1.ini`. `plane1.ini` can change names as long as it ends with the ini extension
 -   Edit them with nano or vi on the running machine or on your pc and transfer the config to where you will be running the bot
 -   Pick between OpenSky and ADS-B Exchange
 -   The OpenSky API is free for everyone but the data is not as good as ADS-B Exchange. The ADS-B Exchange API is not free and this program will not work for the Rapid API from ADS-B Exchange. It only works with the API that they give when you have a partnership with ADS-B Exchange. It is not cheap to get the ADS-B Exchange full API, Don't contact them unless you are ready to pay. 

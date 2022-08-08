@@ -43,7 +43,7 @@ def fuel_message(fuel_info):
 	cost = "{:,}".format(fuel_info['fuel_price'])
 	gallons = "{:,}".format(fuel_info['fuel_used_gal'])
 	lters = "{:,}".format(fuel_info['fuel_used_lters'])
-	lbs = "{:,  }".format(fuel_info['fuel_used_lbs'])
+	lbs = "{:,}".format(fuel_info['fuel_used_lbs'])
 	kgs = "{:,}".format(fuel_info['fuel_used_kg'])
 	fuel_message = f"\n~ {gallons} gallons ({lters} liters). \n~ {lbs} lbs ({kgs} kg) of jet fuel used. \n~ ${cost} cost of fuel. \n~ {fuel_info['c02_tons']} tons of CO2 emissions."
 	print(fuel_message)

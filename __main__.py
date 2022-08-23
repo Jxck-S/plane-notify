@@ -174,15 +174,15 @@ try:
                 failed_count += 1
         elif source == "FACHADEV":
             from defApiFachaDev import pull_apiFachaDev
-            planeData, failed = pull_apiFachaDev(planes)
+            plane_data, failed = pull_apiFachaDev(planes)
             if failed == False:
-                if planeData != None and planeData != []:
+                if plane_data is not None and plane_data != []:
                     for key, obj in planes.items():
                         has_data = False
-                        for dataState in planeData:
-                            if (dataState['icao']).upper() == key:
-                                # print(dataState)
-                                obj.run_fachadev(dataState)
+                        for data_state in plane_data:
+                            if (data_state['icao']).upper() == key:
+                                # print(data_state)
+                                obj.run_fachadev(data_state)
                                 has_data = True
                                 break
                         if has_data is False:

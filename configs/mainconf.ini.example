@@ -37,6 +37,7 @@ API_KEY = googleapikey
 ENABLE = FALSE
 USERNAME = usernamehere
 URL = webhookurl
+ROLE_ID = 
 
 [TFRS]
 URL = http://127.0.0.1:5000/detailed_all

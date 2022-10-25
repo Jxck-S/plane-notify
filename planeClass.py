@@ -81,7 +81,14 @@ class Plane:
         self.print_header("BEGIN")
         #print (Fore.YELLOW + "OpenSky Sourced Data: ", ac_dict)
         try:
-            self.__dict__.update({'icao' : ac_dict.icao24.upper(), 'callsign' : ac_dict.callsign, 'latitude' : ac_dict.latitude, 'longitude' : ac_dict.longitude,  'on_ground' : bool(ac_dict.on_ground), 'squawk' : ac_dict.squawk, 'track' : float(ac_dict.heading)})
+            self.__dict__.update({
+                'icao' : ac_dict.icao24.upper(),
+                'callsign' : ac_dict.callsign,
+                'latitude' : ac_dict.latitude,
+                'longitude' : ac_dict.longitude,
+                'on_ground' : bool(ac_dict.on_ground),
+                'squawk' : ac_dict.squawk,
+                'track' : float(ac_dict.true_track)})
             if ac_dict.baro_altitude != None:
                 self.alt_ft = round(float(ac_dict.baro_altitude)  * 3.281)
             elif self.on_ground:

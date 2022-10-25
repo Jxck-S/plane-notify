@@ -4,13 +4,19 @@ import time
 from colorama import Fore, Back, Style
 import platform
 import traceback
+import os
 if platform.system() == "Windows":
     from colorama import init
     init(convert=True)
+elif platform.system() == "Linux":
+    if os.path.exists("/tmp/plane-notify"):
+        import shutil
+        shutil.rmtree("/tmp/plane-notify")
+    os.makedirs("/tmp/plane-notify")
+    os.makedirs("/tmp/plane-notify/chrome")
 from planeClass import Plane
 from datetime import datetime
 import pytz
-import os
 import signal
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -49,11 +55,13 @@ main_config.read('./configs/mainconf.ini')
 source = main_config.get('DATA', 'SOURCE')
 if main_config.getboolean('DISCORD', 'ENABLE'):
         from defDiscord import sendDis
+        role_id = main_config.get('DISCORD', 'ROLE_ID') if main_config.has_option('DISCORD', 'ROLE_ID') and main_config.get('DISCORD', 'ROLE_ID').strip() != "" else None
         sendDis("Started", main_config, role_id = main_config.get('DISCORD', 'ROLE_ID'))
 def service_exit(signum, frame):
     if main_config.getboolean('DISCORD', 'ENABLE'):
         from defDiscord import sendDis
-        sendDis("Service Stop", main_config, role_id = main_config.get('DISCORD', 'ROLE_ID'))
+        role_id = main_config.get('DISCORD', 'ROLE_ID') if main_config.has_option('DISCORD', 'ROLE_ID') and main_config.get('DISCORD', 'ROLE_ID').strip() != "" else None
+        sendDis("Service Stop", main_config, role_id = role_id)
     raise SystemExit("Service Stop")
 signal.signal(signal.SIGTERM, service_exit)
 if os.path.isfile("lookup_route.py"):
@@ -69,7 +77,7 @@ try:
     print("Found the following configs")
     for dirpath, dirname, filename in os.walk("./configs"):
             for filename in [f for f in filename if f.endswith(".ini") and f != "mainconf.ini"]:
-                if not "disabled" in dirpath:
+                if  "disabled" not in dirpath:
                     print(os.path.join(dirpath, filename))
                     plane_config = configparser.ConfigParser()
                     plane_config.read((os.path.join(dirpath, filename)))

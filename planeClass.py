@@ -55,6 +55,7 @@ class Plane:
         self.track = None
         self.last_track = None
         self.circle_history = None
+        self.nearest_from_airport = None
         if self.config.has_option('DATA', 'DATA_LOSS_MINS'):
             self.data_loss_mins = self.config.getint('DATA', 'DATA_LOSS_MINS')
         else:
@@ -222,8 +223,11 @@ class Plane:
         def route_format(extra_route_info, type):
             from defAirport import get_airport_by_icao
             to_airport = get_airport_by_icao(self.known_to_airport)
-            code = to_airport['iata_code'] if to_airport['iata_code'] != "" else to_airport['icao']
-            airport_text = f"{code}, {to_airport['name']}"
+            if to_airport:
+                code = to_airport['iata_code'] if to_airport['iata_code'] != "" else to_airport['icao']
+                airport_text = f"{code}, {to_airport['name']}"
+            else:
+                airport_text = f"{self.known_to_airport}"
             if 'time_to' in extra_route_info.keys() and type != "divert":
                 arrival_rel = "in ~" + extra_route_info['time_to']
             else:
@@ -235,7 +239,10 @@ class Plane:
                     header = "Now going to"
                 elif type == "divert":
                     header = "Now diverting to"
-                area = f"{to_airport['municipality']}, {to_airport['region']}, {to_airport['iso_country']}"
+                if to_airport:
+                    area = f"{to_airport['municipality']}, {to_airport['region']}, {to_airport['iso_country']}"
+                else:
+                    area = ""
                 route_to = f"{header} {area} ({airport_text})" + (f" arriving {arrival_rel}" if arrival_rel is not None else "")
             else:
                 if type == "inital":
@@ -424,12 +431,8 @@ class Plane:
             elif self.landed:
                 landed_time_msg = None
                 landed_time = None
-            if self.icao != "A835AF":
-                message = (f"{type_header} {location_string}.") + ("" if route_to is None else f" {route_to}.") + ((f" {landed_time_msg}") if landed_time_msg != None else "")
-                dirty_message = None
-            else:
-                message =  (f"{type_header} {location_string}.")  + ((f" {landed_time_msg}") if landed_time_msg != None else "")
-                dirty_message = (f"{type_header} {location_string}.") + ("" if route_to is None else f" {route_to}.") + ((f" {landed_time_msg}") if landed_time_msg != None else "")
+
+            message = (f"{type_header} {location_string}.") + ("" if route_to is None else f" {route_to}.") + ((f" {landed_time_msg}") if landed_time_msg != None else "")
             print (message)
             #Google Map or tar1090 screenshot
             if Plane.main_config.get('MAP', 'OPTION') == "GOOGLESTATICMAP":
@@ -451,9 +454,8 @@ class Plane:
                 sendTeleg(photo, message, self.config)
             #Discord
             if self.config.getboolean('DISCORD', 'ENABLE'):
-                dis_message = f"{self.dis_title} {message}".strip() if dirty_message is None else f"{self.dis_title} {dirty_message}".strip()
-                role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') else None
-                sendDis(dis_message, self.config, role_id, self.map_file_name)
+                role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') and self.config.get('DISCORD', 'ROLE_ID').strip() != "" else None
+                sendDis(message, self.config, role_id, self.map_file_name)
             #PushBullet
             if self.config.getboolean('PUSHBULLET', 'ENABLE'):
                 with open(self.map_file_name, "rb") as pic:
@@ -477,13 +479,13 @@ class Plane:
                 post_to_meta_both(self.config.get("META", "FB_PAGE_ID"), self.config.get("META", "IG_USER_ID"), self.map_file_name, message, self.config.get("META", "ACCESS_TOKEN"))
             os.remove(self.map_file_name)
             if self.landed:
-                if self.known_to_airport is not None and self.nearest_from_airport is not None and self.known_to_airport != self.nearest_from_airport:
+                if nearest_airport_dict is not None and self.nearest_from_airport is not None and nearest_airport_dict['icao'] != self.nearest_from_airport:
                     from defAirport import get_airport_by_icao
                     from geopy.distance import geodesic
-                    known_to_airport = get_airport_by_icao(self.known_to_airport)
+                    landed_airport = nearest_airport_dict
                     nearest_from_airport = get_airport_by_icao(self.nearest_from_airport)
                     from_coord = (nearest_from_airport['latitude_deg'], nearest_from_airport['longitude_deg'])
-                    to_coord =  (known_to_airport['latitude_deg'], known_to_airport['longitude_deg'])
+                    to_coord =  (landed_airport['latitude_deg'], landed_airport['longitude_deg'])
                     distance_mi = float(geodesic(from_coord, to_coord).mi)
                     distance_nm = distance_mi / 1.150779448
                     distance_message = f"{'{:,}'.format(round(distance_mi))} mile ({'{:,}'.format(round(distance_nm))} NM) flight from {nearest_from_airport['iata_code'] if nearest_from_airport['iata_code'] != '' else  nearest_from_airport['ident']} to {nearest_airport_dict['iata_code'] if nearest_airport_dict['iata_code'] != '' else nearest_airport_dict['ident']}\n"
@@ -498,7 +500,7 @@ class Plane:
                         fuel_message = fuel_message(fuel_info)
                         if self.config.getboolean('DISCORD', 'ENABLE'):
                             dis_message = f"{self.dis_title} {distance_message} \nFlight Fuel Info ```{fuel_message}```".strip()
-                            role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') else None
+                            role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') and self.config.get('DISCORD', 'ROLE_ID').strip() != "" else None
                             sendDis(dis_message, self.config, role_id)
                         if self.config.getboolean('TWITTER', 'ENABLE'):
                             try:
@@ -525,11 +527,10 @@ class Plane:
                 #Discord
                 if self.config.getboolean('DISCORD', 'ENABLE'):
                     dis_message = f"{self.dis_title} {route_to}".strip()
-                    role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') else None
+                    role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') and self.config.get('DISCORD', 'ROLE_ID').strip() != "" else None
                     sendDis(dis_message, self.config, role_id)
                 #Twitter
-                if self.config.getboolean('TWITTER', 'ENABLE') and self.icao == 'A835AF':
-                    #tweet = self.tweet_api.user_timeline(count = 1)[0]
+                if self.config.getboolean('TWITTER', 'ENABLE'):
                     self.latest_tweet_id = self.tweet_api.update_status(status = f"{self.twitter_title} {route_to}".strip(), in_reply_to_status_id = self.latest_tweet_id).id
 
         if self.circle_history is not None:
@@ -793,8 +794,8 @@ class Plane:
                             from defTelegram import sendTeleg
                             sendTeleg(photo, message, self.config)
                         if self.config.getboolean('DISCORD', 'ENABLE'):
-                            role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') else None
-                            if tfr_map_filename is not None: 
+                            role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') and self.config.get('DISCORD', 'ROLE_ID').strip() != "" else None
+                            if tfr_map_filename is not None:
                                 sendDis(message, self.config, role_id, self.map_file_name, tfr_map_filename)
                             elif tfr_map_filename is None:
                                 sendDis(message, self.config, role_id, self.map_file_name)
@@ -865,7 +866,7 @@ class Plane:
                     if self.config.getboolean('DISCORD', 'ENABLE'):
                         from defDiscord import sendDis
                         dis_message = f"{self.dis_title} {ra_message}"
-                        role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') else None
+                        role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') and self.config.get('DISCORD', 'ROLE_ID').strip() != "" else None
                         sendDis(dis_message, self.config, role_id, self.map_file_name)
                     #if twitter
     def expire_ra_types(self):

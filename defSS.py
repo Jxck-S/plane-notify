@@ -8,14 +8,17 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 
 def get_adsbx_screenshot(file_path, url_params, enable_labels=False, enable_track_labels=False, overrides={}):
+    import os
+    import platform
     chrome_options = webdriver.ChromeOptions()
     chrome_options.headless = True
     chrome_options.add_argument('window-size=800,800')
     chrome_options.add_argument('ignore-certificate-errors')
-    #Plane images issue loading when in headless setting agent fixes. 
+    if platform.system() == "Linux":
+        chrome_options.add_argument('crash-dumps-dir=/tmp/plane-notify/chrome')
+
+    #Plane images issue loading when in headless setting agent fixes.
     chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.54 Safari/537.36")
-    import os
-    import platform
     if platform.system() == "Linux" and os.geteuid()==0:
         chrome_options.add_argument('--no-sandbox') # required when running as root user. otherwise you would get no sandbox errors.
     browser = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
@@ -107,6 +110,7 @@ def get_adsbx_screenshot(file_path, url_params, enable_labels=False, enable_trac
         browser.execute_script(f"arguments[0].innerText = '* {overrides['ownop']}'", element)
     time.sleep(5)
     browser.save_screenshot(file_path)
+    browser.quit()
 def generate_adsbx_screenshot_time_params(timestamp):
     from datetime import datetime
     from datetime import timedelta

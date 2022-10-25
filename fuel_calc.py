@@ -14,12 +14,11 @@ def get_avg_fuel_price():
 	except Exception as e:
 		print(e)
 		return None
-	
+
 def fuel_calculation(aircraft_icao_type, minutes):
 	"""Calculates fuel usage, price, c02 output of a flight depending on aircraft type and flight length"""
 	with open("aircraft_type_fuel_consumption_rates.json", "r") as f:
 		fuellist = json.loads(f.read())
-	#avg_fuel_price_per_gallon = 5.08
 	fuel_flight_info = {}
 	if aircraft_icao_type in fuellist.keys():
 		avg_fuel_price_per_gallon = get_avg_fuel_price()
@@ -31,7 +30,7 @@ def fuel_calculation(aircraft_icao_type, minutes):
 		fuel_flight_info['fuel_used_kg'] = round(fuel_used_kg)
 		fuel_flight_info["fuel_used_gal"] = round(fuel_used_gal)
 		fuel_flight_info['fuel_used_lters'] = round(fuel_used_gal*3.78541)
-		fuel_flight_info["fuel_used_lbs"] = round(fuel_used_kg * 2.20462) 
+		fuel_flight_info["fuel_used_lbs"] = round(fuel_used_kg * 2.20462)
 		fuel_flight_info["c02_tons"] = round(c02_tons) if c02_tons > 1 else round(c02_tons, 4)
 		print ("Fuel info", fuel_flight_info)
 		return fuel_flight_info
@@ -43,10 +42,8 @@ def fuel_message(fuel_info):
 	cost = "{:,}".format(fuel_info['fuel_price'])
 	gallons = "{:,}".format(fuel_info['fuel_used_gal'])
 	lters = "{:,}".format(fuel_info['fuel_used_lters'])
-	lbs = "{:,  }".format(fuel_info['fuel_used_lbs'])
+	lbs = "{:,}".format(fuel_info['fuel_used_lbs'])
 	kgs = "{:,}".format(fuel_info['fuel_used_kg'])
 	fuel_message = f"\n~ {gallons} gallons ({lters} liters). \n~ {lbs} lbs ({kgs} kg) of jet fuel used. \n~ ${cost} cost of fuel. \n~ {fuel_info['c02_tons']} tons of CO2 emissions."
 	print(fuel_message)
 	return fuel_message
-#fuel_info = fuel_calculation("GLF6", 548.1)
-#fuel_message(fuel_info)

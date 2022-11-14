@@ -8,6 +8,7 @@ class Plane:
         self.icao = icao.upper()
         self.callsign = None
         self.config = config
+        self.config_path = config_path
         self.overrides = {}
         if self.config.has_option('DATA', 'OVERRIDE_REG'):
             self.reg = self.config.get('DATA', 'OVERRIDE_REG')
@@ -478,8 +479,7 @@ class Plane:
                     self.tweet_api.create_media_metadata(media_id= twitter_media_map_obj.media_id, alt_text= alt_text)
                     self.latest_tweet_id = self.tweet_api.update_status(status = ((self.twitter_title + " " + message).strip()), media_ids=[twitter_media_map_obj.media_id]).id
                 except tweepy.errors.TweepyException as e:
-                    print(e)
-                    raise Exception(self.icao) from e
+                    raise
             #Meta
             if self.config.has_option('META', 'ENABLE') and self.config.getboolean('META', 'ENABLE'):
                 from meta_toolkit import post_to_meta_both
@@ -513,8 +513,7 @@ class Plane:
                             try:
                                 self.latest_tweet_id = self.tweet_api.update_status(status = ((self.twitter_title + " " + distance_message + " " + fuel_message).strip()), in_reply_to_status_id = self.latest_tweet_id).id
                             except tweepy.errors.TweepyException as e:
-                                print(e)
-                                raise Exception(self.icao) from e
+                                raise
                 self.latest_tweet_id = None
                 self.recheck_route_time = None
                 self.known_to_airport = None

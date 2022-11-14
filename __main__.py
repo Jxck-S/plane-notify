@@ -1,5 +1,4 @@
 import configparser
-from logging import DEBUG
 import time
 from colorama import Fore, Back, Style
 import platform
@@ -91,7 +90,6 @@ try:
     except pytz.exceptions.UnknownTimeZoneError:
         tz = pytz.UTC
     last_ra_count = None
-    print(len(planes), "Planes configured")
     while True:
         datetime_tz = datetime.now(tz)
         if datetime_tz.hour == 0 and datetime_tz.minute == 0:
@@ -148,12 +146,75 @@ try:
                     for planeData in data['ac']:
                         data_indexed[planeData[icao_key].upper()] = planeData
                     for key, obj in planes.items():
-                        if key in data_indexed.keys():
+                        try:
                             if api_version == 1:
                                 obj.run_adsbx_v1(data_indexed[key.upper()])
                             elif api_version == 2:
                                 obj.run_adsbx_v2(data_indexed[key.upper()])
-                        else:
+                        except KeyError:
+                            obj.run_empty()
+                else:
+                    for obj in planes.values():
+                        obj.run_empty()
+            else:
+                failed_count += 1
+        elif source == "RpdADSBX":
+            #ACAS data
+            from defADSBX import pull_date_ras
+            import ast
+            today = datetime.utcnow()
+            date = today.strftime("%Y/%m/%d")
+            ras = pull_date_ras(date)
+            sorted_ras = {}
+            if ras is not None:
+                #Testing RAs
+                #if last_ra_count is not None:
+                #    with open('./testing/acastest.json') as f:
+                #        data = f.readlines()
+                #    ras += data
+                ra_count = len(ras)
+                if last_ra_count is not None and ra_count != last_ra_count:
+                    print(abs(ra_count - last_ra_count), "new Resolution Advisories")
+                    for ra_num, ra in enumerate(ras[last_ra_count:]):
+                        ra = ast.literal_eval(ra)
+                        if ra['hex'].upper() in planes.keys():
+                            if ra['hex'].upper() not in sorted_ras.keys():
+                                sorted_ras[ra['hex'].upper()] = [ra]
+                            else:
+                                sorted_ras[ra['hex'].upper()].append(ra)
+                else:
+                    print("No new Resolution Advisories")
+                last_ra_count = ra_count
+            for key, obj in planes.items():
+                if sorted_ras != {} and key in sorted_ras.keys():
+                        print(key, "has", len(sorted_ras[key]), "RAs")
+                        obj.check_new_ras(sorted_ras[key])
+                obj.expire_ra_types()
+            icao_key = 'hex'
+            from defRpdADSBX import pull_rpdadsbx
+            # print("Planes list: \n"+str((list(planes.keys()))))
+            # print("\nLen planes:\n"+str(len(planes)))
+            p = 0
+            data = dict.fromkeys(['ac'])
+            # print(data)
+            while p < len(planes):
+                planeInfo = pull_rpdadsbx(str(list(planes.keys())[p]))
+                if p == 0:
+                    data['ac'] = (planeInfo)['ac']
+                else:
+                    data['ac'].extend((planeInfo)['ac'])
+                # print("p = "+str(p))
+                # print(str(list(planes.keys())[p]) + ": " + str(data))
+                p += 1
+            if data is not None:
+                if data['ac'] is not None:
+                    data_indexed = {}
+                    for planeData in data['ac']:
+                        data_indexed[planeData[icao_key].upper()] = planeData
+                    for key, obj in planes.items():
+                        try:
+                            obj.run_adsbx_v2(data_indexed[key.upper()])
+                        except KeyError:
                             obj.run_empty()
                 else:
                     for obj in planes.values():
@@ -194,7 +255,10 @@ try:
         footer = "-------- " + str(running_Count) + " -------- " + str(datetime_tz.strftime("%I:%M:%S %p")) + " ------------------------Elapsed Time- " + str(round(elapsed_calc_time, 3)) + " -------------------------------------"
         print (Back.GREEN + Fore.BLACK + footer[0:100] + Style.RESET_ALL)
 
-        sleep_sec = 30
+        if main_config.has_section('SLEEP'):
+            sleep_sec = int(main_config.get('SLEEP', 'SLEEPSEC'))
+        else:
+            sleep_sec = 30
         for i in range(sleep_sec,0,-1):
             if i < 10:
                 i = " " + str(i)
@@ -216,7 +280,7 @@ except Exception as e:
         except OSError:
             pass
         import logging
-        logging.basicConfig(filename='crash_latest.log', filemode='w', format='%(asctime)s - %(message)s',level=logging.DEBUG)
+        logging.basicConfig(filename='crash_latest.log', filemode='w', format='%(asctime)s - %(message)s')
         logging.Formatter.converter = time.gmtime
         logging.error(e)
         logging.error(str(traceback.format_exc()))

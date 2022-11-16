@@ -38,6 +38,13 @@ apt install python3-pip
 ```bash
 pip install pipenv
 pipenv install
+pip install PIL
+pip install packaging
+pip install webdriver_manager
+pip install geopy
+pip install shapely
+pip install tabulate
+pip install lxml
 ```
 
 ### Install Selenium / ChromeDriver or setup Google Static Maps

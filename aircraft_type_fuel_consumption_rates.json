@@ -1,0 +1,219 @@
+{
+  "EA50": {
+    "name": "Eclipse 550",
+    "galph": 76,
+    "category": "VLJ"
+  },
+  "LJ31": {
+    "name": "Learjet 31",
+    "galph": 202,
+    "category": "Light"
+  },
+  "LJ40": {
+    "name": "Learjet 40",
+    "galph": 207,
+    "category": "Light"
+  },
+  "PC24": {
+    "name": "Pilatus PC-24",
+    "galph": 154,
+    "category": "Light"
+  },
+  "LJ45": {
+    "name": "Learjet 45",
+    "galph": 205,
+    "category": "Super Light"
+  },
+  "LJ70": {
+    "name": "Learjet 70",
+    "galph": 198,
+    "category": "Super Light"
+  },
+  "LJ75": {
+    "name": "Learjet 75",
+    "galph": 199,
+    "category": "Super Light"
+  },
+  "G150": {
+    "name": "Gulfstream G150",
+    "galph": 228,
+    "category": "Midsize"
+  },
+  "LJ60": {
+    "name": "Learjet 60",
+    "galph": 239,
+    "category": "Midsize"
+  },
+  "GALX": {
+    "name": "Gulfstream G200",
+    "galph": 278,
+    "category": "Super Midsize"
+  },
+  "G280": {
+    "name": "Gulfstream G280",
+    "galph": 297,
+    "category": "Super Midsize"
+  },
+  "GLF5": {
+    "name": "Gulfstream G500",
+    "galph": 447,
+    "category": "Large"
+  },
+  "GLF6": {
+    "name": "Gulfstream G650",
+    "galph": 503,
+    "category": "Ultra Long Range"
+  },
+  "PC12": {
+    "name": "Pilatus PC-12",
+    "galph": 66,
+    "category": "Turboprop Aircraft"
+  },
+  "GLEX": {
+    "name": "Global",
+    "galph": 500,
+    "category": "Ultra Long Range"
+  }
+  ,
+  "CL30": {
+    "name": "Challenger 300",
+    "galph": 295, 
+    "category": "Super Midsize"
+  },  "B742": {
+    "name": "Boeing 747-200",
+    "galph": 3830,
+    "category": "Large"
+  },  "T38": {
+    "name": "T-38 Talon",
+    "galph": 375,
+    "category": "Fighter"
+  },  "WB57": {
+    "name": "Martin B-57 Canberra",
+    "galph": 531,
+    "category": "Twinjet Tactical Bomber and Reconnaissance"
+  },  "B74S": {
+    "name": "747 SP",
+    "galph": 2289,
+    "category": "Large"
+  },  "B752": {
+    "name": "757 200",
+    "galph": 877,
+    "category": "Large"
+  },  
+    "B738": {
+    "name": "737 800",
+    "galph": 832,
+    "category": "Medium"
+  },
+  "B737": {
+    "name": "737 700",
+    "galph": 796,
+    "category": "Medium"
+  },
+  "A320": {
+    "name": "A320",
+    "galph": 800,
+    "category": "Medium"
+  },
+  "P3": {
+    "name": "Lockheed Orion P3",
+    "galph": 671,
+    "category": "Turboprop"
+  },
+  "C750": {
+    "name": "Cessna 750 Citation X",
+    "galph": 347,
+    "category": "Small Private Jet"
+  },
+  "FA7X": {
+    "name": "Dassult Falcon 7X",
+    "galph": 380,
+    "category": "Small Private Jet"
+  },
+  "F900": {
+    "name": "Dassult Falcon 900",
+    "galph": 347,
+    "category": "Small Private Jet"
+  },
+  "H25B": {
+    "name": "Hawker 750/850",
+    "galph": 270,
+    "category": "Small Private Jet"
+  },
+  "C680": {
+    "name": "Cessna 680 Citation",
+    "galph": 247,
+    "category": "Small Private Jet"
+  },
+  "GLF3": {
+    "name": "Gulfstream 3",
+    "galph": 568,
+    "category": "Heavy Private Jet"
+  }, 
+  "GLF4": {
+    "name": "Gulfstream 4",
+    "galph": 479,
+    "category": "Heavy Private Jet"
+  },
+  "CL60": {
+    "name": "Bombardier CL-600 Challenge",
+    "galph": 262,
+    "category": "Mid-size Private Jet"
+  },
+  "A139": {
+    "name": "Agusta-Bell AW139",
+    "galph": 150,
+    "category": "Medium Utility Helicopter"
+  },
+  "GL5T": {
+    "name": "Global 5000",
+    "galph": 455,
+    "category": "Heavy Private Jet"
+  },
+  "GA6C": {
+    "name": "Gulfstream G600",
+    "galph": 458,
+    "category": "Heavy Private Jet"
+  },
+  "A337": {
+    "name": "Airbus Beluga XL",
+    "galph": 1800,
+    "category": "Large Transport Aircraft"
+  },
+  "A3ST": {
+    "name": "Airbus Beluga",
+    "galph": 1260,
+    "category": "Large Transport Aircraft"
+  },
+  "F2TH": {
+    "name": "Dassault Falcon 2000",
+    "galph": 245,
+    "category": "Medium Private Jet"
+  },
+  "GA5C": {
+    "name": "Gulfstream G500",
+    "galph": 402,
+    "category": "Large Private Jet"
+  },
+  "C130": {
+    "name": "Lockheed C130",
+    "galph": 740,
+    "category": "Medium Cargo"
+  },
+  "B762": {
+    "name": "Boeing 767 200",
+    "galph": 1722,
+    "category": "Wide-body"
+  },
+  "B429": {
+    "name": "Bell 429 GlobalRanger",
+    "galph": 2300,
+    "category": "Light Rotary"
+ },
+  "BK17": {
+    "name": "eurocopter bk117 c-1/2",
+    "galph": 2300,
+    "category": "Light Rotary"
+  }
+  
+}

@@ -1,0 +1,6 @@
+2022-10-28 22:03:40,727 - 'ac'
+2022-10-28 22:03:40,728 - Traceback (most recent call last):
+  File "C:\Users\cws82\OneDrive\Desktop\flight tracking\eaglenew\__main__.py", line 195, in <module>
+    data['ac'] = (planeInfo)['ac']
+KeyError: 'ac'
+

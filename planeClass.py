@@ -7,8 +7,22 @@ class Plane:
         """Initializes a plane object from its config file and given icao."""
         self.icao = icao.upper()
         self.callsign = None
-        self.reg = None
         self.config = config
+        self.overrides = {}
+        if self.config.has_option('DATA', 'OVERRIDE_REG'):
+            self.reg = self.config.get('DATA', 'OVERRIDE_REG')
+            self.overrides['reg'] = self.reg
+        else:
+            self.reg = None
+        if self.config.has_option('DATA', 'OVERRIDE_ICAO_TYPE'):
+            self.type = self.config.get('DATA', 'OVERRIDE_ICAO_TYPE')
+            self.overrides['type'] = self.type
+        else:
+            self.type = None
+        if self.config.has_option('DATA', 'OVERRIDE_ICAO_TYPE'):
+            self.overrides['typelong'] = self.config.get('DATA', 'OVERRIDE_TYPELONG')
+        if self.config.has_option('DATA', 'OVERRIDE_OWNER'):
+            self.overrides['ownop'] = self.config.get('DATA', 'OVERRIDE_OWNER')
         self.conf_file_path = config_path
         self.alt_ft = None
         self.below_desired_ft = None
@@ -46,9 +60,15 @@ class Plane:
         else:
             self.data_loss_mins = Plane.main_config.getint('DATA', 'DATA_LOSS_MINS')
         #Setup Tweepy
-        if self.config.getboolean('TWITTER', 'ENABLE'):
-            from defTweet import tweepysetup
-            self.tweet_api = tweepysetup(self.config)
+        if self.config.getboolean('TWITTER', 'ENABLE') and Plane.main_config.getboolean('TWITTER', 'ENABLE'):
+            import tweepy
+            twitter_app_auth = tweepy.OAuthHandler(Plane.main_config.get('TWITTER', 'CONSUMER_KEY'), Plane.main_config.get('TWITTER', 'CONSUMER_SECRET'))
+            twitter_app_auth.set_access_token(config.get('TWITTER', 'ACCESS_TOKEN'), config.get('TWITTER', 'ACCESS_TOKEN_SECRET'))
+            self.tweet_api = tweepy.API(twitter_app_auth, wait_on_rate_limit=True)
+            try:
+                self.latest_tweet_id = self.tweet_api.user_timeline(count = 1)[0]
+            except IndexError:
+                self.latest_tweet_id = None
         #Setup PushBullet
         if self.config.getboolean('PUSHBULLET', 'ENABLE'):
             from pushbullet import Pushbullet
@@ -57,7 +77,7 @@ class Plane:
     def run_opens(self, ac_dict):
         #Parse OpenSky Vector
         from colorama import Fore, Back, Style
-        self.printheader("head")
+        self.print_header("BEGIN")
         #print (Fore.YELLOW + "OpenSky Sourced Data: ", ac_dict)
         try:
             self.__dict__.update({'icao' : ac_dict.icao24.upper(), 'callsign' : ac_dict.callsign, 'latitude' : ac_dict.latitude, 'longitude' : ac_dict.longitude,  'on_ground' : bool(ac_dict.on_ground), 'squawk' : ac_dict.squawk, 'track' : float(ac_dict.heading)})
@@ -68,18 +88,41 @@ class Plane:
             from mictronics_parse import get_aircraft_reg_by_icao, get_type_code_by_icao
             self.reg = get_aircraft_reg_by_icao(self.icao)
             self.type = get_type_code_by_icao(self.icao)
-            self.last_pos_datetime = datetime.fromtimestamp(ac_dict.time_position)
+            if ac_dict.time_position is not None:
+                self.last_pos_datetime = datetime.fromtimestamp(ac_dict.time_position)
         except ValueError as e:
             print("Got data but some data is invalid!")
             print(e)
-            self.printheader("foot")
+            self.print_header("END")
+        else:
+            self.feeding = True
+            self.run_check()
+    def run_fachadev(self, ac_dict):
+        #Parse Api.facha.Dev
+        from colorama import Fore, Back, Style
+        self.print_header("BEGIN")
+        # print (Fore.YELLOW + "Api.facha.Dev Sourced Data: ", ac_dict)
+        try:
+            self.__dict__.update({'icao' : ac_dict['icao'].upper(), 'callsign' : ac_dict['callsign'], 'latitude' : ac_dict['lat'], 'longitude' : ac_dict['lon'],  'on_ground' : bool(ac_dict['onGround']), 'squawk' : ac_dict['squawk'], 'track' : float(ac_dict['heading'])})
+            if ac_dict['baroAltitude'] != None:
+                self.alt_ft = round(float(ac_dict['baroAltitude']) * 3.281)
+            elif self.on_ground:
+                self.alt_ft = 0
+            self.last_pos_datetime = datetime.fromtimestamp(ac_dict['positionTime']/1000)
+            from mictronics_parse import get_aircraft_reg_by_icao, get_type_code_by_icao
+            self.reg = get_aircraft_reg_by_icao(self.icao)
+            self.type = get_type_code_by_icao(self.icao)
+        except ValueError as e:
+            print("Got data but some data is invalid!")
+            print(e)
+            self.print_header("END")
         else:
             self.feeding = True
             self.run_check()
     def run_adsbx_v1(self, ac_dict):
         #Parse ADBSX V1 Vector
         from colorama import Fore, Back, Style
-        self.printheader("head")
+        self.print_header("BEGIN")
         #print (Fore.YELLOW +"ADSBX Sourced Data: ", ac_dict, Style.RESET_ALL)
         try:
             #postime is divided by 1000 to get seconds from milliseconds, from timestamp expects secs.
@@ -92,7 +135,7 @@ class Plane:
             print("Got data but some data is invalid!")
             print(e)
             print (Fore.YELLOW +"ADSBX Sourced Data: ", ac_dict, Style.RESET_ALL)
-            self.printheader("foot")
+            self.print_header("END")
         else:
             self.feeding = True
             self.run_check()
@@ -100,7 +143,7 @@ class Plane:
     def run_adsbx_v2(self, ac_dict):
         #Parse ADBSX V2 Vector
         from colorama import Fore, Back, Style
-        self.printheader("head")
+        self.print_header("BEGIN")
         print(ac_dict)
         try:
             self.__dict__.update({'icao' : ac_dict['hex'].upper(), 'latitude' : float(ac_dict['lat']), 'longitude' : float(ac_dict['lon']), 'speed': ac_dict['gs']})
@@ -116,6 +159,8 @@ class Plane:
                 self.on_ground = True
             if ac_dict.get('flight') is not None:
                 self.callsign = ac_dict.get('flight').strip()
+            else:
+                self.callsign = None
             if ac_dict.get('dbFlags') is not None:
                 self.db_flags = ac_dict['dbFlags']
             if 'nav_modes' in ac_dict:
@@ -142,7 +187,7 @@ class Plane:
             print("Got data but some data is invalid!")
             print(e)
             print (Fore.YELLOW +"ADSBX Sourced Data: ", ac_dict, Style.RESET_ALL)
-            self.printheader("foot")
+            self.print_header("END")
         else:
             #Error Handling for bad data, sometimes it would seem to be ADSB Decode error
             if (not self.on_ground)  and self.speed <= 10:
@@ -169,13 +214,19 @@ class Plane:
         ]
         output = list(filter(None, output))
         return tabulate(output, [], 'fancy_grid')
-    def printheader(self, type):
+    def print_header(self, note):
         from colorama import Fore, Back, Style
-        if type == "head":
-            header = str("--------- " + self.conf_file_path + " ---------------------------- ICAO: " +  self.icao + " ---------------------------------------")
-        elif type == "foot":
-            header = "----------------------------------------------------------------------------------------------------"
-        print(Back.MAGENTA + header[0:100] + Style.RESET_ALL)
+        if note == "BEGIN":
+            header = f"---BEGIN---------{self.conf_file_path}"
+        elif note == "END":
+            header = f"---END"
+        remaning_len = 85 - len(header)
+        for x in range(0, remaning_len):
+            header += "-"
+        header += f"ICAO: {self.icao}---"
+        if note =="END":
+            header += Style.RESET_ALL + "\n"
+        print(Back.MAGENTA + header + Style.RESET_ALL)
     def get_time_since(self, datetime_obj):
         if datetime_obj != None:
             time_since = datetime.now() - datetime_obj
@@ -186,7 +237,7 @@ class Plane:
         if self.config.has_option('MAP', 'OVERLAYS'):
             overlays = self.config.get('MAP', 'OVERLAYS')
         else:
-            overlays = ""
+            overlays = "null"
         return overlays
     def route_info(self):
         from lookup_route import lookup_route, clean_data
@@ -243,7 +294,7 @@ class Plane:
 
         return route_to
     def run_empty(self):
-        self.printheader("head")
+        self.print_header("BEGIN")
         self.feeding = False
         self.run_check()
     def run_check(self):
@@ -352,17 +403,19 @@ class Plane:
                 area = f"{municipality}, {state}"
             location_string = (f"{area}, {country_code}")
             print (Fore.GREEN + "Country Code:", country_code, "State:", state, "Municipality:", municipality + Style.RESET_ALL)
-        title_switch = {
-        "reg": self.reg,
-        "callsign": self.callsign,
-        "icao": self.icao,
-        }
+        dynamic_title = self.callsign or self.reg or self.icao
     #Set Discord Title
         if self.config.getboolean('DISCORD', 'ENABLE'):
-            self.dis_title = (title_switch.get(self.config.get('DISCORD', 'TITLE')) or "NA").strip() if self.config.get('DISCORD', 'TITLE') in title_switch.keys() else self.config.get('DISCORD', 'TITLE')
+            if self.config.get('DISCORD', 'TITLE') in ["DYNAMIC", "callsign"]:
+                self.dis_title = dynamic_title
+            else:
+                self.dis_title = self.config.get('DISCORD', 'TITLE')
     #Set Twitter Title
         if self.config.getboolean('TWITTER', 'ENABLE'):
-            self.twitter_title = (title_switch.get(self.config.get('TWITTER', 'TITLE')) or "NA") if self.config.get('TWITTER', 'TITLE') in title_switch.keys() else self.config.get('TWITTER', 'TITLE')
+            if self.config.get('TWITTER', 'TITLE') in ["DYNAMIC", "callsign"]:
+                self.twitter_title = dynamic_title
+            else:
+                self.twitter_title = self.config.get('TWITTER', 'TITLE')
     #Takeoff and Land Notification
         if self.tookoff or self.landed:
             route_to = None
@@ -392,26 +445,37 @@ class Plane:
                 self.takeoff_time = None
             elif self.landed:
                 landed_time_msg = None
-            message = (f"{type_header} {location_string}.") + ("" if route_to is None else f" {route_to}.") + ((f" {landed_time_msg}") if landed_time_msg != None else "")
+                landed_time = None
+            if self.icao != "A835AF":
+                message = (f"{type_header} {location_string}.") + ("" if route_to is None else f" {route_to}.") + ((f" {landed_time_msg}") if landed_time_msg != None else "")
+                dirty_message = None
+            else:
+                message =  (f"{type_header} {location_string}.")  + ((f" {landed_time_msg}") if landed_time_msg != None else "")
+                dirty_message = (f"{type_header} {location_string}.") + ("" if route_to is None else f" {route_to}.") + ((f" {landed_time_msg}") if landed_time_msg != None else "")
             print (message)
             #Google Map or tar1090 screenshot
-            if self.config.get('MAP', 'OPTION') == "GOOGLESTATICMAP":
+            if Plane.main_config.get('MAP', 'OPTION') == "GOOGLESTATICMAP":
                 from defMap import getMap
                 getMap((municipality + ", "  + state + ", "  + country_code), self.map_file_name)
-            elif self.config.get('MAP', 'OPTION') == "ADSBX":
+            elif Plane.main_config.get('MAP', 'OPTION') == "ADSBX":
                 from defSS import get_adsbx_screenshot
-
-                url_params = f"icao={self.icao}&zoom=9&largeMode=2&hideButtons&hideSidebar&mapDim=0&overlays=" + self.get_adsbx_map_overlays()
-                get_adsbx_screenshot(self.map_file_name, url_params)
+                url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}&limitupdates=0"
+                get_adsbx_screenshot(self.map_file_name, url_params, overrides=self.overrides)
                 from modify_image import append_airport
-                append_airport(self.map_file_name, nearest_airport_dict)
+                text_credit = self.config.get('MAP', 'TEXT_CREDIT') if self.config.has_option('MAP', 'TEXT_CREDIT') else None
+                append_airport(self.map_file_name, nearest_airport_dict, text_credit)
             else:
                 raise ValueError("Map option not set correctly in this planes conf")
+            #Telegram
+            if self.config.has_section('TELEGRAM') and self.config.getboolean('TELEGRAM', 'ENABLE'):
+                from defTelegram import sendTeleg
+                photo = open(self.map_file_name, "rb")
+                sendTeleg(photo, message, self.config)
             #Discord
             if self.config.getboolean('DISCORD', 'ENABLE'):
-                dis_message = f"{self.dis_title} {message}".strip()
+                dis_message = f"{self.dis_title} {message}".strip() if dirty_message is None else f"{self.dis_title} {dirty_message}".strip()
                 role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') else None
-                sendDis(dis_message, self.config, self.map_file_name, role_id = role_id)
+                sendDis(dis_message, self.config, role_id, self.map_file_name)
             #PushBullet
             if self.config.getboolean('PUSHBULLET', 'ENABLE'):
                 with open(self.map_file_name, "rb") as pic:
@@ -420,12 +484,50 @@ class Plane:
                 self.pb_channel.push_file(**map_data)
             #Twitter
             if self.config.getboolean('TWITTER', 'ENABLE'):
-                twitter_media_map_obj = self.tweet_api.media_upload(self.map_file_name)
-                alt_text = f"Reg: {self.reg} On Ground: {str(self.on_ground)} Alt: {str(self.alt_ft)} Last Contact: {str(time_since_contact)} Trigger: {trigger_type}"
-                self.tweet_api.create_media_metadata(media_id= twitter_media_map_obj.media_id, alt_text= alt_text)
-                self.latest_tweet_id = self.tweet_api.update_status(status = ((self.twitter_title + " " + message).strip()), media_ids=[twitter_media_map_obj.media_id]).id
+                import tweepy
+                try:
+                    twitter_media_map_obj = self.tweet_api.media_upload(self.map_file_name)
+                    alt_text = f"Reg: {self.reg} On Ground: {str(self.on_ground)} Alt: {str(self.alt_ft)} Last Contact: {str(time_since_contact)} Trigger: {trigger_type}"
+                    self.tweet_api.create_media_metadata(media_id= twitter_media_map_obj.media_id, alt_text= alt_text)
+                    self.latest_tweet_id = self.tweet_api.update_status(status = ((self.twitter_title + " " + message).strip()), media_ids=[twitter_media_map_obj.media_id]).id
+                except tweepy.errors.TweepyException as e:
+                    print(e)
+                    raise Exception(self.icao) from e
+            #Meta
+            if self.config.has_option('META', 'ENABLE') and self.config.getboolean('META', 'ENABLE'):
+                from meta_toolkit import post_to_meta_both
+                post_to_meta_both(self.config.get("META", "FB_PAGE_ID"), self.config.get("META", "IG_USER_ID"), self.map_file_name, message, self.config.get("META", "ACCESS_TOKEN"))
             os.remove(self.map_file_name)
             if self.landed:
+                if self.known_to_airport is not None and self.nearest_from_airport is not None and self.known_to_airport != self.nearest_from_airport:
+                    from defAirport import get_airport_by_icao
+                    from geopy.distance import geodesic
+                    known_to_airport = get_airport_by_icao(self.known_to_airport)
+                    nearest_from_airport = get_airport_by_icao(self.nearest_from_airport)
+                    from_coord = (nearest_from_airport['latitude_deg'], nearest_from_airport['longitude_deg'])
+                    to_coord =  (known_to_airport['latitude_deg'], known_to_airport['longitude_deg'])
+                    distance_mi = float(geodesic(from_coord, to_coord).mi)
+                    distance_nm = distance_mi / 1.150779448
+                    distance_message = f"{'{:,}'.format(round(distance_mi))} mile ({'{:,}'.format(round(distance_nm))} NM) flight from {nearest_from_airport['iata_code'] if nearest_from_airport['iata_code'] != '' else  nearest_from_airport['ident']} to {nearest_airport_dict['iata_code'] if nearest_airport_dict['iata_code'] != '' else nearest_airport_dict['ident']}\n"
+                else:
+                    distance_message = ""
+                if landed_time is not None and self.type is not None:
+                    print("Running fuel info calc")
+                    flight_time_min = landed_time.total_seconds() / 60
+                    from fuel_calc import fuel_calculation, fuel_message
+                    fuel_info = fuel_calculation(self.type, flight_time_min)
+                    if fuel_info is not None:
+                        fuel_message = fuel_message(fuel_info)
+                        if self.config.getboolean('DISCORD', 'ENABLE'):
+                            dis_message = f"{self.dis_title} {distance_message} \nFlight Fuel Info ```{fuel_message}```".strip()
+                            role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') else None
+                            sendDis(dis_message, self.config, role_id)
+                        if self.config.getboolean('TWITTER', 'ENABLE'):
+                            try:
+                                self.latest_tweet_id = self.tweet_api.update_status(status = ((self.twitter_title + " " + distance_message + " " + fuel_message).strip()), in_reply_to_status_id = self.latest_tweet_id).id
+                            except tweepy.errors.TweepyException as e:
+                                print(e)
+                                raise Exception(self.icao) from e
                 self.latest_tweet_id = None
                 self.recheck_route_time = None
                 self.known_to_airport = None
@@ -436,13 +538,19 @@ class Plane:
             route_to = self.route_info()
             if route_to != None:
                 print(route_to)
+                #Telegram
+                if self.config.has_section('TELEGRAM') and self.config.getboolean('TELEGRAM', 'ENABLE'):
+                    message = f"{self.dis_title} {route_to}".strip()
+                    photo = open(self.map_file_name, "rb")
+                    from defTelegram import sendTeleg
+                    sendTeleg(photo, message, self.config)
                 #Discord
                 if self.config.getboolean('DISCORD', 'ENABLE'):
                     dis_message = f"{self.dis_title} {route_to}".strip()
                     role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') else None
-                    sendDis(dis_message, self.config, role_id = role_id)
+                    sendDis(dis_message, self.config, role_id)
                 #Twitter
-                if self.config.getboolean('TWITTER', 'ENABLE'):
+                if self.config.getboolean('TWITTER', 'ENABLE') and self.icao == 'A835AF':
                     #tweet = self.tweet_api.user_timeline(count = 1)[0]
                     self.latest_tweet_id = self.tweet_api.update_status(status = f"{self.twitter_title} {route_to}".strip(), in_reply_to_status_id = self.latest_tweet_id).id
 
@@ -469,15 +577,15 @@ class Plane:
                     squawk_message = (f"{self.dis_title} Squawking {self.last_emergency[1]} {emergency_squawks[self.squawk]}").strip()
                     print(squawk_message)
                     #Google Map or tar1090 screenshot
-                    if self.config.get('MAP', 'OPTION') == "GOOGLESTATICMAP":
+                    if Plane.main_config.get('MAP', 'OPTION') == "GOOGLESTATICMAP":
                         getMap((municipality + ", "  + state + ", "  + country_code), self.map_file_name)
-                    if self.config.get('MAP', 'OPTION') == "ADSBX":
+                    if Plane.main_config.get('MAP', 'OPTION') == "ADSBX":
                         from defSS import get_adsbx_screenshot
-                        url_params = f"icao={self.icao}&zoom=9&largeMode=2&hideButtons&hideSidebar&mapDim=0&overlays=" + self.get_adsbx_map_overlays()
-                        get_adsbx_screenshot(self.map_file_name, url_params)
+                        url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}&limitupdates=0"
+                        get_adsbx_screenshot(self.map_file_name, url_params, overrides=self.overrides)
                     if self.config.getboolean('DISCORD', 'ENABLE'):
                         dis_message =  (self.dis_title + " "  + squawk_message)
-                        sendDis(dis_message, self.config, self.map_file_name)
+                        sendDis(dis_message, self.config, None, self.map_file_name)
                     os.remove(self.map_file_name)
             #Realizes first time seeing emergency, stores time and type
             elif self.squawk in emergency_squawks.keys() and not self.emergency_already_triggered and not self.on_ground:
@@ -496,9 +604,9 @@ class Plane:
                             dis_message =  (self.dis_title + " "  + mode + " mode enabled.")
                             if mode == "Approach":
                                 from defSS import get_adsbx_screenshot
-                                url_params = f"icao={self.icao}&zoom=9&largeMode=2&hideButtons&hideSidebar&mapDim=0&overlays={self.get_adsbx_map_overlays()}"
-                                get_adsbx_screenshot(self.map_file_name, url_params)
-                                sendDis(dis_message, self.config, self.map_file_name)
+                                url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}&limitupdates=0"
+                                get_adsbx_screenshot(self.map_file_name, url_params, overrides=self.overrides)
+                                sendDis(dis_message, self.config, None, self.map_file_name)
                             #elif mode in ["Althold", "VNAV", "LNAV"] and self.sel_nav_alt != None:
                             #    sendDis((dis_message + ", Sel Alt. " + str(self.sel_nav_alt) + ", Current Alt. " + str(self.alt_ft)), self.config)
                             else:
@@ -509,7 +617,7 @@ class Plane:
                 print("Nav altitude is now", self.sel_nav_alt)
                 if self.config.getboolean('DISCORD', 'ENABLE'):
                     dis_message =  (self.dis_title + " Sel.  alt. " + str("{:,} ft".format(self.sel_nav_alt)))
-                    sendDis(dis_message,self.config)
+                    sendDis(dis_message, self.config)
             #Circling
             if self.last_track is not None:
                 import time
@@ -543,36 +651,189 @@ class Plane:
                     #rp =  (points.representative_point()) #A represenative point, not centroid,
                     print(cent)
                     #print(rp)
-                    distance_to_centroid = geodesic(aircraft_coords, cent.coords).mi
+                    distance_to_centroid = round(geodesic(aircraft_coords, cent.coords).mi, 2)
                     print(f"Distance to centroid of circling coordinates {distance_to_centroid} miles")
                     if distance_to_centroid <= 15:
                         print("Within 15 miles of centroid, CIRCLING")
+                        #Finds Nearest Airport
                         from defAirport import getClosestAirport
                         nearest_airport_dict = getClosestAirport(self.latitude, self.longitude, ["small_airport", "medium_airport", "large_airport"])
                         from calculate_headings import calculate_from_bearing, calculate_cardinal
                         from_bearing = calculate_from_bearing((float(nearest_airport_dict['latitude_deg']), float(nearest_airport_dict['longitude_deg'])), (self.latitude, self.longitude))
                         cardinal = calculate_cardinal(from_bearing)
+                        #Finds Nearest TFR or in TFR
+                        from shapely.geometry import MultiPoint
+                        from geopy.distance import geodesic
+                        from shapely.geometry.polygon import Polygon
+                        from shapely.geometry import Point
+                        import requests, json
+                        closest_tfr = None
+                        in_tfr = None
+                        if Plane.main_config.getboolean("TFRS", "ENABLE"):
+                            tfr_url = Plane.main_config.get("TFRS", "URL")
+                            response = requests.get(tfr_url, timeout=60)
+                            tfrs = json.loads(response.text)
+                            for tfr in tfrs:
+                                if in_tfr is not None:
+                                    break
+                                elif tfr['details'] is not None and 'shapes' in tfr['details'].keys():
+                                    for index, shape in enumerate(tfr['details']['shapes']):
+                                        if 'txtName' not in shape.keys():
+                                            shape['txtName'] = 'shape_'+str(index)
+                                        polygon = None
+                                        if shape['type'] == "poly":
+                                            points = shape['points']
+                                        elif shape['type'] == "circle":
+                                            from functools import partial
+                                            import pyproj
+                                            from shapely.ops import transform
+                                            from shapely.geometry import Point
+                                            proj_wgs84 = pyproj.Proj('+proj=longlat +datum=WGS84')
+                                            def geodesic_point_buffer(lat, lon, km):
+                                                # Azimuthal equidistant projection
+                                                aeqd_proj = '+proj=aeqd +lat_0={lat} +lon_0={lon} +x_0=0 +y_0=0'
+                                                project = partial(
+                                                    pyproj.transform,
+                                                    pyproj.Proj(aeqd_proj.format(lat=lat, lon=lon)),
+                                                    proj_wgs84)
+                                                buf = Point(0, 0).buffer(km * 1000)  # distance in metres
+                                                return transform(project, buf).exterior.coords[:]
+                                            radius_km = float(shape['radius']) *  1.852
+                                            b = geodesic_point_buffer(shape['lat'], shape['lon'], radius_km)
+                                            points = []
+                                            for coordinate in b:
+                                                points.append([coordinate[1], coordinate[0]])
+                                        elif shape['type'] in ["polyarc", "polyexclude"]:
+                                            points = shape['all_points']
+                                        aircraft_location = Point(self.latitude, self.longitude)
+                                        if polygon is None:
+                                            polygon = Polygon(points)
+                                        if polygon.contains(aircraft_location):
+                                            in_tfr = {'info': tfr, 'closest_shape_name' : shape['txtName']}
+                                            break
+                                        else:
+                                            point_dists = []
+                                            for point in points:
+                                                from geopy.distance import geodesic
+                                                point = tuple(point)
+                                                point_dists.append(float((geodesic((self.latitude, self.longitude), point).mi)))
+                                            distance = min(point_dists)
+                                            if closest_tfr is None:
+                                                closest_tfr = {'info': tfr, 'closest_shape_name' : shape['txtName'], 'distance' : round(distance)}
+                                            elif distance < closest_tfr['distance']:
+                                                closest_tfr = {'info': tfr, 'closest_shape_name' : shape['txtName'], 'distance' : round(distance)}
+                            if in_tfr is not None:
+                                for shape in in_tfr['info']['details']['shapes']:
+                                    if shape['txtName'] == in_tfr['closest_shape_name']:
+                                        valDistVerUpper, valDistVerLower = int(shape['valDistVerUpper']), int(shape['valDistVerLower'])
+                                        print("In TFR based off location checking alt next", in_tfr)
+                                        break
+                                if not (self.alt_ft >= valDistVerLower and self.alt_ft <= valDistVerUpper):
+                                    if self.alt_ft > valDistVerUpper:
+                                        in_tfr['context'] = "above"
+                                    elif self.alt_ft < valDistVerLower:
+                                        in_tfr['context'] = "below"
+                                    print("But not in alt of TFR", in_tfr['context'])
+
+                            if in_tfr is None:
+                                print("Closest TFR", closest_tfr)
+                            #Generate Map
+                            import staticmaps
+                            context = staticmaps.Context()
+                            context.set_tile_provider(staticmaps.tile_provider_OSM)
+                            if in_tfr is not None:
+                                shapes = in_tfr['info']['details']['shapes']
+                            else:
+                                shapes = closest_tfr['info']['details']['shapes']
+                            def draw_poly(context, pairs):
+                                pairs.append(pairs[0])
+                                context.add_object(
+                                    staticmaps.Area(
+                                        [staticmaps.create_latlng(lat, lng) for lat, lng in pairs],
+                                        fill_color=staticmaps.parse_color("#FF000033"),
+                                        width=2,
+                                        color=staticmaps.parse_color("#8B0000"),
+                                    )
+                                )
+                                return context
+                            for shape in shapes:
+                                if shape['type'] == "poly":
+                                    pairs = shape['points']
+                                    context = draw_poly(context, pairs)
+                                elif shape['type'] == "polyarc" or shape['type'] == "polyexclude":
+                                    pairs = shape['all_points']
+                                    context = draw_poly(context, pairs)
+                                elif shape['type'] =="circle":
+                                    center = [shape['lat'], shape['lon']]
+                                    center1 = staticmaps.create_latlng(center[0], center[1])
+                                    context.add_object(staticmaps.Circle(center1, (float(shape['radius']) * 1.852), fill_color=staticmaps.parse_color("#FF000033"), color=staticmaps.parse_color("#8B0000"), width=2))
+                                    context.add_object(staticmaps.Marker(center1, color=staticmaps.RED))
+                            def tfr_image(context, aircraft_coords):
+                                from PIL import Image
+                                heading = self.track
+                                heading *= -1
+                                im = Image.open('./dependencies/ac.png')
+                                im_rotate = im.rotate(heading, resample=Image.BICUBIC)
+                                import tempfile
+                                rotated_file = f"{tempfile.gettempdir()}/rotated_ac.png"
+                                im_rotate.save(rotated_file)
+                                pos = staticmaps.create_latlng(aircraft_coords[0], aircraft_coords[1])
+                                marker = staticmaps.ImageMarker(pos, rotated_file, origin_x=35, origin_y=35)
+                                context.add_object(marker)
+                                image = context.render_cairo(1000, 1000)
+                                os.remove(rotated_file)
+                                tfr_map_filename = f"{tempfile.gettempdir()}/{self.icao}_TFR_.png"
+                                image.write_to_png(tfr_map_filename)
+                                return tfr_map_filename
+
                         from defSS import get_adsbx_screenshot
-                        url_params = f"icao={self.icao}&zoom=10&largeMode=2&hideButtons&hideSidebar&mapDim=0&overlays={self.get_adsbx_map_overlays()}"
-                        get_adsbx_screenshot(self.map_file_name, url_params)
+                        url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}&limitupdates=0"
+                        get_adsbx_screenshot(self.map_file_name, url_params, overrides=self.overrides)
                         if nearest_airport_dict['distance_mi'] < 3:
                             if "touchngo" in self.circle_history.keys():
                                 message = f"Doing touch and goes at {nearest_airport_dict['icao']}"
                             else:
-                                message =  f"Circling over {nearest_airport_dict['icao']} at {self.alt_ft}ft"
+                                message =  f"Circling over {nearest_airport_dict['icao']} at {self.alt_ft}ft."
                         else:
-                            message =  f"Circling {round(nearest_airport_dict['distance_mi'], 2)}mi {cardinal} of {nearest_airport_dict['icao']}, {nearest_airport_dict['name']}  at {self.alt_ft}ft"
+                            message =  f"Circling {round(nearest_airport_dict['distance_mi'], 2)}mi {cardinal} of {nearest_airport_dict['icao']}, {nearest_airport_dict['name']} at {self.alt_ft}ft. "
+                        tfr_map_filename = None
+                        if in_tfr is not None:
+                            wording_context = "Inside" if 'context' not in in_tfr.keys() else "Above" if in_tfr['context'] == 'above' else "Below"
+                            message += f" {wording_context} TFR {in_tfr['info']['NOTAM']}, a TFR for {in_tfr['info']['Type'].title()}"
+                            tfr_map_filename = tfr_image(context, (self.latitude, self.longitude))
+                        elif in_tfr is None and closest_tfr is not None and "distance" in closest_tfr.keys() and closest_tfr["distance"] <= 20:
+                            message += f" {closest_tfr['distance']} miles from TFR {closest_tfr['info']['NOTAM']}, a TFR for {closest_tfr['info']['Type']}"
+                            tfr_map_filename = tfr_image(context, (self.latitude, self.longitude))
+                        elif in_tfr is None and closest_tfr is not None and "distance" not in closest_tfr.keys():
+                            message += f" near TFR {closest_tfr['info']['NOTAM']}, a TFR for {closest_tfr['info']['Type']}"
+                            raise Exception(message)
+
                         print(message)
+                        #Telegram
+                        if self.config.has_section('TELEGRAM') and self.config.getboolean('TELEGRAM', 'ENABLE'):
+                            photo = open(self.map_file_name, "rb")
+                            from defTelegram import sendTeleg
+                            sendTeleg(photo, message, self.config)
                         if self.config.getboolean('DISCORD', 'ENABLE'):
                             role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') else None
-                            sendDis(message, self.config, self.map_file_name, role_id)
+                            if tfr_map_filename is not None: 
+                                sendDis(message, self.config, role_id, self.map_file_name, tfr_map_filename)
+                            elif tfr_map_filename is None:
+                                sendDis(message, self.config, role_id, self.map_file_name)
                         if self.config.getboolean('TWITTER', 'ENABLE'):
                             twitter_media_map_obj = self.tweet_api.media_upload(self.map_file_name)
-                            alt_text = f"Distance to centroid: {distance_to_centroid}, Total change: {total_change}"
-                            self.tweet_api.create_media_metadata(media_id= twitter_media_map_obj.media_id, alt_text= alt_text)
-                            tweet = self.tweet_api.user_timeline(count = 1)[0]
-                            self.latest_tweet_id = self.tweet_api.update_status(status = f"{self.twitter_title} {message}".strip(), in_reply_to_status_id = self.latest_tweet_id, media_ids=[twitter_media_map_obj.media_id]).id
-
+                            media_ids = [twitter_media_map_obj.media_id]
+                            if tfr_map_filename is not None:
+                                twitter_media_tfr_map_obj = self.tweet_api.media_upload(tfr_map_filename)
+                                media_ids.append(twitter_media_tfr_map_obj.media_id)
+                            elif tfr_map_filename is None:
+                                print("No TFR Map")
+                            tweet = f"{self.twitter_title} {message}".strip()
+                            self.tweet_api.update_status(status = tweet, media_ids=media_ids)
+                        #Meta
+                        if self.config.has_option('META', 'ENABLE') and self.config.getboolean('META', 'ENABLE'):
+                            from meta_toolkit import post_to_meta_both
+                            post_to_meta_both(self.config.get("META", "FB_PAGE_ID"), self.config.get("META", "IG_USER_ID"), self.map_file_name, message, self.config.get("META", "ACCESS_TOKEN"))
                         self.circle_history['triggered'] = True
                 elif abs(total_change) <= 360 and self.circle_history["triggered"]:
                     print("No Longer Circling, trigger cleared")
@@ -600,7 +861,7 @@ class Plane:
             hours, remainder = divmod(elapsed_time.total_seconds(), 3600)
             minutes, seconds = divmod(remainder, 60)
             print((f"Time Since Take off  {int(hours)} Hours : {int(minutes)} Mins : {int(seconds)} Secs"))
-        self.printheader("foot")
+        self.print_header("END")
     def check_new_ras(self, ras):
             for ra in ras:
                 if self.recent_ra_types == {} or ra['acas_ra']['advisory'] not in self.recent_ra_types.keys():
@@ -611,7 +872,7 @@ class Plane:
                     if bool(int(ra['acas_ra']['MTE'])):
                         ra_message += ", Multi threat"
                     from defSS import get_adsbx_screenshot, generate_adsbx_screenshot_time_params
-                    url_params = f"&lat={ra['lat']}&lon={ra['lon']}&zoom=11&largeMode=2&hideButtons&hideSidebar&mapDim=0&overlays={self.get_adsbx_map_overlays()}"
+                    url_params = f"&lat={ra['lat']}&lon={ra['lon']}&zoom=11&largeMode=2&hideButtons&hideSidebar&mapDim=0&overlays={self.get_adsbx_map_overlays()}&limitupdates=0"
                     if "threat_id_hex" in ra['acas_ra'].keys():
                         from mictronics_parse import get_aircraft_reg_by_icao
                         threat_reg = get_aircraft_reg_by_icao(ra['acas_ra']['threat_id_hex'])
@@ -621,13 +882,13 @@ class Plane:
                     else:
                         url_params += f"&icao={self.icao.lower()}&noIsolation"
                     print(url_params)
-                    get_adsbx_screenshot(self.map_file_name, url_params, True, True)
+                    get_adsbx_screenshot(self.map_file_name, url_params, True, True, overrides=self.overrides)
 
                     if self.config.getboolean('DISCORD', 'ENABLE'):
                         from defDiscord import sendDis
                         dis_message = f"{self.dis_title} {ra_message}"
                         role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') else None
-                        sendDis(dis_message, self.config, self.map_file_name, role_id = role_id)
+                        sendDis(dis_message, self.config, role_id, self.map_file_name)
                     #if twitter
     def expire_ra_types(self):
         if self.recent_ra_types != {}:

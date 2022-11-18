@@ -9,7 +9,7 @@ RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key
     && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list
 
 # Install Chrome.
-RUN apt-get update && apt-get -y install google-chrome-stable
+RUN apt-get update && apt-get -y install google-chrome-stable python3-dev
 
 # Add pipenv
 RUN pip install pipenv==2021.5.29

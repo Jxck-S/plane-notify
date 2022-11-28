@@ -92,7 +92,7 @@ screen -R <name screen whatever you want>
 ### Start Program
 
 ```bash
-pipenv run python __main__
+pipenv run python __main__.py
 ```
 
 ## Using with Docker

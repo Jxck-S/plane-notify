@@ -20,7 +20,7 @@ API_VERSION = 1
 #ADSBX API Proxy, https://gitlab.com/jjwiseman/adsbx-api-proxy, v2 input, v1 or v2 output from proxy
 ENABLE_PROXY = FALSE
 #Full URL http://host:port
-PROXY_HOST = 
+PROXY_HOST =
 
 #OpenSky https://opensky-network.org/apidoc/index.html
 #When using without your own login user and pass should be None
@@ -57,3 +57,8 @@ ENABLE = False
 ENABLE = False
 CONSUMER_KEY = ck
 CONSUMER_SECRET = cs
+
+[MAP]
+#Map to create from Google Static Maps or screenshot global tar1090 from globe.adsbexchange.com
+#Enter GOOGLESTATICMAP or ADSBX
+OPTION = ADSBX

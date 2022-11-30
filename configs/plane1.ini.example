@@ -9,6 +9,8 @@ ICAO = icaohere
 ; OVERRIDE_TYPELONG = 
 ; OVERRIDE_OWNER = 
 ; DATA_LOSS_MINS = 20
+; CONCEAL_AC_ID = True
+; CONCEAL_PIA = False
 
 [MAP]
 #Map to create from Google Static Maps or screenshot global tar1090 from globe.adsbexchange.com

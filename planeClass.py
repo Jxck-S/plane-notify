@@ -24,6 +24,14 @@ class Plane:
             self.overrides['typelong'] = self.config.get('DATA', 'OVERRIDE_TYPELONG')
         if self.config.has_option('DATA', 'OVERRIDE_OWNER'):
             self.overrides['ownop'] = self.config.get('DATA', 'OVERRIDE_OWNER')
+        if self.config.has_option('DATA', 'CONCEAL_AC_ID'):
+            self.conceal_ac_id = self.config.getboolean('DATA', 'CONCEAL_AC_ID')
+        else:
+            self.conceal_ac_id = False
+        if self.config.has_option('DATA', 'CONCEAL_PIA'):
+            self.conceal_pia = self.config.getboolean('DATA', 'CONCEAL_PIA')
+        else:
+            self.conceal_pia = False
         self.conf_file_path = config_path
         self.alt_ft = None
         self.below_desired_ft = None
@@ -449,7 +457,7 @@ class Plane:
             elif Plane.main_config.get('MAP', 'OPTION') == "ADSBX":
                 from defSS import get_adsbx_screenshot
                 url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}&limitupdates=0"
-                get_adsbx_screenshot(self.map_file_name, url_params, overrides=self.overrides)
+                get_adsbx_screenshot(self.map_file_name, url_params, overrides=self.overrides, conceal_ac_id=self.conceal_ac_id, conceal_pia=self.conceal_pia)
                 from modify_image import append_airport
                 text_credit = self.config.get('MAP', 'TEXT_CREDIT') if self.config.has_option('MAP', 'TEXT_CREDIT') else None
                 append_airport(self.map_file_name, nearest_airport_dict, text_credit)
@@ -567,7 +575,7 @@ class Plane:
                     if Plane.main_config.get('MAP', 'OPTION') == "ADSBX":
                         from defSS import get_adsbx_screenshot
                         url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}&limitupdates=0"
-                        get_adsbx_screenshot(self.map_file_name, url_params, overrides=self.overrides)
+                        get_adsbx_screenshot(self.map_file_name, url_params, overrides=self.overrides, conceal_ac_id=self.conceal_ac_id, conceal_pia=self.conceal_pia)
                     if self.config.getboolean('DISCORD', 'ENABLE'):
                         dis_message =  (self.dis_title + " "  + squawk_message)
                         sendDis(dis_message, self.config, None, self.map_file_name)
@@ -590,7 +598,7 @@ class Plane:
                             if mode == "Approach":
                                 from defSS import get_adsbx_screenshot
                                 url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}&limitupdates=0"
-                                get_adsbx_screenshot(self.map_file_name, url_params, overrides=self.overrides)
+                                get_adsbx_screenshot(self.map_file_name, url_params, overrides=self.overrides, conceal_ac_id=self.conceal_ac_id, conceal_pia=self.conceal_pia)
                                 sendDis(dis_message, self.config, None, self.map_file_name)
                             #elif mode in ["Althold", "VNAV", "LNAV"] and self.sel_nav_alt != None:
                             #    sendDis((dis_message + ", Sel Alt. " + str(self.sel_nav_alt) + ", Current Alt. " + str(self.alt_ft)), self.config)
@@ -773,7 +781,7 @@ class Plane:
 
                         from defSS import get_adsbx_screenshot
                         url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}&limitupdates=0"
-                        get_adsbx_screenshot(self.map_file_name, url_params, overrides=self.overrides)
+                        get_adsbx_screenshot(self.map_file_name, url_params, overrides=self.overrides, conceal_ac_id=self.conceal_ac_id, conceal_pia=self.conceal_pia)
                         if nearest_airport_dict['distance_mi'] < 3:
                             if "touchngo" in self.circle_history.keys():
                                 message = f"Doing touch and goes at {nearest_airport_dict['icao']}"
@@ -867,7 +875,7 @@ class Plane:
                     else:
                         url_params += f"&icao={self.icao.lower()}&noIsolation"
                     print(url_params)
-                    get_adsbx_screenshot(self.map_file_name, url_params, True, True, overrides=self.overrides)
+                    get_adsbx_screenshot(self.map_file_name, url_params, True, True, overrides=self.overrides, conceal_ac_id=self.conceal_ac_id, conceal_pia=self.conceal_pia)
 
                     if self.config.getboolean('DISCORD', 'ENABLE'):
                         from defDiscord import sendDis

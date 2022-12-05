@@ -79,11 +79,6 @@ class Plane:
                 self.latest_tweet_id = self.tweet_api.user_timeline(count = 1)[0]
             except IndexError:
                 self.latest_tweet_id = None
-        #Setup PushBullet
-        if self.config.getboolean('PUSHBULLET', 'ENABLE'):
-            from pushbullet import Pushbullet
-            self.pb = Pushbullet(self.config['PUSHBULLET']['API_KEY'])
-            self.pb_channel = self.pb.get_channel(self.config.get('PUSHBULLET', 'CHANNEL_TAG'))
     def run_opens(self, ac_dict):
         #Parse OpenSky Vector
         from colorama import Fore, Back, Style
@@ -472,12 +467,6 @@ class Plane:
             if self.config.getboolean('DISCORD', 'ENABLE'):
                 role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') and self.config.get('DISCORD', 'ROLE_ID').strip() != "" else None
                 sendDis(message, self.config, role_id, self.map_file_name)
-            #PushBullet
-            if self.config.getboolean('PUSHBULLET', 'ENABLE'):
-                with open(self.map_file_name, "rb") as pic:
-                    map_data = self.pb.upload_file(pic, "Tookoff IMG" if self.tookoff else "Landed IMG")
-                self.pb_channel.push_note(self.config.get('PUSHBULLET', 'TITLE'), message)
-                self.pb_channel.push_file(**map_data)
             #Twitter
             if self.config.getboolean('TWITTER', 'ENABLE'):
                 import tweepy

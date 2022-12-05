@@ -1,5 +1,4 @@
 import requests
-import json
 import configparser
 from datetime import datetime
 
@@ -18,29 +17,18 @@ def pull_rpdadsbx(planes):
     }
     try:
         response = requests.get(url, headers = headers, timeout=30)
-    except Exception as error:
-            print('err.args:' + str(error.args))
-            response = None
-    if response is not None:
-        try:
-            data = json.loads(response.text)
-        except (json.decoder.JSONDecodeError, ValueError) as error_message:
-            print("Error with JSON")
-            print(error_message)
-            data = None
-        except TypeError as error_message:
-            print("Type Error", error_message)
-            data = None
-        else:
-            if "msg" in data.keys() and data['msg'] != "No error":
-                raise ValueError("Error from ADSBX: msg = ", data['msg'])
-            if "ctime" in data.keys():
-                data_ctime = float(data['ctime']) / 1000.0
-                print("Data ctime:",datetime.utcfromtimestamp(data_ctime))
-            if "now" in data.keys():
-                data_now = float(data['now']) / 1000.0
-                print("Data now time:",datetime.utcfromtimestamp(data_now))
+        response.raise_for_status()
+        data = response.json()
+        if "msg" in data.keys() and data['msg'] != "No error":
+            raise ValueError("Error from ADSBX: msg = ", data['msg'])
+        if "ctime" in data.keys():
+            data_ctime = float(data['ctime']) / 1000.0
+            print("Data ctime:",datetime.utcfromtimestamp(data_ctime))
+        if "now" in data.keys():
+            data_now = float(data['now']) / 1000.0
+            print("Data now time:",datetime.utcfromtimestamp(data_now))
         print("Current UTC:", datetime.utcnow())
-    else:
-        data = None
-    return data
+        return data
+    except Exception as e:
+        print('Error calling RapidAPI', e)
+    return None

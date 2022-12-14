@@ -463,6 +463,11 @@ class Plane:
                 from defTelegram import sendTeleg
                 photo = open(self.map_file_name, "rb")
                 sendTeleg(photo, message, self.config)
+            #Mastodon
+            if self.config.has_section('MASTODON') and self.config.getboolean('MASTODON', 'ENABLE'):
+                from defMastodon import sendMastodon
+                sendMastodon(self.map_file_name, message, self.config)
+
             #Discord
             if self.config.getboolean('DISCORD', 'ENABLE'):
                 role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') and self.config.get('DISCORD', 'ROLE_ID').strip() != "" else None

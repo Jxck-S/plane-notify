@@ -5,10 +5,9 @@ def sendMastodon(photo, message, config):
     while sent == False:
         try:
             bot  = Mastodon(
-                access_token=config.get['MASTODON']['ACCESS_TOKEN'],
-                api_base_url=config.get['MASTODON']['APP_URL']
+                access_token=config.get('MASTODON','ACCESS_TOKEN'),
+                api_base_url=config.get('MASTODON','APP_URL')
             )
-            #todo: add photo/image processing here, Mastodon has strict image sizing requirements
             mediaid = bot.media_post(photo, mime_type="image/jpeg")
             sent =  bot.status_post(message,None,mediaid,False, "Public")
         except Exception as err:
@@ -17,7 +16,7 @@ def sendMastodon(photo, message, config):
             print(f"Unexpected {err=}, {type(err)=}")
             print("\nString err:\n"+str(err))
             if retry_c > 4:
-                print('Telegram attempts exceeded. Message not sent.')
+                print('Mastodon attempts exceeded. Message not sent.')
                 break
             elif str(err) == 'Unauthorized':
                 print('Invalid Mastodon bot token, message not sent.')

@@ -57,5 +57,4 @@ BOT_TOKEN = xxxxxxxxxx:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ENABLE = TRUE
 ACCESS_TOKEN = mastodonaccesstoken
 APP_URL = mastodonappurl
-MAX_IMAGE_SIZE = maximagesize
 

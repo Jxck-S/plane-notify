@@ -40,6 +40,9 @@ pip install pipenv
 pipenv install
 ```
 
+### Install tabulate for table display
+pip3 install tabulate
+
 ### Install Selenium / ChromeDriver or setup Google Static Maps
 
 Selenium/ChromeDriver is used to take a screenshot of the plane on globe.adsbexchange.com. Or use Google Static Maps, which can cost money if overused(No tutorial use <https://developers.google.com/maps/documentation/maps-static/get-api-key> to get to a key).
@@ -50,6 +53,10 @@ Selenium/ChromeDriver is used to take a screenshot of the plane on globe.adsbexc
 sudo apt-get install chromium
 ```
 These output methods once installed can be configured in the planes config you create, using the example plane1.ini
+
+### Install webdriver_manager, required for managing web browser
+
+pip3 install webdriver_manager
 
 ### Install Screen to run in the background
 

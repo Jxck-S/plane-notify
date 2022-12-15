@@ -9,8 +9,8 @@ def sendMastodon(photo, message, config):
                 api_base_url=config.get['MASTODON']['APP_URL']
             )
             #todo: add photo/image processing here, Mastodon has strict image sizing requirements
-            mediaid = mastodonBot.media_post(photo, mime_type="image/jpeg")
-            sent =  mastodonBot.status_post(message,None,mediaid,False, feedvisibility)
+            mediaid = bot.media_post(photo, mime_type="image/jpeg")
+            sent =  bot.status_post(message,None,mediaid,False, "Public")
         except Exception as err:
             print('err.args:')
             print(err.args)

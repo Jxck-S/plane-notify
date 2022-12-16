@@ -12,3 +12,5 @@ icao_url_gen.py
 install.sh
 coul_icao_gen.py
 test.py
+configs/*.ini
+ve/

@@ -1,0 +1,33 @@
+[project]
+name = "plane_notify"
+version = "0.0.0.dev0"
+dependencies = [
+    "colorama",
+    "geopy",
+    "tabulate",
+    "pytz",
+    "pillow",
+    "tweepy",
+    "pushbullet.py",
+    "discord-webhook",
+    "selenium",
+    "opensky-api @ git+ssh://git@github.com/openskynetwork/opensky-api.git#subdirectory=python",
+    "webdriver-manager",
+    "shapely",
+    "pycairo",
+    "geog",
+    "py-staticmaps",
+    "pyproj",
+    "pandas",
+    "lxml",
+    "beautifulsoup4",
+    "python-telegram-bot",
+    "configparser",
+]
+
+[project.optional-dependencies]
+dev = ["black"]
+
+[tool.setuptools]
+packages=["plane_notify"]
+py-modules = []

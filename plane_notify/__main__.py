@@ -51,6 +51,7 @@ if os.path.isfile("./dependencies/" + required_files[4][0]) and not os.path.isfi
 main_config = configparser.ConfigParser()
 print(os.getcwd())
 main_config.read('./configs/mainconf.ini')
+print(main_config)
 source = main_config.get('DATA', 'SOURCE')
 if main_config.getboolean('DISCORD', 'ENABLE'):
         from defDiscord import sendDis

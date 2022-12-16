@@ -1,10 +1,15 @@
-def sendDis(message, config, role_id = None, *file_names):
+def sendDis(message, config, role_id=None, *file_names):
     import requests
     from discord_webhook import DiscordWebhook
+
     if role_id != None:
         message += f" <@&{role_id}>"
-    webhook = DiscordWebhook(url=config.get('DISCORD', 'URL'), content=message[0:1999], username=config.get('DISCORD', 'USERNAME'))
-    
+    webhook = DiscordWebhook(
+        url=config.get("DISCORD", "URL"),
+        content=message[0:1999],
+        username=config.get("DISCORD", "USERNAME"),
+    )
+
     if file_names != []:
         for file_name in file_names:
             with open(file_name, "rb") as f:

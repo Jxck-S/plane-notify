@@ -2,7 +2,7 @@
 #Source to pull data from
 #SHOULD BE ADSBX which is ADS-B Exchange or OPENS which is OpenSky
 #By default configured with OpenSky which anyone can use without a login
-#ADS-B Exchange has better data but is not avalible unless you feed their network or pay.
+#ADS-B Exchange has better data but is not available unless you feed their network or pay.
 SOURCE = RpdADSBX
 #Default amount of time after data loss to trigger a landing when under 10k ft
 DATA_LOSS_MINS = 5
@@ -33,7 +33,7 @@ PASSWORD = None
 API_KEY = none
 API_VERSION = 2
 
-#Define the delay interval in seconds between each data request. This is usefull if you have limited requests in the API.
+#Define the delay interval in seconds between each data request. This is useful if you have limited requests in the API.
 [SLEEP]
 SLEEPSEC = 60
 
@@ -41,7 +41,7 @@ SLEEPSEC = 60
 #API KEY for Google Static Maps only if you using this on any of the planes.
 API_KEY = googleapikey
 
-#Used for failover messages and program exits notifcation
+#Used for failover messages and program exits notification
 [DISCORD]
 ENABLE = FALSE
 USERNAME = usernamehere

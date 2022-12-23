@@ -12,7 +12,7 @@ RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key
 RUN apt-get update && apt-get -y install google-chrome-stable
 
 # Add pipenv
-RUN pip install pipenv==2021.5.29
+RUN pip install pipenv==2022.11.30
 
 # Install dependencies
 RUN pipenv install

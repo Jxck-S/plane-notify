@@ -62,10 +62,3 @@ CONSUMER_SECRET = cs
 #Map to create from Google Static Maps or screenshot global tar1090 from globe.adsbexchange.com
 #Enter GOOGLESTATICMAP or ADSBX
 OPTION = ADSBX
-
-[MASTODON]
-ENABLE = TRUE
-ACCESS_TOKEN = mastodonaccesstoken
-APP_URL = mastodonappurl
-MAX_IMAGE_SIZE = maximagesizeformastodonserver
-

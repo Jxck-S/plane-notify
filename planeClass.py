@@ -407,7 +407,7 @@ class Plane:
             else:
                 self.dis_title = self.config.get('DISCORD', 'TITLE')
     #Set Twitter Title
-        if self.config.getboolean('TWITTER', 'ENABLE'):
+        if self.config.getboolean('TWITTER', 'ENABLE') and Plane.main_config.getboolean('TWITTER', 'ENABLE'):
             if self.config.get('TWITTER', 'TITLE') in ["DYNAMIC", "callsign"]:
                 self.twitter_title = dynamic_title
             else:
@@ -473,7 +473,7 @@ class Plane:
                 role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') and self.config.get('DISCORD', 'ROLE_ID').strip() != "" else None
                 sendDis(message, self.config, role_id, self.map_file_name)
             #Twitter
-            if self.config.getboolean('TWITTER', 'ENABLE'):
+            if self.config.getboolean('TWITTER', 'ENABLE') and Plane.main_config.getboolean('TWITTER', 'ENABLE'):
                 import tweepy
                 try:
                     twitter_media_map_obj = self.tweet_api.media_upload(self.map_file_name)
@@ -511,7 +511,7 @@ class Plane:
                             dis_message = f"{self.dis_title} {distance_message} \nFlight Fuel Info ```{fuel_message}```".strip()
                             role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') and self.config.get('DISCORD', 'ROLE_ID').strip() != "" else None
                             sendDis(dis_message, self.config, role_id)
-                        if self.config.getboolean('TWITTER', 'ENABLE'):
+                        if self.config.getboolean('TWITTER', 'ENABLE') and Plane.main_config.getboolean('TWITTER', 'ENABLE'):
                             try:
                                 self.latest_tweet_id = self.tweet_api.update_status(status = ((self.twitter_title + " " + distance_message + " " + fuel_message).strip()), in_reply_to_status_id = self.latest_tweet_id).id
                             except tweepy.errors.TweepyException as e:
@@ -538,7 +538,7 @@ class Plane:
                     role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') and self.config.get('DISCORD', 'ROLE_ID').strip() != "" else None
                     sendDis(dis_message, self.config, role_id)
                 #Twitter
-                if self.config.getboolean('TWITTER', 'ENABLE'):
+                if self.config.getboolean('TWITTER', 'ENABLE') and Plane.main_config.getboolean('TWITTER', 'ENABLE'):
                     self.latest_tweet_id = self.tweet_api.update_status(status = f"{self.twitter_title} {route_to}".strip(), in_reply_to_status_id = self.latest_tweet_id).id
 
         if self.circle_history is not None:
@@ -807,7 +807,7 @@ class Plane:
                                 sendDis(message, self.config, role_id, self.map_file_name, tfr_map_filename)
                             elif tfr_map_filename is None:
                                 sendDis(message, self.config, role_id, self.map_file_name)
-                        if self.config.getboolean('TWITTER', 'ENABLE'):
+                        if self.config.getboolean('TWITTER', 'ENABLE') and Plane.main_config.getboolean('TWITTER', 'ENABLE'):
                             twitter_media_map_obj = self.tweet_api.media_upload(self.map_file_name)
                             media_ids = [twitter_media_map_obj.media_id]
                             if tfr_map_filename is not None:

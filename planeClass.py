@@ -463,6 +463,11 @@ class Plane:
                 from defTelegram import sendTeleg
                 photo = open(self.map_file_name, "rb")
                 sendTeleg(photo, message, self.config)
+            #Mastodon
+            if self.config.has_section('MASTODON') and self.config.getboolean('MASTODON', 'ENABLE'):
+                from defMastodon import sendMastodon
+                sendMastodon(self.map_file_name, message, self.config)
+
             #Discord
             if self.config.getboolean('DISCORD', 'ENABLE'):
                 role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') and self.config.get('DISCORD', 'ROLE_ID').strip() != "" else None
@@ -816,6 +821,10 @@ class Plane:
                         if self.config.has_option('META', 'ENABLE') and self.config.getboolean('META', 'ENABLE'):
                             from meta_toolkit import post_to_meta_both
                             post_to_meta_both(self.config.get("META", "FB_PAGE_ID"), self.config.get("META", "IG_USER_ID"), self.map_file_name, message, self.config.get("META", "ACCESS_TOKEN"))
+                        #Mastodon
+                        if self.config.has_section('MASTODON') and self.config.getboolean('MASTODON', 'ENABLE'):
+                            from defMastodon import sendMastodon
+                            sendMastodon(self.map_file_name, message, self.config)
                         self.circle_history['triggered'] = True
                 elif abs(total_change) <= 360 and self.circle_history["triggered"]:
                     print("No Longer Circling, trigger cleared")

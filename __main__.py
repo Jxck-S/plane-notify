@@ -190,36 +190,21 @@ try:
                         print(key, "has", len(sorted_ras[key]), "RAs")
                         obj.check_new_ras(sorted_ras[key])
                 obj.expire_ra_types()
-            icao_key = 'hex'
             from defRpdADSBX import pull_rpdadsbx
-            # print("Planes list: \n"+str((list(planes.keys()))))
-            # print("\nLen planes:\n"+str(len(planes)))
-            p = 0
-            data = dict.fromkeys(['ac'])
-            # print(data)
-            while p < len(planes):
-                planeInfo = pull_rpdadsbx(str(list(planes.keys())[p]))
-                if p == 0:
-                    data['ac'] = (planeInfo)['ac']
+            data_indexed = {}
+            for icao in planes:
+                plane = planes[icao]
+                plane_info = pull_rpdadsbx(icao)
+                if plane_info:
+                    if plane_info['ac']:
+                        data_indexed[icao.upper()] = plane_info['ac'][0]
+                        plane.run_adsbx_v2(data_indexed[icao.upper()])
+                    else:
+                        plane.run_empty()
                 else:
-                    data['ac'].extend((planeInfo)['ac'])
-                # print("p = "+str(p))
-                # print(str(list(planes.keys())[p]) + ": " + str(data))
-                p += 1
-            if data is not None:
-                if data['ac'] is not None:
-                    data_indexed = {}
-                    for planeData in data['ac']:
-                        data_indexed[planeData[icao_key].upper()] = planeData
-                    for key, obj in planes.items():
-                        try:
-                            obj.run_adsbx_v2(data_indexed[key.upper()])
-                        except KeyError:
-                            obj.run_empty()
-                else:
-                    for obj in planes.values():
-                        obj.run_empty()
-            else:
+                    print(f"No data for icao {icao}. Skipping...")
+                    plane.run_empty()
+            if not data_indexed:
                 failed_count += 1
         elif source == "OPENS":
             from defOpenSky import pull_opensky

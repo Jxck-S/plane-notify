@@ -28,7 +28,7 @@ def sendTeleg(photo, message, config):
                 print('Telegram module couldn\'t find an image to send.')
                 break
             elif str(err) == 'Media_caption_too_long':
-                print('Telegram image caption lenght exceeds 1024 characters. Message not send.')
+                print('Telegram image caption length exceeds 1024 characters. Message not send.')
                 break
             else:
                 print('[X] Unknown Telegram error. Message not sent.')

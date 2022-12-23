@@ -1,3 +1,5 @@
+configs/*.ini
+
 # PyCharm
 .idea
 .vscode/settings.json
@@ -6,3 +8,7 @@ __pycache__
 dependencies
 testing
 lookup_route.py
+icao_url_gen.py
+install.sh
+coul_icao_gen.py
+test.py

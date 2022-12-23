@@ -1,0 +1,412 @@
+{
+  "EA50": {
+      "name": "Eclipse 550",
+      "galph": 76,
+      "category": "VLJ"
+  },
+  "LJ31": {
+      "name": "Learjet 31",
+      "galph": 202,
+      "category": "Light"
+  },
+  "LJ40": {
+      "name": "Learjet 40",
+      "galph": 207,
+      "category": "Light"
+  },
+  "PC24": {
+      "name": "Pilatus PC-24",
+      "galph": 154,
+      "category": "Light"
+  },
+  "LJ45": {
+      "name": "Learjet 45",
+      "galph": 205,
+      "category": "Super Light"
+  },
+  "LJ70": {
+      "name": "Learjet 70",
+      "galph": 198,
+      "category": "Super Light"
+  },
+  "LJ75": {
+      "name": "Learjet 75",
+      "galph": 199,
+      "category": "Super Light"
+  },
+  "G150": {
+      "name": "Gulfstream G150",
+      "galph": 228,
+      "category": "Midsize"
+  },
+  "LJ60": {
+      "name": "Learjet 60",
+      "galph": 239,
+      "category": "Midsize"
+  },
+  "GALX": {
+      "name": "Gulfstream G200",
+      "galph": 278,
+      "category": "Super Midsize"
+  },
+  "G280": {
+      "name": "Gulfstream G280",
+      "galph": 297,
+      "category": "Super Midsize"
+  },
+  "GLF5": {
+      "name": "Gulfstream G500",
+      "galph": 447,
+      "category": "Large"
+  },
+  "GLF6": {
+      "name": "Gulfstream G650",
+      "galph": 503,
+      "category": "Ultra Long Range"
+  },
+  "PC12": {
+      "name": "Pilatus PC-12",
+      "galph": 66,
+      "category": "Turboprop Aircraft"
+  },
+  "GLEX": {
+      "name": "Global",
+      "galph": 500,
+      "category": "Ultra Long Range"
+  },
+  "CL30": {
+      "name": "Challenger 300",
+      "galph": 295,
+      "category": "Super Midsize"
+  },
+  "B742": {
+      "name": "Boeing 747-200",
+      "galph": 3830,
+      "category": "Large"
+  },
+  "T38": {
+      "name": "T-38 Talon",
+      "galph": 375,
+      "category": "Fighter"
+  },
+  "WB57": {
+      "name": "Martin B-57 Canberra",
+      "galph": 531,
+      "category": "Twinjet Tactical Bomber and Reconnaissance"
+  },
+  "B74S": {
+      "name": "747 SP",
+      "galph": 2289,
+      "category": "Large"
+  },
+  "B752": {
+      "name": "757 200",
+      "galph": 877,
+      "category": "Large"
+  },
+  "B738": {
+      "name": "737 800",
+      "galph": 832,
+      "category": "Medium"
+  },
+  "B737": {
+      "name": "737 700",
+      "galph": 796,
+      "category": "Medium"
+  },
+  "A320": {
+      "name": "A320",
+      "galph": 800,
+      "category": "Medium"
+  },
+  "P3": {
+      "name": "Lockheed Orion P3",
+      "galph": 671,
+      "category": "Turboprop"
+  },
+  "C750": {
+      "name": "Cessna 750 Citation X",
+      "galph": 347,
+      "category": "Small Private Jet"
+  },
+  "FA7X": {
+      "name": "Dassult Falcon 7X",
+      "galph": 380,
+      "category": "Small Private Jet"
+  },
+  "F900": {
+      "name": "Dassult Falcon 900",
+      "galph": 347,
+      "category": "Small Private Jet"
+  },
+  "H25B": {
+      "name": "Hawker 750/850",
+      "galph": 270,
+      "category": "Small Private Jet"
+  },
+  "C680": {
+      "name": "Cessna 680 Citation",
+      "galph": 247,
+      "category": "Small Private Jet"
+  },
+  "GLF3": {
+      "name": "Gulfstream 3",
+      "galph": 568,
+      "category": "Heavy Private Jet"
+  },
+  "GLF4": {
+      "name": "Gulfstream 4",
+      "galph": 479,
+      "category": "Heavy Private Jet"
+  },
+  "CL60": {
+      "name": "Bombardier CL-600 Challenge",
+      "galph": 262,
+      "category": "Mid-size Private Jet"
+  },
+  "A139": {
+      "name": "Agusta-Bell AW139",
+      "galph": 150,
+      "category": "Medium Utility Helicopter"
+  },
+  "GL5T": {
+      "name": "Global 5000",
+      "galph": 455,
+      "category": "Heavy Private Jet"
+  },
+  "GA6C": {
+      "name": "Gulfstream G600",
+      "galph": 458,
+      "category": "Heavy Private Jet"
+  },
+  "A337": {
+      "name": "Airbus Beluga XL",
+      "galph": 1800,
+      "category": "Large Transport Aircraft"
+  },
+  "A3ST": {
+      "name": "Airbus Beluga",
+      "galph": 1260,
+      "category": "Large Transport Aircraft"
+  },
+  "F2TH": {
+      "name": "Dassault Falcon 2000",
+      "galph": 245,
+      "category": "Medium Private Jet"
+  },
+  "GA5C": {
+      "name": "Gulfstream G500",
+      "galph": 402,
+      "category": "Large Private Jet"
+  },
+  "C130": {
+      "name": "Lockheed C130",
+      "galph": 740,
+      "category": "Medium Cargo"
+  },
+  "B762": {
+      "name": "Boeing 767 200",
+      "galph": 1722,
+      "category": "Wide-body"
+  },
+  "B772": {
+      "name": "Boeing 777 200",
+      "galph": 2300,
+      "category": "Wide-body"
+  },
+  "SLCH": {
+      "name": "Stratolaunch",
+      "galph": 2396,
+      "category": "Special"
+  },
+  "P51": {
+      "name": "P51 Mustang",
+      "galph": 65,
+      "category": "Fighter"
+  },
+  "HDJT": {
+      "name": "Honda Jet",
+      "galph": 90,
+      "category": "Light Jet"
+  },
+  "B744": {
+      "name": "Boeing 747-400",
+      "galph": 3700,
+      "category": "Heavy Airliner"
+  },
+  "E190": {
+      "name": "Embrar E190",
+      "galph": 469,
+      "category": "Heavy Jet"
+  },
+  "FA50": {
+      "name": "Falcon 50",
+      "galph": 229,
+      "category": "Heavy Jet"
+  },
+  "GL7T": {
+      "name": "Global 7000",
+      "galph": 460,
+      "category": "Heavy Jet"
+  },
+  "GL6T": {
+      "name": "",
+      "galph": 455.0,
+      "category": ""
+  },
+  "C68A": {
+      "name": "",
+      "galph": 212.0,
+      "category": ""
+  },
+  "C56X": {
+      "name": "",
+      "galph": 217.0,
+      "category": ""
+  },
+  "B763": {
+      "name": "",
+      "galph": 1320.0,
+      "category": ""
+  },
+  "A310": {
+      "name": "",
+      "galph": 1189.0,
+      "category": ""
+  },
+  "A330": {
+      "name": "",
+      "galph": 1505.0,
+      "category": ""
+  },
+  "A380": {
+      "name": "",
+      "galph": 4062.0,
+      "category": ""
+  },
+  "E170": {
+      "name": "",
+      "galph": 469.0,
+      "category": ""
+  },
+  "DC87": {
+      "name": "",
+      "galph": 1250.0,
+      "category": ""
+  },
+  "SGUP": {
+      "name": "",
+      "galph": 1156.0,
+      "category": ""
+  },
+  "WHK2": {
+      "name": "",
+      "galph": 500.0,
+      "category": ""
+  },
+  "B350": {
+      "name": "",
+      "galph": 122.0,
+      "category": ""
+  },
+  "BE30": {
+      "name": "",
+      "galph": 121.0,
+      "category": ""
+  },
+  "FA8X": {
+      "name": "",
+      "galph": 380.0,
+      "category": ""
+  },
+  "E550": {
+      "name": "",
+      "galph": 280.0,
+      "category": ""
+  },
+  "E55P": {
+      "name": "",
+      "galph": 166.0,
+      "category": ""
+  },
+  "A332": {
+      "name": "",
+      "galph": 1480,
+      "category": ""
+  },
+  "GA7C": {
+      "name": "",
+      "galph": 382.0,
+      "category": ""
+  },
+  "FA6X": {
+      "name": "",
+      "galph": 419.0,
+      "category": ""
+  },
+  "B3XM": {
+      "name": "",
+      "galph": 716.0,
+      "category": ""
+  },
+  "B779": {
+      "name": "",
+      "galph": 2250.0,
+      "category": ""
+  },
+  "BE22": {
+      "name": "",
+      "galph": 60.0,
+      "category": ""
+  },
+  "C560": {
+      "name": "",
+      "galph": 182.0,
+      "category": ""
+  },
+  "E145": {
+      "name": "",
+      "galph": 284.0,
+      "category": ""
+  },
+  "C25C": {
+      "name": "",
+      "galph": 110.0,
+      "category": ""
+  },
+  "C25B": {
+      "name": "",
+      "galph": 110.0,
+      "category": ""
+  },
+  "C441": {
+      "name": "",
+      "galph": 57.0,
+      "category": ""
+  },
+  "E50P": {
+      "name": "",
+      "galph": 109.0,
+      "category": ""
+  },
+  "CRJ2": {
+      "name": "",
+      "galph": 325.0,
+      "category": ""
+  },
+  "CRJ7": {
+      "name": "",
+      "galph": 444.0,
+      "category": ""
+  },
+  "BE40": {
+      "name": "",
+      "galph": 220.0,
+      "category": ""
+  },
+  "C700": {
+      "name": "",
+      "galph": 288.0,
+      "category": ""
+  }
+}

@@ -15,11 +15,11 @@ Notify if configured planes have taken off or landed using Python with <a href="
 
 ### Background
 
-I made this program so I could track Elon Musk's Jet and share with others of his whereabouts on Twitter. [![Twitter Follow](https://img.shields.io/twitter/follow/ElonJet.svg?style=social)](https://twitter.com/ElonJet) I have now Expanded and run multiple accounts for multiple planes, a list of the accounts here [plane-notify Twitter List](https://twitter.com/i/lists/1307414615316467715)
+I made this program so I could track Elon Musk's Jet and share his whereabouts with others on Twitter. [![Twitter Follow](https://img.shields.io/twitter/follow/ElonJet.svg?style=social)](https://twitter.com/ElonJet) I have now expanded and run multiple accounts for multiple planes, a list of the accounts can be found here [plane-notify Twitter List](https://twitter.com/i/lists/1307414615316467715)
 
 ### Contributing
 
- I'm open to any help or suggestions, I realize there are many better ways to improve this program and better ways to get this program to work properly, Im only a noob. I'll accept pull requests. If you'd like to discuss join <https://JacksTech.net/Discord>
+I'm open to any help or suggestions, I realize there are many better ways to improve this program and better ways to get this program to work properly, I'm only a noob. I'll accept pull requests. If you'd like to discuss join <https://discord.gg/groundcontrol>
 
 ### [Algorithm](PseudoCode.md)
 
@@ -67,6 +67,7 @@ cd plane-notify
 
 ### Configure main config file with keys and URLs (mainconf.ini) in the configs directory
 
+-   Copy `mainconf.ini.example` to `mainconf.ini` andCopy `plane1.ini.example` to `plane1.ini`. `plane1.ini` can change names as long as it ends with the ini extension
 -   Edit them with nano or vi on the running machine or on your pc and transfer the config to where you will be running the bot
 -   Pick between OpenSky and ADS-B Exchange
 -   The OpenSky API is free for everyone but the data is not as good as ADS-B Exchange. The ADS-B Exchange API is not free and this program will not work for the Rapid API from ADS-B Exchange. It only works with the API that they give when you have a partnership with ADS-B Exchange. It is not cheap to get the ADS-B Exchange full API, Don't contact them unless you are ready to pay. 
@@ -91,7 +92,7 @@ screen -R <name screen whatever you want>
 ### Start Program
 
 ```bash
-pipenv run python __main__
+pipenv run python __main__.py
 ```
 
 ## Using with Docker

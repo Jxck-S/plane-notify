@@ -2,8 +2,15 @@
 #Plane to track, based off ICAO or ICAO24 which is the unique transponder address of a plane.
 ICAO = icaohere
 
-#Optional Per Plane Override                                                                                    
-#DATA_LOSS_MINS = 20
+
+#Optional Per Plane Overrides
+; OVERRIDE_REG= 
+; OVERRIDE_ICAO_TYPE= 
+; OVERRIDE_TYPELONG = 
+; OVERRIDE_OWNER = 
+; DATA_LOSS_MINS = 20
+; CONCEAL_AC_ID = True
+; CONCEAL_PIA = False
 
 [MAP]
 #Map to create from Google Static Maps or screenshot global tar1090 from globe.adsbexchange.com
@@ -21,16 +28,8 @@ TYPES = [small_airport, medium_airport, large_airport]
 [TWITTER]
 ENABLE = FALSE
 TITLE =
-CONSUMER_KEY = ckhere
-CONSUMER_SECRET = cshere
 ACCESS_TOKEN = athere
 ACCESS_TOKEN_SECRET = atshere
-
-[PUSHBULLET]
-ENABLE = FALSE
-TITLE = Title Of Pushbullet message
-API_KEY = apikey
-CHANNEL_TAG = channeltag
 
 [DISCORD]
 ENABLE = FALSE
@@ -41,10 +40,15 @@ ROLE_ID =
 Title =
 USERNAME = plane-notify
 
+[META]
+ENABLE = False
+FB_PAGE_ID =
+IG_USER_ID =
+ACCESS_TOKEN =
+
+
 [TELEGRAM]
 ENABLE = FALSE
 TITLE = Title Of Telegram message
 ROOM_ID = -100xxxxxxxxxx
 BOT_TOKEN = xxxxxxxxxx:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-=======
-

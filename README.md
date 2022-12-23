@@ -7,7 +7,7 @@ Notify if configured planes have taken off or landed using Python with <a href="
 
 ### Discord Output Example
 
-![Discord Output Example](./ExImages/DiscordEX.png?raw=true)
+![Discord Output Example](./ExImages/DiscordEX2.png?raw=true)
 
 #### More examples are in  the ExImages folder
 

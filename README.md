@@ -15,7 +15,7 @@ Notify if configured planes have taken off or landed using Python with <a href="
 
 ### Background
 
-I made this program so I could track Elon Musk's Jet and share his whereabouts with others orginally on Twitter (but now suspended, but now also on other platforms). I have now expanded and run multiple accounts for multiple planes, a list of the accounts can be found here <https://grndcntrl.net/>
+I made this program so I could track Elon Musk's Jet and share his whereabouts with others orginally on Twitter (but now suspended, but now also on other platforms). I have now expanded and run multiple accounts for multiple planes, a list of the accounts can be found here <https://grndcntrl.net/links>
 
 ### Contributing
 

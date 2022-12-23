@@ -1,0 +1,14 @@
+# requirements.txt
+colorama
+geopy
+tabulate
+pytz
+pillow
+tweepy 
+pushbullet.py
+discord-webhook
+selenium
+git+https://github.com/openskynetwork/opensky-api.git@master#subdirectory=python/
+webdriver-manager
+shapely
+python-telegram-bot

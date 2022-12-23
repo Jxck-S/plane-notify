@@ -24,6 +24,7 @@ I'm open to any help or suggestions, I realize there are many better ways to imp
 ### [Algorithm](PseudoCode.md)
 
 ## Setup / Install
+- Install using the following steps or use Docker, scroll down to the Docker section.
 
 ### Make sure Python/PIP is installed
 
@@ -44,10 +45,13 @@ pipenv install
 
 Selenium/ChromeDriver is used to take a screenshot of the plane on globe.adsbexchange.com. Or use Google Static Maps, which can cost money if overused(No tutorial use <https://developers.google.com/maps/documentation/maps-static/get-api-key> to get to a key).
 
-#### Chromium
-
+#### Chrome 
+- This is assuming linux/debian
 ```bash
-sudo apt-get install chromium
+curl -sSL https://dl-ssl.google.com/linux/linux_signing_key.pub  | apt-key add 
+echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google.list
+apt update
+apt install google-chrome-stable
 ```
 These output methods once installed can be configured in the planes config you create, using the example plane1.ini
 

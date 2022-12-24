@@ -12,3 +12,4 @@ git+https://github.com/openskynetwork/opensky-api.git@master#subdirectory=python
 webdriver-manager
 shapely
 python-telegram-bot
+mastodon.py

@@ -5,7 +5,6 @@ tabulate
 pytz
 pillow
 tweepy 
-pushbullet.py
 discord-webhook
 selenium
 git+https://github.com/openskynetwork/opensky-api.git@master#subdirectory=python/

@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "e92b392f297b73499f81fc50caed6e0be339726d234842c3ba99eeff2588b09c"
+            "sha256": "1d80adfb6e58767e8fa25016043df0f2363d57f736d19e43e7dffc55ad511a73"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -496,14 +496,6 @@
             "index": "pypi",
             "version": "==9.3.0"
         },
-        "pushbullet.py": {
-            "hashes": [
-                "sha256:38e3ce79843efaf839c8dc43485c0c7eedbe5825a8751751f13d041dd00c5a37",
-                "sha256:917883e1af4a0c979ce46076b391e0243eb8fe0a81c086544bcfa10f53e5ae64"
-            ],
-            "index": "pypi",
-            "version": "==0.12.0"
-        },
         "py-staticmaps": {
             "hashes": [
                 "sha256:5aba5ad59f30a63f860e76ed99407a6efb24eaad5c8997aa8617363989f17389"
@@ -882,14 +874,6 @@
             ],
             "index": "pypi",
             "version": "==3.8.5"
-        },
-        "websocket-client": {
-            "hashes": [
-                "sha256:d6b06432f184438d99ac1f456eaf22fe1ade524c3dd16e661142dc54e9cba574",
-                "sha256:d6e8f90ca8e2dd4e8027c4561adeb9456b54044312dba655e7cae652ceb9ae59"
-            ],
-            "markers": "python_version >= '3.7'",
-            "version": "==1.4.2"
         },
         "wsproto": {
             "hashes": [

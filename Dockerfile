@@ -12,7 +12,9 @@ RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key
 # Install Chrome.
 RUN apt-get update && apt-get -y install --no-install-recommends \
     google-chrome-stable \
-    python3-dev 
+    python3-dev \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Add pipenv
 RUN pip install pipenv

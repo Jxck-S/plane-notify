@@ -59,6 +59,6 @@ CONSUMER_KEY = ck
 CONSUMER_SECRET = cs
 
 [MAP]
-#Map to create from Google Static Maps or screenshot global tar1090 from globe.adsbexchange.com
+#Map to create from Google Static Maps or screenshot global tar1090 from globe.theairtraffic.com
 #Enter GOOGLESTATICMAP or ADSBX
 OPTION = ADSBX

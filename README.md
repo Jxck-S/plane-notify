@@ -3,7 +3,7 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/c4e1d839eec3468cadfe351d64dc1ac4)](https://app.codacy.com/manual/Jxck-S/plane-notify?utm_source=github.com&utm_medium=referral&utm_content=Jxck-S/plane-notify&utm_campaign=Badge_Grade_Settings)
 [![GPLv3 License](https://img.shields.io/badge/License-GPL%20v3-yellow.svg)](https://opensource.org/licenses/)
 
-Notify if configured planes have taken off or landed using Python with <a href="https://opensky-network.org/">OpenSky</a>(free) or <a href="https://www.adsbexchange.com/">ADSBExchange</a> Data(paid but much better), outputs location of takeoff location of landing and takeoff by reverse lookup of coordinates.
+Notify if configured planes have taken off or landed using Python with <a href="https://opensky-network.org/">OpenSky</a>(free) or <a href="https://www.adsbexchange.com/">ADSBExchange</a> Data(paid, declining data, and run by clowns), outputs location of takeoff location of landing and takeoff by reverse lookup of coordinates.
 
 ### Discord Output Example
 
@@ -43,7 +43,7 @@ pipenv install
 
 ### Install Selenium / ChromeDriver or setup Google Static Maps
 
-Selenium/ChromeDriver is used to take a screenshot of the plane on globe.adsbexchange.com. Or use Google Static Maps, which can cost money if overused(No tutorial use <https://developers.google.com/maps/documentation/maps-static/get-api-key> to get to a key).
+Selenium/ChromeDriver is used to take a screenshot of the plane on globe.theairtraffic.com. Or use Google Static Maps, which can cost money if overused(No tutorial use <https://developers.google.com/maps/documentation/maps-static/get-api-key> to get to a key).
 
 #### Chrome 
 - This is assuming linux/debian

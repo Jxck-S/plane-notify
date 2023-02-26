@@ -274,5 +274,5 @@ except Exception as e:
         logging.error(e)
         logging.error(str(traceback.format_exc()))
         from defDiscord import sendDis
-        sendDis(str("Error Exiting: " + str(e) + f"Failed on ({obj.config_path}) https://globe.adsbexchange.com/?icao={key} "), main_config, main_config.get('DISCORD', 'ROLE_ID'), "crash_latest.log")
+        sendDis(str("Error Exiting: " + str(e) + f"Failed on ({obj.config_path}) https://globe.theairtraffic.com/?icao={key} "), main_config, main_config.get('DISCORD', 'ROLE_ID'), "crash_latest.log")
     raise e

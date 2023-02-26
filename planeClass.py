@@ -618,7 +618,8 @@ class Plane:
                     from calculate_headings import calculate_deg_change
                     track_change = calculate_deg_change(self.track, self.last_track)
                     track_change = round(track_change, 3)
-                    self.circle_history["traces"].append((time.time(), self.latitude, self.longitude, track_change))
+                    if self.latitude is not None and self.longitude is not None:
+                        self.circle_history["traces"].append((time.time(), self.latitude, self.longitude, track_change))
 
                 total_change = 0
                 coords = []

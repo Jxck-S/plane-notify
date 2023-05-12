@@ -9,11 +9,11 @@ ICAO = icaohere
 ; OVERRIDE_TYPELONG = 
 ; OVERRIDE_OWNER = 
 ; DATA_LOSS_MINS = 20
+; CONCEAL_AC_ID = True
+; CONCEAL_PIA = False
 
 [MAP]
-#Map to create from Google Static Maps or screenshot global tar1090 from globe.adsbexchange.com
-#Enter GOOGLESTATICMAP or ADSBX
-OPTION = ADSBX
+#Optional, map selection moved to mainconf, this is for map overlays per plane
 #Tar1090 overlays option, should be seperated by comma no space, remove option all together to disable any
 OVERLAYS = nexrad
 
@@ -28,12 +28,6 @@ ENABLE = FALSE
 TITLE =
 ACCESS_TOKEN = athere
 ACCESS_TOKEN_SECRET = atshere
-
-[PUSHBULLET]
-ENABLE = FALSE
-TITLE = Title Of Pushbullet message
-API_KEY = apikey
-CHANNEL_TAG = channeltag
 
 [DISCORD]
 ENABLE = FALSE
@@ -56,3 +50,9 @@ ENABLE = FALSE
 TITLE = Title Of Telegram message
 ROOM_ID = -100xxxxxxxxxx
 BOT_TOKEN = xxxxxxxxxx:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+[MASTODON]
+ENABLE = TRUE
+ACCESS_TOKEN = mastodonaccesstoken
+APP_URL = mastodonappurl
+

@@ -12,7 +12,6 @@ tabulate = "*"
 pytz = "*"
 pillow = "*"
 tweepy = "*"
-"pushbullet.py" = "*"
 discord-webhook = "*"
 selenium = "*"
 opensky-api = {editable = true, git = "https://github.com/openskynetwork/opensky-api.git", subdirectory = "python"}
@@ -27,5 +26,7 @@ lxml = "*"
 beautifulsoup4 = "*"
 python-telegram-bot = "*"
 configparser = "*"
+"mastodon.py" = "*"
+
 [requires]
 python_version = "3.9"

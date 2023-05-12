@@ -30,6 +30,7 @@ def getClosestAirport(latitude, longitude, allowed_types):
 	return closest_airport_dict
 def get_airport_by_icao(icao):
 	with open('./dependencies/airports.csv', 'r', encoding='utf-8') as airport_csv:
+		matching_airport = None
 		airport_csv_reader = csv.DictReader(filter(lambda row: row[0]!='#', airport_csv))
 		for airport in airport_csv_reader:
 			if airport['gps_code'] == icao:
@@ -37,5 +38,8 @@ def get_airport_by_icao(icao):
 				#Convert indent key to icao key as its labeled icao in other places not ident
 				matching_airport['icao'] = matching_airport.pop('gps_code')
 				break
-		matching_airport = add_airport_region(matching_airport)
-		return matching_airport
+		if matching_airport:
+			matching_airport = add_airport_region(matching_airport)
+			return matching_airport
+		else:
+			return None

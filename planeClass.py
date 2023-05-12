@@ -8,6 +8,7 @@ class Plane:
         self.icao = icao.upper()
         self.callsign = None
         self.config = config
+        self.config_path = config_path
         self.overrides = {}
         if self.config.has_option('DATA', 'OVERRIDE_REG'):
             self.reg = self.config.get('DATA', 'OVERRIDE_REG')
@@ -23,6 +24,14 @@ class Plane:
             self.overrides['typelong'] = self.config.get('DATA', 'OVERRIDE_TYPELONG')
         if self.config.has_option('DATA', 'OVERRIDE_OWNER'):
             self.overrides['ownop'] = self.config.get('DATA', 'OVERRIDE_OWNER')
+        if self.config.has_option('DATA', 'CONCEAL_AC_ID'):
+            self.conceal_ac_id = self.config.getboolean('DATA', 'CONCEAL_AC_ID')
+        else:
+            self.conceal_ac_id = False
+        if self.config.has_option('DATA', 'CONCEAL_PIA'):
+            self.conceal_pia = self.config.getboolean('DATA', 'CONCEAL_PIA')
+        else:
+            self.conceal_pia = False
         self.conf_file_path = config_path
         self.alt_ft = None
         self.below_desired_ft = None
@@ -55,6 +64,7 @@ class Plane:
         self.track = None
         self.last_track = None
         self.circle_history = None
+        self.nearest_from_airport = None
         if self.config.has_option('DATA', 'DATA_LOSS_MINS'):
             self.data_loss_mins = self.config.getint('DATA', 'DATA_LOSS_MINS')
         else:
@@ -69,18 +79,20 @@ class Plane:
                 self.latest_tweet_id = self.tweet_api.user_timeline(count = 1)[0]
             except IndexError:
                 self.latest_tweet_id = None
-        #Setup PushBullet
-        if self.config.getboolean('PUSHBULLET', 'ENABLE'):
-            from pushbullet import Pushbullet
-            self.pb = Pushbullet(self.config['PUSHBULLET']['API_KEY'])
-            self.pb_channel = self.pb.get_channel(self.config.get('PUSHBULLET', 'CHANNEL_TAG'))
     def run_opens(self, ac_dict):
         #Parse OpenSky Vector
         from colorama import Fore, Back, Style
         self.print_header("BEGIN")
         #print (Fore.YELLOW + "OpenSky Sourced Data: ", ac_dict)
         try:
-            self.__dict__.update({'icao' : ac_dict.icao24.upper(), 'callsign' : ac_dict.callsign, 'latitude' : ac_dict.latitude, 'longitude' : ac_dict.longitude,  'on_ground' : bool(ac_dict.on_ground), 'squawk' : ac_dict.squawk, 'track' : float(ac_dict.heading)})
+            self.__dict__.update({
+                'icao' : ac_dict.icao24.upper(),
+                'callsign' : ac_dict.callsign,
+                'latitude' : ac_dict.latitude,
+                'longitude' : ac_dict.longitude,
+                'on_ground' : bool(ac_dict.on_ground),
+                'squawk' : ac_dict.squawk,
+                'track' : float(ac_dict.true_track)})
             if ac_dict.baro_altitude != None:
                 self.alt_ft = round(float(ac_dict.baro_altitude)  * 3.281)
             elif self.on_ground:
@@ -88,7 +100,8 @@ class Plane:
             from mictronics_parse import get_aircraft_reg_by_icao, get_type_code_by_icao
             self.reg = get_aircraft_reg_by_icao(self.icao)
             self.type = get_type_code_by_icao(self.icao)
-            self.last_pos_datetime = datetime.fromtimestamp(ac_dict.time_position)
+            if ac_dict.time_position is not None:
+                self.last_pos_datetime = datetime.fromtimestamp(ac_dict.time_position)
         except ValueError as e:
             print("Got data but some data is invalid!")
             print(e)
@@ -221,8 +234,11 @@ class Plane:
         def route_format(extra_route_info, type):
             from defAirport import get_airport_by_icao
             to_airport = get_airport_by_icao(self.known_to_airport)
-            code = to_airport['iata_code'] if to_airport['iata_code'] != "" else to_airport['icao']
-            airport_text = f"{code}, {to_airport['name']}"
+            if to_airport:
+                code = to_airport['iata_code'] if to_airport['iata_code'] != "" else to_airport['icao']
+                airport_text = f"{code}, {to_airport['name']}"
+            else:
+                airport_text = f"{self.known_to_airport}"
             if 'time_to' in extra_route_info.keys() and type != "divert":
                 arrival_rel = "in ~" + extra_route_info['time_to']
             else:
@@ -234,7 +250,10 @@ class Plane:
                     header = "Now going to"
                 elif type == "divert":
                     header = "Now diverting to"
-                area = f"{to_airport['municipality']}, {to_airport['region']}, {to_airport['iso_country']}"
+                if to_airport:
+                    area = f"{to_airport['municipality']}, {to_airport['region']}, {to_airport['iso_country']}"
+                else:
+                    area = ""
                 route_to = f"{header} {area} ({airport_text})" + (f" arriving {arrival_rel}" if arrival_rel is not None else "")
             else:
                 if type == "inital":
@@ -388,7 +407,7 @@ class Plane:
             else:
                 self.dis_title = self.config.get('DISCORD', 'TITLE')
     #Set Twitter Title
-        if self.config.getboolean('TWITTER', 'ENABLE'):
+        if self.config.getboolean('TWITTER', 'ENABLE') and Plane.main_config.getboolean('TWITTER', 'ENABLE'):
             if self.config.get('TWITTER', 'TITLE') in ["DYNAMIC", "callsign"]:
                 self.twitter_title = dynamic_title
             else:
@@ -423,12 +442,8 @@ class Plane:
             elif self.landed:
                 landed_time_msg = None
                 landed_time = None
-            if self.icao != "A835AF":
-                message = (f"{type_header} {location_string}.") + ("" if route_to is None else f" {route_to}.") + ((f" {landed_time_msg}") if landed_time_msg != None else "")
-                dirty_message = None
-            else:
-                message =  (f"{type_header} {location_string}.")  + ((f" {landed_time_msg}") if landed_time_msg != None else "")
-                dirty_message = (f"{type_header} {location_string}.") + ("" if route_to is None else f" {route_to}.") + ((f" {landed_time_msg}") if landed_time_msg != None else "")
+
+            message = (f"{type_header} {location_string}.") + ("" if route_to is None else f" {route_to}.") + ((f" {landed_time_msg}") if landed_time_msg != None else "")
             print (message)
             #Google Map or tar1090 screenshot
             if Plane.main_config.get('MAP', 'OPTION') == "GOOGLESTATICMAP":
@@ -436,8 +451,8 @@ class Plane:
                 getMap((municipality + ", "  + state + ", "  + country_code), self.map_file_name)
             elif Plane.main_config.get('MAP', 'OPTION') == "ADSBX":
                 from defSS import get_adsbx_screenshot
-                url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}" 
-                get_adsbx_screenshot(self.map_file_name, url_params, overrides=self.overrides)
+                url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}&limitupdates=0"
+                get_adsbx_screenshot(self.map_file_name, url_params, overrides=self.overrides, conceal_ac_id=self.conceal_ac_id, conceal_pia=self.conceal_pia)
                 from modify_image import append_airport
                 text_credit = self.config.get('MAP', 'TEXT_CREDIT') if self.config.has_option('MAP', 'TEXT_CREDIT') else None
                 append_airport(self.map_file_name, nearest_airport_dict, text_credit)
@@ -448,19 +463,17 @@ class Plane:
                 from defTelegram import sendTeleg
                 photo = open(self.map_file_name, "rb")
                 sendTeleg(photo, message, self.config)
+            #Mastodon
+            if self.config.has_section('MASTODON') and self.config.getboolean('MASTODON', 'ENABLE'):
+                from defMastodon import sendMastodon
+                sendMastodon(self.map_file_name, message, self.config)
+
             #Discord
             if self.config.getboolean('DISCORD', 'ENABLE'):
-                dis_message = f"{self.dis_title} {message}".strip() if dirty_message is None else f"{self.dis_title} {dirty_message}".strip()
-                role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') else None
-                sendDis(dis_message, self.config, role_id, self.map_file_name)
-            #PushBullet
-            if self.config.getboolean('PUSHBULLET', 'ENABLE'):
-                with open(self.map_file_name, "rb") as pic:
-                    map_data = self.pb.upload_file(pic, "Tookoff IMG" if self.tookoff else "Landed IMG")
-                self.pb_channel.push_note(self.config.get('PUSHBULLET', 'TITLE'), message)
-                self.pb_channel.push_file(**map_data)
+                role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') and self.config.get('DISCORD', 'ROLE_ID').strip() != "" else None
+                sendDis(message, self.config, role_id, self.map_file_name)
             #Twitter
-            if self.config.getboolean('TWITTER', 'ENABLE'):
+            if self.config.getboolean('TWITTER', 'ENABLE') and Plane.main_config.getboolean('TWITTER', 'ENABLE'):
                 import tweepy
                 try:
                     twitter_media_map_obj = self.tweet_api.media_upload(self.map_file_name)
@@ -468,21 +481,20 @@ class Plane:
                     self.tweet_api.create_media_metadata(media_id= twitter_media_map_obj.media_id, alt_text= alt_text)
                     self.latest_tweet_id = self.tweet_api.update_status(status = ((self.twitter_title + " " + message).strip()), media_ids=[twitter_media_map_obj.media_id]).id
                 except tweepy.errors.TweepyException as e:
-                    print(e)
-                    raise Exception(self.icao) from e
+                    raise
             #Meta
             if self.config.has_option('META', 'ENABLE') and self.config.getboolean('META', 'ENABLE'):
                 from meta_toolkit import post_to_meta_both
                 post_to_meta_both(self.config.get("META", "FB_PAGE_ID"), self.config.get("META", "IG_USER_ID"), self.map_file_name, message, self.config.get("META", "ACCESS_TOKEN"))
             os.remove(self.map_file_name)
             if self.landed:
-                if self.known_to_airport is not None and self.nearest_from_airport is not None and self.known_to_airport != self.nearest_from_airport:
+                if nearest_airport_dict is not None and self.nearest_from_airport is not None and nearest_airport_dict['icao'] != self.nearest_from_airport:
                     from defAirport import get_airport_by_icao
                     from geopy.distance import geodesic
-                    known_to_airport = get_airport_by_icao(self.known_to_airport)
+                    landed_airport = nearest_airport_dict
                     nearest_from_airport = get_airport_by_icao(self.nearest_from_airport)
                     from_coord = (nearest_from_airport['latitude_deg'], nearest_from_airport['longitude_deg'])
-                    to_coord =  (known_to_airport['latitude_deg'], known_to_airport['longitude_deg'])
+                    to_coord =  (landed_airport['latitude_deg'], landed_airport['longitude_deg'])
                     distance_mi = float(geodesic(from_coord, to_coord).mi)
                     distance_nm = distance_mi / 1.150779448
                     distance_message = f"{'{:,}'.format(round(distance_mi))} mile ({'{:,}'.format(round(distance_nm))} NM) flight from {nearest_from_airport['iata_code'] if nearest_from_airport['iata_code'] != '' else  nearest_from_airport['ident']} to {nearest_airport_dict['iata_code'] if nearest_airport_dict['iata_code'] != '' else nearest_airport_dict['ident']}\n"
@@ -497,14 +509,13 @@ class Plane:
                         fuel_message = fuel_message(fuel_info)
                         if self.config.getboolean('DISCORD', 'ENABLE'):
                             dis_message = f"{self.dis_title} {distance_message} \nFlight Fuel Info ```{fuel_message}```".strip()
-                            role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') else None
+                            role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') and self.config.get('DISCORD', 'ROLE_ID').strip() != "" else None
                             sendDis(dis_message, self.config, role_id)
-                        if self.config.getboolean('TWITTER', 'ENABLE'):
+                        if self.config.getboolean('TWITTER', 'ENABLE') and Plane.main_config.getboolean('TWITTER', 'ENABLE'):
                             try:
                                 self.latest_tweet_id = self.tweet_api.update_status(status = ((self.twitter_title + " " + distance_message + " " + fuel_message).strip()), in_reply_to_status_id = self.latest_tweet_id).id
                             except tweepy.errors.TweepyException as e:
-                                print(e)
-                                raise Exception(self.icao) from e
+                                raise
                 self.latest_tweet_id = None
                 self.recheck_route_time = None
                 self.known_to_airport = None
@@ -524,11 +535,10 @@ class Plane:
                 #Discord
                 if self.config.getboolean('DISCORD', 'ENABLE'):
                     dis_message = f"{self.dis_title} {route_to}".strip()
-                    role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') else None
+                    role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') and self.config.get('DISCORD', 'ROLE_ID').strip() != "" else None
                     sendDis(dis_message, self.config, role_id)
                 #Twitter
-                if self.config.getboolean('TWITTER', 'ENABLE') and self.icao == 'A835AF':
-                    #tweet = self.tweet_api.user_timeline(count = 1)[0]
+                if self.config.getboolean('TWITTER', 'ENABLE') and Plane.main_config.getboolean('TWITTER', 'ENABLE'):
                     self.latest_tweet_id = self.tweet_api.update_status(status = f"{self.twitter_title} {route_to}".strip(), in_reply_to_status_id = self.latest_tweet_id).id
 
         if self.circle_history is not None:
@@ -558,8 +568,8 @@ class Plane:
                         getMap((municipality + ", "  + state + ", "  + country_code), self.map_file_name)
                     if Plane.main_config.get('MAP', 'OPTION') == "ADSBX":
                         from defSS import get_adsbx_screenshot
-                        url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}" 
-                        get_adsbx_screenshot(self.map_file_name, url_params, overrides=self.overrides)
+                        url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}&limitupdates=0"
+                        get_adsbx_screenshot(self.map_file_name, url_params, overrides=self.overrides, conceal_ac_id=self.conceal_ac_id, conceal_pia=self.conceal_pia)
                     if self.config.getboolean('DISCORD', 'ENABLE'):
                         dis_message =  (self.dis_title + " "  + squawk_message)
                         sendDis(dis_message, self.config, None, self.map_file_name)
@@ -581,8 +591,8 @@ class Plane:
                             dis_message =  (self.dis_title + " "  + mode + " mode enabled.")
                             if mode == "Approach":
                                 from defSS import get_adsbx_screenshot
-                                url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}" 
-                                get_adsbx_screenshot(self.map_file_name, url_params, overrides=self.overrides)
+                                url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}&limitupdates=0"
+                                get_adsbx_screenshot(self.map_file_name, url_params, overrides=self.overrides, conceal_ac_id=self.conceal_ac_id, conceal_pia=self.conceal_pia)
                                 sendDis(dis_message, self.config, None, self.map_file_name)
                             #elif mode in ["Althold", "VNAV", "LNAV"] and self.sel_nav_alt != None:
                             #    sendDis((dis_message + ", Sel Alt. " + str(self.sel_nav_alt) + ", Current Alt. " + str(self.alt_ft)), self.config)
@@ -608,7 +618,8 @@ class Plane:
                     from calculate_headings import calculate_deg_change
                     track_change = calculate_deg_change(self.track, self.last_track)
                     track_change = round(track_change, 3)
-                    self.circle_history["traces"].append((time.time(), self.latitude, self.longitude, track_change))
+                    if self.latitude is not None and self.longitude is not None:
+                        self.circle_history["traces"].append((time.time(), self.latitude, self.longitude, track_change))
 
                 total_change = 0
                 coords = []
@@ -648,7 +659,7 @@ class Plane:
                         in_tfr = None
                         if Plane.main_config.getboolean("TFRS", "ENABLE"):
                             tfr_url = Plane.main_config.get("TFRS", "URL")
-                            response = requests.get(tfr_url, timeout=30)
+                            response = requests.get(tfr_url, timeout=60)
                             tfrs = json.loads(response.text)
                             for tfr in tfrs:
                                 if in_tfr is not None:
@@ -764,9 +775,8 @@ class Plane:
                                 return tfr_map_filename
 
                         from defSS import get_adsbx_screenshot
-                        
-                        url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}" 
-                        get_adsbx_screenshot(self.map_file_name, url_params, overrides=self.overrides)
+                        url_params = f"largeMode=2&hideButtons&hideSidebar&mapDim=0&zoom=10&icao={self.icao}&overlays={self.get_adsbx_map_overlays()}&limitupdates=0"
+                        get_adsbx_screenshot(self.map_file_name, url_params, overrides=self.overrides, conceal_ac_id=self.conceal_ac_id, conceal_pia=self.conceal_pia)
                         if nearest_airport_dict['distance_mi'] < 3:
                             if "touchngo" in self.circle_history.keys():
                                 message = f"Doing touch and goes at {nearest_airport_dict['icao']}"
@@ -776,8 +786,8 @@ class Plane:
                             message =  f"Circling {round(nearest_airport_dict['distance_mi'], 2)}mi {cardinal} of {nearest_airport_dict['icao']}, {nearest_airport_dict['name']} at {self.alt_ft}ft. "
                         tfr_map_filename = None
                         if in_tfr is not None:
-                            context = "Inside" if 'context' not in in_tfr.keys() else "Above" if in_tfr['context'] == 'above' else "Below"
-                            message += f" {context} TFR {in_tfr['info']['NOTAM']}, a TFR for {in_tfr['info']['Type'].title()}"
+                            wording_context = "Inside" if 'context' not in in_tfr.keys() else "Above" if in_tfr['context'] == 'above' else "Below"
+                            message += f" {wording_context} TFR {in_tfr['info']['NOTAM']}, a TFR for {in_tfr['info']['Type'].title()}"
                             tfr_map_filename = tfr_image(context, (self.latitude, self.longitude))
                         elif in_tfr is None and closest_tfr is not None and "distance" in closest_tfr.keys() and closest_tfr["distance"] <= 20:
                             message += f" {closest_tfr['distance']} miles from TFR {closest_tfr['info']['NOTAM']}, a TFR for {closest_tfr['info']['Type']}"
@@ -793,12 +803,12 @@ class Plane:
                             from defTelegram import sendTeleg
                             sendTeleg(photo, message, self.config)
                         if self.config.getboolean('DISCORD', 'ENABLE'):
-                            role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') else None
-                            if tfr_map_filename is not None: 
+                            role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') and self.config.get('DISCORD', 'ROLE_ID').strip() != "" else None
+                            if tfr_map_filename is not None:
                                 sendDis(message, self.config, role_id, self.map_file_name, tfr_map_filename)
                             elif tfr_map_filename is None:
                                 sendDis(message, self.config, role_id, self.map_file_name)
-                        if self.config.getboolean('TWITTER', 'ENABLE'):
+                        if self.config.getboolean('TWITTER', 'ENABLE') and Plane.main_config.getboolean('TWITTER', 'ENABLE'):
                             twitter_media_map_obj = self.tweet_api.media_upload(self.map_file_name)
                             media_ids = [twitter_media_map_obj.media_id]
                             if tfr_map_filename is not None:
@@ -812,6 +822,10 @@ class Plane:
                         if self.config.has_option('META', 'ENABLE') and self.config.getboolean('META', 'ENABLE'):
                             from meta_toolkit import post_to_meta_both
                             post_to_meta_both(self.config.get("META", "FB_PAGE_ID"), self.config.get("META", "IG_USER_ID"), self.map_file_name, message, self.config.get("META", "ACCESS_TOKEN"))
+                        #Mastodon
+                        if self.config.has_section('MASTODON') and self.config.getboolean('MASTODON', 'ENABLE'):
+                            from defMastodon import sendMastodon
+                            sendMastodon(self.map_file_name, message, self.config)
                         self.circle_history['triggered'] = True
                 elif abs(total_change) <= 360 and self.circle_history["triggered"]:
                     print("No Longer Circling, trigger cleared")
@@ -850,7 +864,7 @@ class Plane:
                     if bool(int(ra['acas_ra']['MTE'])):
                         ra_message += ", Multi threat"
                     from defSS import get_adsbx_screenshot, generate_adsbx_screenshot_time_params
-                    url_params = f"&lat={ra['lat']}&lon={ra['lon']}&zoom=11&largeMode=2&hideButtons&hideSidebar&mapDim=0&overlays={self.get_adsbx_map_overlays()}"
+                    url_params = f"&lat={ra['lat']}&lon={ra['lon']}&zoom=11&largeMode=2&hideButtons&hideSidebar&mapDim=0&overlays={self.get_adsbx_map_overlays()}&limitupdates=0"
                     if "threat_id_hex" in ra['acas_ra'].keys():
                         from mictronics_parse import get_aircraft_reg_by_icao
                         threat_reg = get_aircraft_reg_by_icao(ra['acas_ra']['threat_id_hex'])
@@ -860,12 +874,12 @@ class Plane:
                     else:
                         url_params += f"&icao={self.icao.lower()}&noIsolation"
                     print(url_params)
-                    get_adsbx_screenshot(self.map_file_name, url_params, True, True, overrides=self.overrides)
+                    get_adsbx_screenshot(self.map_file_name, url_params, True, True, overrides=self.overrides, conceal_ac_id=self.conceal_ac_id, conceal_pia=self.conceal_pia)
 
                     if self.config.getboolean('DISCORD', 'ENABLE'):
                         from defDiscord import sendDis
                         dis_message = f"{self.dis_title} {ra_message}"
-                        role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') else None
+                        role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') and self.config.get('DISCORD', 'ROLE_ID').strip() != "" else None
                         sendDis(dis_message, self.config, role_id, self.map_file_name)
                     #if twitter
     def expire_ra_types(self):

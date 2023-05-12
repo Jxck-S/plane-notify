@@ -17,10 +17,10 @@ def calculate_cardinal(d):
     card = dirs[ix % len(dirs)]
     return card
 def calculate_deg_change(new_heading, original_heading):
+    """Calculates change between two headings, returns negative degree if change is left, positive if right"""
     if new_heading is None:
         print("Track heading missing. No change")
         return 0
-    """Calculates change between two headings, returns negative degree if change is left, positive if right"""
     normal = abs(original_heading-new_heading)
     across_inital = 360 - abs(original_heading-new_heading)
     if across_inital < normal:

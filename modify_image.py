@@ -26,11 +26,6 @@ def append_airport(filename, airport, text_credit=None):
 	draw.rectangle(((325, 760), (624, 800)), fill= white, outline=black)
 	#Header Box
 	draw.rectangle(((401, 738), (549, 760)), fill= navish)
-	#ADSBX Logo
-	# 
-	# adsbx = Image.open("./dependencies/ADSBX_Logo.png")
-	# adsbx = adsbx.resize((25, 25), Image.ANTIALIAS)
-	# image.paste(adsbx, (632, 757), adsbx)
 	#Create Text
 	#ADSBX Credit
 	if text_credit is not None:

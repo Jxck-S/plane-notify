@@ -25,7 +25,11 @@ sys.path.extend([os.getcwd()])
 #Dependency Handling
 if not os.path.isdir("./dependencies/"):
     os.mkdir("./dependencies/")
-required_files = [("Roboto-Regular.ttf", 'https://github.com/googlefonts/roboto/blob/main/src/hinted/Roboto-Regular.ttf?raw=true'), ('airports.csv', 'https://ourairports.com/data/airports.csv'), ('regions.csv', 'https://ourairports.com/data/regions.csv'), ('ADSBX_Logo.png', "https://www.adsbexchange.com/wp-content/uploads/cropped-Stealth.png"), ('Mictronics_db.zip', "https://www.mictronics.de/aircraft-database/indexedDB.php")]
+required_files = [
+    ("Roboto-Regular.ttf", 'https://github.com/googlefonts/roboto/blob/main/src/hinted/Roboto-Regular.ttf?raw=true'),
+    ('airports.csv', 'https://ourairports.com/data/airports.csv'),
+    ('regions.csv', 'https://ourairports.com/data/regions.csv'),
+    ('Mictronics_db.zip', "https://www.mictronics.de/aircraft-database/indexedDB.php")]
 for file in required_files:
 	file_name = file[0]
 	url = file[1]
@@ -270,5 +274,5 @@ except Exception as e:
         logging.error(e)
         logging.error(str(traceback.format_exc()))
         from defDiscord import sendDis
-        sendDis(str("Error Exiting: " + str(e) + f"Failed on ({obj.config_path}) https://globe.adsbexchange.com/?icao={key} "), main_config, main_config.get('DISCORD', 'ROLE_ID'), "crash_latest.log")
+        sendDis(str("Error Exiting: " + str(e) + f"Failed on ({obj.config_path}) https://globe.theairtraffic.com/?icao={key} "), main_config, main_config.get('DISCORD', 'ROLE_ID'), "crash_latest.log")
     raise e

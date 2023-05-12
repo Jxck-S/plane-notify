@@ -29,7 +29,7 @@ def get_adsbx_screenshot(file_path, url_params, enable_labels=False, enable_trac
     if platform.system() == "Linux" and os.geteuid()==0:
         chrome_options.add_argument('--no-sandbox') # required when running as root user. otherwise you would get no sandbox errors.
     browser = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
-    url = f"https://globe.adsbexchange.com/?{url_params}"
+    url = f"https://globe.theairtraffic.com/?{url_params}"
     print(f"Getting Screenshot of {url}")
     browser.set_page_load_timeout(80)
     browser.get(url)

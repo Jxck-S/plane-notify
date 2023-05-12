@@ -554,7 +554,8 @@ class Plane:
         if self.feeding:
             #Squawks
             emergency_squawks ={"7500" : "Hijacking", "7600" :"Radio Failure", "7700" : "General Emergency"}
-            seen = datetime.now() - self.last_pos_datetime
+            if self.last_pos_datetime is not None:
+                seen = datetime.now() - self.last_pos_datetime
             #Only run check if emergency data previously set
             if self.last_emergency is not None and not self.emergency_already_triggered:
                 time_since_org_emer = datetime.now() - self.last_emergency[0]
@@ -577,7 +578,8 @@ class Plane:
             #Realizes first time seeing emergency, stores time and type
             elif self.squawk in emergency_squawks.keys() and not self.emergency_already_triggered and not self.on_ground:
                 print("Emergency", self.squawk, "detected storing code and time and waiting to trigger")
-                self.last_emergency = (self.last_pos_datetime, self.squawk)
+                if self.last_pos_datetime is not None:
+                    self.last_emergency = (self.last_pos_datetime, self.squawk)
             elif self.squawk not in emergency_squawks.keys() and self.emergency_already_triggered:
                 self.emergency_already_triggered = None
 

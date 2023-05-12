@@ -34,7 +34,7 @@ for file in required_files:
 	file_name = file[0]
 	url = file[1]
 	if not os.path.isfile("./dependencies/" + file_name):
-		print(file_name,  "does not exist downloading now")
+		print(f"{file_name} does not exist downloading now")
 		try:
 			import requests
 			file_content = requests.get(url)
@@ -43,9 +43,9 @@ for file in required_files:
 		except Exception as e:
 			raise e("Error getting", file_name, "from", url)
 		else:
-			print("Successfully got", file_name)
+			print(f"Successfully got {file_name}")
 	else:
-		print("Already have", file_name, "continuing")
+		print(f"Already have {file_name} continuing")
 if os.path.isfile("./dependencies/" + required_files[4][0]) and not os.path.isfile("./dependencies/aircrafts.json"):
     print("Extracting Mictronics DB")
     from zipfile import ZipFile
@@ -73,7 +73,7 @@ else:
     print("Route lookup is disabled")
 
 try:
-    print("Source is set to", source)
+    print(f"Source is set to {source}")
     import sys
     #Setup plane objects from plane configs
     planes = {}
@@ -94,6 +94,7 @@ try:
     except pytz.exceptions.UnknownTimeZoneError:
         tz = pytz.UTC
     last_ra_count = None
+    print(f"{len(planes)} Planes configured")
     while True:
         datetime_tz = datetime.now(tz)
         if datetime_tz.hour == 0 and datetime_tz.minute == 0:
@@ -101,7 +102,7 @@ try:
         running_Count +=1
         start_time = time.time()
         header = ("-------- " + str(running_Count) + " -------- " + str(datetime_tz.strftime("%I:%M:%S %p")) + " ---------------------------------------------------------------------------")
-        print (Back.GREEN +  Fore.BLACK + header[0:100] + Style.RESET_ALL)
+        print (f"{Back.GREEN} {Fore.BLACK} {header[0:100]} {Style.RESET_ALL}")
         if source == "ADSBX":
             #ACAS data
             from defADSBX import pull_date_ras
@@ -131,7 +132,7 @@ try:
                 last_ra_count = ra_count
             for key, obj in planes.items():
                 if sorted_ras != {} and key in sorted_ras.keys():
-                        print(key, "has", len(sorted_ras[key]), "RAs")
+                        print(f"{key} has {len(sorted_ras[key])} RAs")
                         obj.check_new_ras(sorted_ras[key])
                 obj.expire_ra_types()
             #Normal API data

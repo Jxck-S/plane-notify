@@ -46,10 +46,10 @@ for file in required_files:
 			print(f"Successfully got {file_name}")
 	else:
 		print(f"Already have {file_name} continuing")
-if os.path.isfile("./dependencies/" + required_files[4][0]) and not os.path.isfile("./dependencies/aircrafts.json"):
+if os.path.isfile("./dependencies/" + required_files[3][0]) and not os.path.isfile("./dependencies/aircrafts.json"):
     print("Extracting Mictronics DB")
     from zipfile import ZipFile
-    with ZipFile("./dependencies/" + required_files[4][0], 'r') as mictronics_db:
+    with ZipFile("./dependencies/" + required_files[3][0], 'r') as mictronics_db:
         mictronics_db.extractall("./dependencies/")
 
 main_config = configparser.ConfigParser()

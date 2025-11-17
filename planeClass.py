@@ -458,6 +458,11 @@ class Plane:
                 append_airport(self.map_file_name, nearest_airport_dict, text_credit)
             else:
                 raise ValueError("Map option not set correctly in this planes conf")
+            #Signal
+            if self.config.has_section('SIGNAL') and self.config.getboolean('SIGNAL', 'ENABLE'):
+                from defSignal import sendSignal
+                photo = open(self.map_file_name, "rb")
+                sendTeleg(photo, message, self.config)
             #Telegram
             if self.config.has_section('TELEGRAM') and self.config.getboolean('TELEGRAM', 'ENABLE'):
                 from defTelegram import sendTeleg
@@ -526,6 +531,12 @@ class Plane:
             route_to = self.route_info()
             if route_to != None:
                 print(route_to)
+                #Signal
+                if self.config.has_section('SIGNAL') and self.config.getboolean('SIGNAL', 'ENABLE'):
+                   message = f"{self.dis_title} {route_to}".strip()
+                   photo = open(self.map_file_name, "rb")
+                   from defSignal import sendSignal
+                   sendSignal(photo, message, self.config)
                 #Telegram
                 if self.config.has_section('TELEGRAM') and self.config.getboolean('TELEGRAM', 'ENABLE'):
                     message = f"{self.dis_title} {route_to}".strip()
@@ -799,7 +810,12 @@ class Plane:
                             raise Exception(message)
 
                         print(message)
-                        #Telegram
+                        #Signal
+                        if self.config.has_section('SIGNAL') and self.config.getboolean('SIGNAL', 'ENABLE'):
+                           photo = open(self.map_file_name, "rb")
+                           from defSignal import sendSigal
+                           sendSignal(photo, message, self.config)
+			#Telegram
                         if self.config.has_section('TELEGRAM') and self.config.getboolean('TELEGRAM', 'ENABLE'):
                             photo = open(self.map_file_name, "rb")
                             from defTelegram import sendTeleg

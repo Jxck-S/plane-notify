@@ -56,3 +56,8 @@ ENABLE = FALSE
 ACCESS_TOKEN = mastodonaccesstoken
 APP_URL = mastodonappurl
 
+[SIGNAL]
+ENABLE = False
+#Optional: Override recipient for this specific plane
+RECIPIENT = +1234567890
+TITLE = Title Of Signal message

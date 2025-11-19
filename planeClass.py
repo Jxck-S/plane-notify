@@ -462,7 +462,7 @@ class Plane:
             if self.config.has_section('SIGNAL') and self.config.getboolean('SIGNAL', 'ENABLE'):
                 from defSignal import sendSignal
                 photo = open(self.map_file_name, "rb")
-                sendTeleg(photo, message, self.config)
+                sendSignal(photo, message, self.config)
             #Telegram
             if self.config.has_section('TELEGRAM') and self.config.getboolean('TELEGRAM', 'ENABLE'):
                 from defTelegram import sendTeleg

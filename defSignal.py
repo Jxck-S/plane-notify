@@ -32,8 +32,8 @@ def sendSignal(photo, message, config):
                 "recipients": [recipient]
             }
             
-            # Handle photo attachment if provided
-            if photo:
+            # Handle photo attachment if provided (TEMPORARILY DISABLED - no maps for now)
+            if False: #Disabled change from "False" to "photo" to enable
                 try:
                     with open(photo, 'rb') as f:
                         file_data = base64.b64encode(f.read()).decode('utf-8')

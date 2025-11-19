@@ -1,11 +1,16 @@
 from datetime import datetime, timedelta
+import logging
+
 class Plane:
     import configparser
     main_config = configparser.ConfigParser()
     main_config.read('./configs/mainconf.ini')
+    logger = logging.getLogger('plane-notify.Plane')
+
     def __init__(self, icao, config_path, config):
         """Initializes a plane object from its config file and given icao."""
         self.icao = icao.upper()
+        self.logger = logging.getLogger(f'plane-notify.Plane.{self.icao}')
         self.callsign = None
         self.config = config
         self.config_path = config_path
@@ -296,6 +301,7 @@ class Plane:
     def run_check(self):
         """Runs a check of a plane module to see if its landed or takenoff using plane data, and takes action if so."""
         print(self)
+        self.logger.debug(f"Running check - On ground: {self.on_ground}, Alt: {self.alt_ft}, Feeding: {self.feeding}")
         #Ability to Remove old Map
         import os
         from colorama import Fore, Style
@@ -322,6 +328,7 @@ class Plane:
                 self.tookoff = True
                 trigger_type = "no longer on ground"
                 type_header = "Took off from"
+                self.logger.info(f"TAKEOFF DETECTED - Trigger: {trigger_type}, Alt: {self.alt_ft}ft")
             elif self.last_feeding is False and self.feeding and self.landing_plausible == False:
                 from defAirport import getClosestAirport
                 nearest_airport_dict = getClosestAirport(self.latitude, self.longitude, self.config.get("AIRPORT", "TYPES"))
@@ -334,6 +341,7 @@ class Plane:
                     self.tookoff = True
                     trigger_type = "data acquisition"
                     type_header = "Took off near"
+                    self.logger.info(f"TAKEOFF DETECTED - Trigger: {trigger_type}, Alt: {self.alt_ft}ft, AGL: {alt_above_airport}ft")
             else:
                 self.tookoff = False
         else:
@@ -345,9 +353,11 @@ class Plane:
             trigger_type = "now on ground"
             type_header = "Landed in"
             self.landing_plausible = False
+            self.logger.info(f"LANDING DETECTED - Trigger: {trigger_type}, Alt: {self.alt_ft}ft")
         #Set status for landing plausible
         elif self.below_desired_ft and self.last_feeding and self.feeding is False and self.last_on_ground is False:
             self.landing_plausible = True
+            self.logger.debug("Near landing conditions, if continued data loss for configured time, and if under 10k AGL landing true")
             print("Near landing conditions, if contiuned data loss for configured time, and  if under 10k AGL landing true")
 
         elif self.landing_plausible and self.feeding is False and time_since_contact.total_seconds() >= (self.data_loss_mins * 60):
@@ -364,8 +374,10 @@ class Plane:
                 self.landed = True
                 trigger_type = "data loss"
                 type_header = "Landed near"
+                self.logger.info(f"LANDING DETECTED - Trigger: {trigger_type}, Alt: {self.alt_ft}ft, AGL: {alt_above_airport}ft, Data loss: {time_since_contact.total_seconds()}s")
             else:
                 print("Alt greater then 10k AGL")
+                self.logger.debug(f"Landing plausible but altitude too high - Alt: {self.alt_ft}ft, AGL: {alt_above_airport}ft")
                 self.landing_plausible = False
                 self.on_ground = None
         else:
@@ -458,22 +470,44 @@ class Plane:
                 append_airport(self.map_file_name, nearest_airport_dict, text_credit)
             else:
                 raise ValueError("Map option not set correctly in this planes conf")
+            self.logger.info(f"Sending {type_header} notification to enabled platforms")
+
             #Telegram
             if self.config.has_section('TELEGRAM') and self.config.getboolean('TELEGRAM', 'ENABLE'):
+                self.logger.info("Sending Telegram notification")
                 from defTelegram import sendTeleg
                 photo = open(self.map_file_name, "rb")
                 sendTeleg(photo, message, self.config)
+            else:
+                self.logger.debug("Telegram not enabled or not configured")
+
             #Mastodon
             if self.config.has_section('MASTODON') and self.config.getboolean('MASTODON', 'ENABLE'):
+                self.logger.info("Sending Mastodon notification")
                 from defMastodon import sendMastodon
                 sendMastodon(self.map_file_name, message, self.config)
+            else:
+                self.logger.debug("Mastodon not enabled or not configured")
+
+            #Signal
+            if self.config.has_section('SIGNAL') and self.config.getboolean('SIGNAL', 'ENABLE'):
+                self.logger.info("Sending Signal notification")
+                from defSignal import sendSignal
+                sendSignal(self.map_file_name, message, self.config)
+            else:
+                self.logger.debug("Signal not enabled or not configured")
 
             #Discord
             if self.config.getboolean('DISCORD', 'ENABLE'):
+                self.logger.info("Sending Discord notification")
                 role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') and self.config.get('DISCORD', 'ROLE_ID').strip() != "" else None
                 sendDis(message, self.config, role_id, self.map_file_name)
+            else:
+                self.logger.debug("Discord not enabled")
+
             #Twitter
             if self.config.getboolean('TWITTER', 'ENABLE') and Plane.main_config.getboolean('TWITTER', 'ENABLE'):
+                self.logger.info("Sending Twitter notification")
                 import tweepy
                 try:
                     twitter_media_map_obj = self.tweet_api.media_upload(self.map_file_name)
@@ -482,10 +516,16 @@ class Plane:
                     self.latest_tweet_id = self.tweet_api.update_status(status = ((self.twitter_title + " " + message).strip()), media_ids=[twitter_media_map_obj.media_id]).id
                 except tweepy.errors.TweepyException as e:
                     raise
+            else:
+                self.logger.debug("Twitter not enabled")
+
             #Meta
             if self.config.has_option('META', 'ENABLE') and self.config.getboolean('META', 'ENABLE'):
+                self.logger.info("Sending Meta (Facebook/Instagram) notification")
                 from meta_toolkit import post_to_meta_both
                 post_to_meta_both(self.config.get("META", "FB_PAGE_ID"), self.config.get("META", "IG_USER_ID"), self.map_file_name, message, self.config.get("META", "ACCESS_TOKEN"))
+            else:
+                self.logger.debug("Meta not enabled or not configured")
             os.remove(self.map_file_name)
             if self.landed:
                 if nearest_airport_dict is not None and self.nearest_from_airport is not None and nearest_airport_dict['icao'] != self.nearest_from_airport:
@@ -532,6 +572,11 @@ class Plane:
                     photo = open(self.map_file_name, "rb")
                     from defTelegram import sendTeleg
                     sendTeleg(photo, message, self.config)
+                #Signal
+                if self.config.has_section('SIGNAL') and self.config.getboolean('SIGNAL', 'ENABLE'):
+                    message = f"{self.dis_title} {route_to}".strip()
+                    from defSignal import sendSignal
+                    sendSignal(self.map_file_name, message, self.config)
                 #Discord
                 if self.config.getboolean('DISCORD', 'ENABLE'):
                     dis_message = f"{self.dis_title} {route_to}".strip()
@@ -804,6 +849,10 @@ class Plane:
                             photo = open(self.map_file_name, "rb")
                             from defTelegram import sendTeleg
                             sendTeleg(photo, message, self.config)
+                        #Signal
+                        if self.config.has_section('SIGNAL') and self.config.getboolean('SIGNAL', 'ENABLE'):
+                            from defSignal import sendSignal
+                            sendSignal(self.map_file_name, message, self.config)
                         if self.config.getboolean('DISCORD', 'ENABLE'):
                             role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') and self.config.get('DISCORD', 'ROLE_ID').strip() != "" else None
                             if tfr_map_filename is not None:

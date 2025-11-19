@@ -56,3 +56,11 @@ ENABLE = FALSE
 ACCESS_TOKEN = mastodonaccesstoken
 APP_URL = mastodonappurl
 
+[SIGNAL]
+ENABLE = FALSE
+TITLE = Title Of Signal message
+#Optional per-plane overrides (otherwise uses mainconf.ini settings)
+; API_URL = http://localhost:8080
+; SENDER = +1234567890
+; RECIPIENTS = +1234567890,+0987654321
+

@@ -4,6 +4,23 @@ from colorama import Fore, Back, Style
 import platform
 import traceback
 import os
+import logging
+import sys
+from datetime import datetime
+import pytz
+import signal
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('plane-notify.log'),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+logger = logging.getLogger('plane-notify')
+
 if platform.system() == "Windows":
     from colorama import init
     init(convert=True)
@@ -14,13 +31,9 @@ elif platform.system() == "Linux":
     os.makedirs("/tmp/plane-notify")
     os.makedirs("/tmp/plane-notify/chrome")
 from planeClass import Plane
-from datetime import datetime
-import pytz
-import signal
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 os.chdir(dname)
-import sys
 sys.path.extend([os.getcwd()])
 #Dependency Handling
 if not os.path.isdir("./dependencies/"):
@@ -53,13 +66,28 @@ if os.path.isfile("./dependencies/" + required_files[4][0]) and not os.path.isfi
         mictronics_db.extractall("./dependencies/")
 
 main_config = configparser.ConfigParser()
-print(os.getcwd())
+logger.info(f"Working directory: {os.getcwd()}")
 main_config.read('./configs/mainconf.ini')
 source = main_config.get('DATA', 'SOURCE')
+logger.info(f"Data source configured: {source}")
+
+# Log enabled notification platforms
+enabled_platforms = []
 if main_config.getboolean('DISCORD', 'ENABLE'):
-        from defDiscord import sendDis
-        role_id = main_config.get('DISCORD', 'ROLE_ID') if main_config.has_option('DISCORD', 'ROLE_ID') and main_config.get('DISCORD', 'ROLE_ID').strip() != "" else None
-        sendDis("Started", main_config, role_id = main_config.get('DISCORD', 'ROLE_ID'))
+    enabled_platforms.append('Discord')
+    from defDiscord import sendDis
+    role_id = main_config.get('DISCORD', 'ROLE_ID') if main_config.has_option('DISCORD', 'ROLE_ID') and main_config.get('DISCORD', 'ROLE_ID').strip() != "" else None
+    sendDis("Started", main_config, role_id = main_config.get('DISCORD', 'ROLE_ID'))
+if main_config.has_section('TELEGRAM') and main_config.getboolean('TELEGRAM', 'ENABLE'):
+    enabled_platforms.append('Telegram')
+if main_config.has_section('SIGNAL') and main_config.getboolean('SIGNAL', 'ENABLE'):
+    enabled_platforms.append('Signal')
+if main_config.has_section('MASTODON') and main_config.getboolean('MASTODON', 'ENABLE'):
+    enabled_platforms.append('Mastodon')
+if main_config.has_section('TWITTER') and main_config.getboolean('TWITTER', 'ENABLE'):
+    enabled_platforms.append('Twitter')
+
+logger.info(f"Enabled notification platforms: {', '.join(enabled_platforms) if enabled_platforms else 'None'}")
 def service_exit(signum, frame):
     if main_config.getboolean('DISCORD', 'ENABLE'):
         from defDiscord import sendDis
@@ -77,24 +105,31 @@ try:
     import sys
     #Setup plane objects from plane configs
     planes = {}
-    print("Found the following configs")
+    logger.info("Scanning for plane configuration files...")
     for dirpath, dirname, filename in os.walk("./configs"):
             for filename in [f for f in filename if f.endswith(".ini") and f != "mainconf.ini"]:
                 if  "disabled" not in dirpath:
-                    print(os.path.join(dirpath, filename))
+                    config_path = os.path.join(dirpath, filename)
+                    logger.info(f"Loading config: {config_path}")
                     plane_config = configparser.ConfigParser()
-                    plane_config.read((os.path.join(dirpath, filename)))
+                    plane_config.read(config_path)
                     #Creates a Key labeled the ICAO of the plane, with the value being a plane object
-                    planes[plane_config.get('DATA', 'ICAO').upper()] = Plane(plane_config.get('DATA', 'ICAO'), os.path.join(dirpath, filename), plane_config)
+                    icao = plane_config.get('DATA', 'ICAO').upper()
+                    planes[icao] = Plane(plane_config.get('DATA', 'ICAO'), config_path, plane_config)
+                    logger.info(f"Configured aircraft {icao} for tracking")
 
     running_Count = 0
     failed_count = 0
     try:
         tz = pytz.timezone(main_config.get('DATA', 'TZ'))
+        logger.info(f"Timezone set to: {main_config.get('DATA', 'TZ')}")
     except pytz.exceptions.UnknownTimeZoneError:
         tz = pytz.UTC
+        logger.warning(f"Invalid timezone, defaulting to UTC")
     last_ra_count = None
-    print(f"{len(planes)} Planes configured")
+    logger.info(f"Successfully configured {len(planes)} aircraft for tracking")
+    logger.info("=" * 80)
+    logger.info("Starting main tracking loop...")
     while True:
         datetime_tz = datetime.now(tz)
         if datetime_tz.hour == 0 and datetime_tz.minute == 0:

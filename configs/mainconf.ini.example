@@ -62,3 +62,13 @@ CONSUMER_SECRET = cs
 #Map to create from Google Static Maps or screenshot global tar1090 from globe.theairtraffic.com
 #Enter GOOGLESTATICMAP or ADSBX
 OPTION = ADSBX
+
+[SIGNAL]
+#Signal messenger notifications via signal-cli-rest-api
+ENABLE = FALSE
+#API URL for your Signal API (e.g., http://localhost:8080)
+API_URL = http://localhost:8080
+#Sender phone number with country code (e.g., +1234567890)
+SENDER = +1234567890
+#Recipient phone numbers, comma-separated (e.g., +1234567890,+0987654321)
+RECIPIENTS = +1234567890

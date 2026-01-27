@@ -130,12 +130,17 @@
       "category": "Small Private Jet"
   },
   "FA7X": {
-      "name": "Dassult Falcon 7X",
+      "name": "Dassault Falcon 7X",
       "galph": 380,
       "category": "Small Private Jet"
   },
+    "FA8X": {
+      "name": "Dassault Falcon 8X",
+      "galph": 347,
+      "category": "Small Private Jet"
+  },
   "F900": {
-      "name": "Dassult Falcon 900",
+      "name": "Dassault Falcon 900",
       "galph": 347,
       "category": "Small Private Jet"
   },

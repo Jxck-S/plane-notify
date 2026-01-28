@@ -1,15 +1,16 @@
-def sendMastodon(photo, message, config):
+def sendMastodon(message, config, photo=None, reply_to=None):
     from mastodon import Mastodon
     sent = False
     retry_c = 0
     while sent == False:
         try:
-            bot  = Mastodon(
+            bot = Mastodon(
                 access_token=config.get('MASTODON','ACCESS_TOKEN'),
                 api_base_url=config.get('MASTODON','APP_URL')
             )
-            mediaid = bot.media_post(photo, mime_type="image/jpeg")
-            sent =  bot.status_post(message,None,mediaid,False, "Public")
+            if photo:
+                media_id = bot.media_post(photo, mime_type="image/jpeg")
+            sent = bot.status_post(message, reply_to, (media_id if photo else None), False, "Public")
         except Exception as err:
             print('err.args:')
             print(err.args)

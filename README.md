@@ -1,3 +1,14 @@
+> [!IMPORTANT]
+> **archive: May 2023 - January 2026**
+> This represents a milestone archive of the last few years of changes, before a major restructure and cleanup. Unfortunately, the repository was not maintained with my modifications since May 2023 until January 2026. This archive does not contain the database setup, the FSM code, or the dependency logic for the database.
+>
+> **Major additions and architectural shifts since May 2023:**
+> - Implementation of PostgreSQL database for persistent dependency tracking and logging.
+> - Development of the Flight Static Maps engine with custom info-box rendering.
+> - Expanded social media suite supporting Threads, Nostr, Bluesky, and Blossom.
+> - Introduction of configuration automation and dynamic live-reloading.
+> - Transition to dynamic readsb JSON feeds as the primary data source, instead of hardcoded ADSBX.
+
 # plane-notify
 
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/c4e1d839eec3468cadfe351d64dc1ac4)](https://app.codacy.com/manual/Jxck-S/plane-notify?utm_source=github.com&utm_medium=referral&utm_content=Jxck-S/plane-notify&utm_campaign=Badge_Grade_Settings)

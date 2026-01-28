@@ -1,24 +1,27 @@
-def sendTeleg(photo, message, config):
+def sendTeleg(message, config, photo=None):
     try:
         from telegram import __version_info__
     except ImportError:
         __version_info__ = (0, 0, 0, 0, 0)
     if __version_info__ < (20, 0, 0, "alpha", 5):
-        sent = sendTelegOld(photo, message, config)
+        sent = telegram_send_old(message, config, photo)
         return sent
     else:
         import asyncio
-        sent = asyncio.run(t_send_photo(photo,message,config))
+        sent = asyncio.run(telegram_send(message, config, photo))
         return sent
 
-def sendTelegOld(photo, message, config):
+def telegram_send_old(message, config, photo=None):
     import telegram
     sent = False
     retry_c = 0
     while sent == False:
         try:
             bot = telegram.Bot(token=config.get('TELEGRAM', 'BOT_TOKEN'), request=telegram.utils.request.Request(connect_timeout=20, read_timeout=20))
-            sent = bot.send_photo(chat_id=config.get('TELEGRAM', 'ROOM_ID'), photo=photo, caption=message, parse_mode=telegram.ParseMode.MARKDOWN, timeout=20)
+            if photo:
+                sent = bot.send_photo(chat_id=config.get('TELEGRAM', 'ROOM_ID'), photo=photo, caption=message, parse_mode=telegram.ParseMode.MARKDOWN, timeout=20, )
+            else:
+                sent = bot.send_message(chat_id=config.get('TELEGRAM', 'ROOM_ID'), text=message, parse_mode=telegram.ParseMode.MARKDOWN, timeout=20)
         except Exception as err:
             print('err.args:')
             print(err.args)
@@ -38,10 +41,10 @@ def sendTelegOld(photo, message, config):
                 print('Invalid Telegram Chat ID, message not sent.')
                 break
             elif str(err)[:35] == '[Errno 2] No such file or directory':
-                print('Telegram module couldn\'t find an image to sent.')
+                print('Telegram module couldn\'t find an image to send.')
                 break
             elif str(err) == 'Media_caption_too_long':
-                print('Telegram image caption length exceeds 1024 characters. Message not sent.')
+                print('Telegram image caption lenght exceeds 1024 characters. Message not send.')
                 break
             else:
                 print('[X] Unknown Telegram error. Message not sent.')
@@ -50,14 +53,17 @@ def sendTelegOld(photo, message, config):
             print("Telegram message successfully sent.")
     return sent
 
-async def t_send_photo(photo,message,config):
+async def telegram_send(message, config, photo=None):
     import telegram
     sent = False
     retry_c = 0
     while sent == False:
         try:
             bot = telegram.Bot(token=config.get('TELEGRAM', 'BOT_TOKEN'))
-            sent = await bot.send_photo(chat_id=config.get('TELEGRAM', 'ROOM_ID'), photo=photo, caption=message)
+            if photo:
+                sent = await bot.send_photo(chat_id=config.get('TELEGRAM', 'ROOM_ID'), photo=photo, caption=message)
+            else:
+                sent = await bot.send_message(chat_id=config.get('TELEGRAM', 'ROOM_ID'), text=message)
         except Exception as err:
             print('err.args:')
             print(err.args)

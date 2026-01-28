@@ -8,8 +8,6 @@ import urllib3
 import socket
 main_config = configparser.ConfigParser()
 main_config.read('./configs/mainconf.ini')
-api_version = main_config.get('ADSBX', 'API_VERSION')
-
 def pull(url, headers):
     try:
         response = requests.get(url, headers = headers, timeout=30)
@@ -42,14 +40,12 @@ def pull_adsbx(planes):
         elif api_version == 2:
             url = "https://adsbexchange.com/api/aircraft/v2/all"
     else:
-        if main_config.has_option('ADSBX', 'PROXY_HOST'):
-            if api_version ==  1:
-                url = main_config.get('ADSBX', 'PROXY_HOST') + "/api/aircraft/json/all"
-            if api_version ==  2:
-                url = main_config.get('ADSBX', 'PROXY_HOST') + "/api/aircraft/v2/all"
+        if main_config.has_option('ADSBX', 'PROXY_ENDPOINT'):
+            url = main_config.get('ADSBX', 'PROXY_ENDPOINT')
         else:
-            raise ValueError("Proxy enabled but no host")
+            raise ValueError("Proxy enabled but no endpoint set")
     headers = {
+        "User-Agent": "plane-notify",
         'api-auth': main_config.get('ADSBX', 'API_KEY'),
         'Accept-Encoding': 'gzip'
     }

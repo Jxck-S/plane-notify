@@ -1,9 +1,9 @@
-def sendDis(message, config, role_id = None, *file_names):
+def sendDis(message, config, role_id = None, *file_names, username=None):
     import requests
     from discord_webhook import DiscordWebhook
     if role_id != None:
         message += f" <@&{role_id}>"
-    webhook = DiscordWebhook(url=config.get('DISCORD', 'URL'), content=message[0:1999], username=config.get('DISCORD', 'USERNAME'))
+    webhook = DiscordWebhook(url=config.get('DISCORD', 'URL'), content=message[0:1999], username=username)
     
     if file_names != []:
         for file_name in file_names:

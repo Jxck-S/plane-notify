@@ -1,45 +1,32 @@
-import csv
-import math
-def add_airport_region(airport_dict):
-	#Get full region/state name from iso region name
-	with open('./dependencies/regions.csv', 'r', encoding='utf-8') as regions_csv:
-		regions_csv = csv.DictReader(filter(lambda row: row[0]!='#', regions_csv))
-		for region in regions_csv:
-			if region['code'] == airport_dict['iso_region']:
-				airport_dict['region'] = region['name']
-	return airport_dict
-def getClosestAirport(latitude, longitude, allowed_types):
-	from geopy.distance import geodesic
-	plane = (latitude, longitude)
-	with open('./dependencies/airports.csv', 'r', encoding='utf-8') as airport_csv:
-		airport_csv_reader = csv.DictReader(filter(lambda row: row[0]!='#', airport_csv))
-		for airport in airport_csv_reader:
-			if airport['type'] in allowed_types:
-				airport_coord = float(airport['latitude_deg']), float(airport['longitude_deg'])
-				airport_dist = float((geodesic(plane, airport_coord).mi))
-				if "closest_airport_dict" not in locals():
-					closest_airport_dict = airport
-					closest_airport_dist = airport_dist
-				elif airport_dist < closest_airport_dist:
-					closest_airport_dict = airport
-					closest_airport_dist = airport_dist
-		closest_airport_dict['distance_mi'] = closest_airport_dist
-		#Convert indent key to icao key as its labeled icao in other places not ident
-		closest_airport_dict['icao'] = closest_airport_dict.pop('gps_code')
-		closest_airport_dict = add_airport_region(closest_airport_dict)
-	return closest_airport_dict
-def get_airport_by_icao(icao):
-	with open('./dependencies/airports.csv', 'r', encoding='utf-8') as airport_csv:
-		matching_airport = None
-		airport_csv_reader = csv.DictReader(filter(lambda row: row[0]!='#', airport_csv))
-		for airport in airport_csv_reader:
-			if airport['gps_code'] == icao:
-				matching_airport = airport
-				#Convert indent key to icao key as its labeled icao in other places not ident
-				matching_airport['icao'] = matching_airport.pop('gps_code')
-				break
-		if matching_airport:
-			matching_airport = add_airport_region(matching_airport)
-			return matching_airport
-		else:
-			return None
+def getClosestAirport(cursor, latitude, longitude, allowed_types):
+    allowed_types = allowed_types.strip("[]").split(', ')
+    allowed_types_ses = ("%s, " * len(allowed_types))[:-2]
+    sql = f"""SELECT oaa.ident, oaa.type, oaa.name, oaa.lat, oaa.lon, oaa.elev as elevation_ft, oaa.continent, oaa.iso_country, oaa.iso_region, oaa.municipality, oaa.icao_code, oaa.iata_code, oaa.local_code,
+	oar.name as region,
+    oac.name as country,
+	ST_Distance(ST_MakePoint(%s, %s)::geography, ST_MakePoint(oaa.lon,oaa.lat)) / 1609 as distance_mi
+	FROM deps.our_airports_airports oaa, deps.our_airports_regions oar, deps.our_airports_countries oac 
+	WHERE oaa.geog <> ST_MakePoint(%s, %s) AND type in ({allowed_types_ses}) AND oaa.iso_region = oar.code AND oaa.iso_country = oac.code
+	ORDER BY distance_mi
+	LIMIT 1;
+	"""
+    vals = [longitude, latitude, longitude, latitude]
+    vals.extend(allowed_types)
+    cursor.execute(sql, vals)
+    closest_airport_dict = dict(cursor.fetchone())
+    return closest_airport_dict
+
+def get_airport_by_icao(cursor, icao):
+    sql = """SELECT oaa.ident, oaa.type, oaa.name, oaa.lat, oaa.lon, oaa.elev, oaa.continent, oaa.iso_country, oaa.iso_region, oaa.municipality, oaa.icao_code, oaa.iata_code, oaa.local_code,
+	oar.name as region,
+    oac.name as country
+	FROM deps.our_airports_airports oaa, deps.our_airports_regions oar, deps.our_airports_countries oac 
+	WHERE oaa.gps_code = %s AND oaa.iso_region = oar.code AND oaa.iso_country = oac.code
+	LIMIT 1;
+	"""
+    cursor.execute(sql, [icao])
+    if cursor.rowcount > 0:
+        airport_dict = dict(cursor.fetchone())
+    else:
+        airport_dict = None
+    return airport_dict

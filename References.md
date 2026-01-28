@@ -36,7 +36,7 @@
 -   <https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks>
 -   <https://pypi.org/project/discord-webhook/>
 
-## Selenium - ChromeDriver, Screenshot ADSBX
+## Selenium - ChromeDriver, Screenshot tar1090
 
 -   <https://pypi.org/project/selenium/>
 -   <https://zwbetz.com/download-chromedriver-binary-and-add-to-your-path-for-automated-functional-testing/>

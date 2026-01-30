@@ -12,11 +12,11 @@ Notify if configured planes have taken off or landed using Python with ADS-B dat
 
 ### Discord Output Example
 
-![Discord Output Example](./ExImages/DiscordEX2.png?raw=true)
+![Discord Output Example](docs/images/DiscordEX2.png?raw=true)
 
-#### More examples are in  the ExImages folder
+#### More examples are in the images folder
 
-[ExImages](./ExImages)
+[Images](docs/images/)
 
 ### Background
 
@@ -26,7 +26,7 @@ I made this program so I could track Elon Musk's Jet and share his whereabouts w
 
 I'm open to any help or suggestions, I realize there are many better ways to improve this program and better ways to get this program to work properly, I'm only a noob. I'll accept pull requests. If you'd like to discuss join <https://grndcntrl.net/discord>
 
-### [Algorithm](PseudoCode.md)
+### [Algorithm](docs/algorithm.md)
 
 ## Setup / Install
 - Install using the following steps or use Docker, scroll down to the Docker section.
@@ -44,26 +44,6 @@ apt install python3-pip
 ```bash
 pip install pipenv
 pipenv install
-```
-
-### Install Selenium / ChromeDriver or setup Google Static Maps
-
-Selenium/ChromeDriver is used to take a screenshot of the plane on globe.theairtraffic.com. Or use Google Static Maps, which can cost money if overused(No tutorial use <https://developers.google.com/maps/documentation/maps-static/get-api-key> to get to a key).
-
-#### Chrome 
-- This is assuming linux/debian
-```bash
-curl -sSL https://dl-ssl.google.com/linux/linux_signing_key.pub  | apt-key add 
-echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google.list
-apt update
-apt install google-chrome-stable
-```
-These output methods once installed can be configured in the planes config you create, using the example plane1.ini
-
-### Install Screen to run in the background
-
-```bash
-apt install screen
 ```
 
 ### Download / Clone
@@ -147,4 +127,4 @@ Getting a group ID
 -   Add proper logging and service to run the program and remove excessive printing.
 -   Better single config YAML, or DB maybe
 
-### [More References/Documentation](References.md)
+### [More References/Documentation](docs/References.md)

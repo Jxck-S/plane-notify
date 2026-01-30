@@ -108,6 +108,8 @@ def pull_date_ras(date):
                      or None if the request failed.
     """
     home_url = main_config.get('READSB', 'RA_HOST')
+    if not home_url:
+        return None
 
     url = f"{home_url}/globe_history/{date}/acas/acas.json"
     headers = {

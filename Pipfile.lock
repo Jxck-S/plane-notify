@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "df8f6444dbd1c7ae66ca67652af58c9cd9d16dd4f31c301adac33f8e68eca104"
+            "sha256": "ddf3c19578c6d403bf2d6e9fe5f5fcf92de471324cef6985a47ed05127d787c5"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -897,11 +897,8 @@
             "version": "==2.9.11"
         },
         "py-staticmaps": {
-            "hashes": [
-                "sha256:5aba5ad59f30a63f860e76ed99407a6efb24eaad5c8997aa8617363989f17389"
-            ],
-            "index": "pypi",
-            "version": "==0.4.0"
+            "git": "https://github.com/Jxck-S/py-staticmaps",
+            "ref": "6a47bc2ed6fe5737278466e25c7e8a20b1354b33"
         },
         "pycairo": {
             "hashes": [
@@ -1314,6 +1311,12 @@
             "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2'",
             "version": "==1.17.0"
         },
+        "slugify": {
+            "hashes": [
+                "sha256:c5703cc11c1a6947536f3ce8bb306766b8bb5a84a53717f5a703ce0f18235e4c"
+            ],
+            "version": "==0.0.1"
+        },
         "svgwrite": {
             "hashes": [
                 "sha256:a8fbdfd4443302a6619a7f76bc937fc683daf2628d9b737c891ec08b8ce524c3",
@@ -1378,6 +1381,14 @@
             ],
             "markers": "python_version >= '3.9'",
             "version": "==0.21.1"
+        },
+        "types-requests": {
+            "hashes": [
+                "sha256:018a11ac158f801bfa84857ddec1650750e393df8a004a8a9ae2a9bec6fcb24f",
+                "sha256:b703fe72f8ce5b31ef031264fe9395cac8f46a04661a79f7ed31a80fb308730d"
+            ],
+            "markers": "python_version >= '3.9'",
+            "version": "==2.32.4.20260107"
         },
         "typing-extensions": {
             "hashes": [

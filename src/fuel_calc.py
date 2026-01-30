@@ -1,14 +1,14 @@
 import json
 import requests
-from db import tracking_cursor
+import db
 
 def get_avg_fuel_price():
-    if not tracking_cursor:
+    if not db.tracking_cursor:
         return None
     sql = """SELECT cost::numeric::float FROM "plane-notify".fuel"""
-    tracking_cursor.execute(sql)
-    if tracking_cursor.rowcount > 0:
-        cost = tracking_cursor.fetchone()['cost']
+    db.tracking_cursor.execute(sql)
+    if db.tracking_cursor.rowcount > 0:
+        cost = db.tracking_cursor.fetchone()['cost']
         print(f"AVG fuel cost per gallong is ${cost}")
         return cost
     else:
@@ -17,13 +17,13 @@ def get_avg_fuel_price():
 
 def fuel_calculation(aircraft_icao_type, minutes):
     """Calculates fuel usage, price, c02 output of a flight depending on aircraft type and flight length"""
-    if not tracking_cursor:
+    if not db.tracking_cursor:
         return None
     sql = """SELECT galph FROM "plane-notify".icao_type_info WHERE icao_code = %s """
-    tracking_cursor.execute(sql, (aircraft_icao_type,))
-    if tracking_cursor.rowcount > 0:
+    db.tracking_cursor.execute(sql, (aircraft_icao_type,))
+    if db.tracking_cursor.rowcount > 0:
         fuel_flight_info = {}
-        galph = tracking_cursor.fetchone()['galph']
+        galph = db.tracking_cursor.fetchone()['galph']
         avg_fuel_price_per_gallon = get_avg_fuel_price()
         fuel_used_gal = galph * (minutes/60)
         if avg_fuel_price_per_gallon:

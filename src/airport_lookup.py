@@ -1,7 +1,7 @@
-from db import tracking_cursor
+import db
 
 def getClosestAirport(latitude, longitude, allowed_types):
-    if not tracking_cursor:
+    if not db.tracking_cursor:
         return None
     allowed_types = allowed_types.strip("[]").split(', ')
     allowed_types_ses = ("%s, " * len(allowed_types))[:-2]
@@ -16,12 +16,12 @@ def getClosestAirport(latitude, longitude, allowed_types):
 	"""
     vals = [longitude, latitude, longitude, latitude]
     vals.extend(allowed_types)
-    tracking_cursor.execute(sql, vals)
-    closest_airport_dict = dict(tracking_cursor.fetchone())
+    db.tracking_cursor.execute(sql, vals)
+    closest_airport_dict = dict(db.tracking_cursor.fetchone())
     return closest_airport_dict
 
 def get_airport_by_icao(icao):
-    if not tracking_cursor:
+    if not db.tracking_cursor:
         return None
     sql = """SELECT oaa.ident, oaa.type, oaa.name, oaa.lat, oaa.lon, oaa.elev, oaa.continent, oaa.iso_country, oaa.iso_region, oaa.municipality, oaa.icao_code, oaa.iata_code, oaa.local_code,
 	oar.name as region,
@@ -30,9 +30,9 @@ def get_airport_by_icao(icao):
 	WHERE oaa.gps_code = %s AND oaa.iso_region = oar.code AND oaa.iso_country = oac.code
 	LIMIT 1;
 	"""
-    tracking_cursor.execute(sql, [icao])
-    if tracking_cursor.rowcount > 0:
-        airport_dict = dict(tracking_cursor.fetchone())
+    db.tracking_cursor.execute(sql, [icao])
+    if db.tracking_cursor.rowcount > 0:
+        airport_dict = dict(db.tracking_cursor.fetchone())
     else:
         airport_dict = None
     return airport_dict

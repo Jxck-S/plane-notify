@@ -10,7 +10,7 @@ def init_db(config):
     global tracking_db, tracking_cursor, tracking_config
     tracking_config = config
     if config.has_section("DB"):
-        flight_logging_status = "Enabled" if config.get("DB", "FLIGHT_LOGGING") else "Disabled"
+        flight_logging_status = "Enabled" if config.getboolean("DB", "FLIGHT_LOGGING") else "Disabled"
         tracking_db = psycopg2.connect(
             host=config.get("DB", "HOST"),
             port=config.getint("DB", "PORT"),

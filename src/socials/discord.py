@@ -1,4 +1,4 @@
-def sendDis(message, config, role_id = None, *file_names, username=None):
+def post(message, config, role_id = None, *file_names, username=None):
     import requests
     from discord_webhook import DiscordWebhook
     if role_id != None:

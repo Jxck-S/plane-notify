@@ -1,4 +1,4 @@
-def sendMastodon(message, config, photo=None, reply_to=None):
+def post(message, config, photo=None, reply_to=None):
     from mastodon import Mastodon
     sent = False
     retry_c = 0

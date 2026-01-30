@@ -76,7 +76,7 @@ def upload_to_blossom(file_path, private_key):
         logging.error(f"Failed to upload to blossom servers: {str(e)}")
         raise Exception("Failed to upload to any blossom server")
 
-def nostr_post(note, private_key, image_url=None, reply_to=None):
+def post(message, private_key, image_url=None, reply_to=None):
     relay_manager = RelayManager(timeout=6)
     # Load relay list from CSV
     relays_list = get_nostr_relays()
@@ -88,8 +88,8 @@ def nostr_post(note, private_key, image_url=None, reply_to=None):
     private_key = PrivateKey.from_nsec(private_key)
 
     if image_url:
-        note = f"{note} {image_url}"
-    event = Event(note)
+        message = f"{message} {image_url}"
+    event = Event(message)
     if reply_to:
         event.add_event_ref(reply_to.id)
         event.add_pubkey_ref(reply_to.pubkey)
@@ -100,16 +100,16 @@ def nostr_post(note, private_key, image_url=None, reply_to=None):
     relay_manager.close_all_relay_connections()
     return event
 
-def nostr_upload_post(note, file_name, private_key):
+def post_with_media(message, file_name, private_key):
     """Upload file using blossom and post to nostr"""
     try:
         url = upload_to_blossom(file_name, private_key)
-        event = nostr_post(note, private_key, url)
+        event = post(message, private_key, url)
         return event
     except Exception as e:
         logging.error(f"Failed to upload and post: {str(e)}")
         # Fallback to posting without image
-        event = nostr_post(note, private_key)
+        event = post(message, private_key)
         return event 
 
 

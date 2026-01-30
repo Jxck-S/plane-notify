@@ -65,7 +65,7 @@ def post_to_instagram(ig_user_id, access_token, image_url, caption):
     else:
         print('Could not post to Instagram: ', resp.json())
     return result
-def post_to_meta_both(fb_page_id, ig_user_id, file_path, message, access_token):
+def post_both(fb_page_id, ig_user_id, file_path, message, access_token):
     """Posts to Facebook and Instagram"""
     fb_post_info = post_fb(fb_page_id, file_path, message, access_token)
     fb_image_link = get_fb_post_image_link(fb_post_info['id'], access_token)

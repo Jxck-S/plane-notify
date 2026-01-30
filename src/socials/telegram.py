@@ -1,4 +1,4 @@
-def sendTeleg(message, config, photo=None):
+def post(message, config, photo=None):
     try:
         from telegram import __version_info__
     except ImportError:

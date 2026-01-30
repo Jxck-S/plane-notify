@@ -124,7 +124,9 @@ class Plane:
         self.print_header()
         self.pia_active = pia
         try:
-            self.__dict__.update({'active_icao' : ac_dict['hex'].upper(), 'latitude' : float(ac_dict['lat']), 'longitude' : float(ac_dict['lon'])})
+            self.active_icao = ac_dict['hex'].upper()
+            self.latitude = float(ac_dict['lat'])
+            self.longitude = float(ac_dict['lon'])
             if "r" in ac_dict:
                 self.reg = ac_dict['r']
             self.speed = ac_dict.get("gs")

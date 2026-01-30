@@ -46,25 +46,7 @@ sys.path.extend([project_root, dname])
 if not os.path.isdir("./dependencies/"):
     os.mkdir("./dependencies/")
 
-required_files = [
-("Roboto-Regular.ttf", 'https://github.com/googlefonts/roboto/blob/main/src/hinted/Roboto-Regular.ttf?raw=true')
-]
-for file in required_files:
-	file_name = file[0]
-	url = file[1]
-	if not os.path.isfile("./dependencies/" + file_name):
-		print(file_name,  "does not exist downloading now")
-		try:
-			import requests
-			file_content = requests.get(url)
 
-			open(("./dependencies/" + file_name), 'wb').write(file_content.content)
-		except Exception as e:
-			raise e("Error getting", file_name, "from", url)
-		else:
-			print("Successfully got", file_name)
-	else:
-		print("Already have", file_name, "continuing")
 
 main_config = ConfigParserExt()
 print(os.getcwd())

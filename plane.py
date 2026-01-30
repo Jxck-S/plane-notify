@@ -149,25 +149,7 @@ class Plane:
             self.data_loss_mins = main_config.getint('DATA', 'DATA_LOSS_MINS')
 
 
-    def run_adsbx_v1(self, ac_dict, pia):
-        #Parse ADBSX V1 Vector
-        self.print_header("BEGIN")
-        self.pia_active = pia
-        try:
-            #postime is divided by 1000 to get seconds from milliseconds, from timestamp expects secs.
-            self.__dict__.update({'icao' : ac_dict['icao'].upper(), 'callsign' : ac_dict['call'], 'reg' : ac_dict['reg'], 'latitude' : float(ac_dict['lat']), 'longitude' : float(ac_dict['lon']), 'alt_ft' : int(ac_dict['alt']), 'on_ground' : bool(int(ac_dict["gnd"])), 'squawk' : ac_dict['sqk'], 'track' : float(ac_dict["trak"])})
-            if self.on_ground:
-                self.alt_ft = 0
-            self.last_pos_datetime = datetime.fromtimestamp(int(ac_dict['postime'])/1000)
-        except ValueError as e:
 
-            print("Got data but some data is invalid!")
-            print(e)
-            print (Fore.YELLOW +"ADSBX Sourced Data: ", ac_dict, Style.RESET_ALL)
-            self.print_header("END")
-        else:
-            self.feeding = True
-            self.run_check()
 
     def run_readsb(self, ac_dict, pia):
         print(ac_dict)

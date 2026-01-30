@@ -1,9 +1,5 @@
 # Reference Links
 
-## ADSB Exchange
-
--   <https://www.adsbexchange.com/data/>
--   <https://www.adsbexchange.com/datafields/>
 
 
 ## GeoPy - Location Name Lookup

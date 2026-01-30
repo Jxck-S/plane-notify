@@ -1,5 +1,5 @@
 [DATA]
-# Source to pull data from: READSB or RpdADSBX (RapidAPI ADSBX)
+# Source to pull data from: READSB
 # Default: READSB
 SOURCE = READSB
 # Default amount of time (mins) after data loss to trigger a landing when under 10k ft
@@ -18,10 +18,6 @@ ENDPOINT = http://127.0.0.1:8080/data/aircraft.json
 RA_HOST = https://globe.theairtraffic.com
 
 
-[RpdADSBX]
-# RapidAPI ADS-B Exchange Source
-API_KEY = 
-API_VERSION = 2
 
 [SLEEP]
 # Define the delay interval in seconds between each data request.

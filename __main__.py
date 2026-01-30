@@ -20,8 +20,8 @@ from heartbeat_server import run_heartbeat_server
 from socials.discord import sendDis
 import ast
 from readsb import pull_date_ras as pull_date_ras_readsb, pull_readsb
-from defADSBX import pull_date_ras as pull_date_ras_adsbx
-from defRpdADSBX import pull_rpdadsbx
+
+
 
 if platform.system() == "Windows":
     init(convert=True)
@@ -189,52 +189,7 @@ try:
                 else:
                     for plane in planes.values():
                         plane.run_empty()
-        elif source == "RpdADSBX":
-            #ACAS data
-            today = datetime.utcnow()
-            date = today.strftime("%Y/%m/%d")
-            ras = pull_date_ras_adsbx(date)
-            sorted_ras = {}
-            if ras is not None:
-                #Testing RAs
-                #if last_ra_count is not None:
-                #    with open('./testing/acastest.json') as f:
-                #        data = f.readlines()
-                #    ras += data
-                ra_count = len(ras)
-                if last_ra_count is not None and ra_count != last_ra_count:
-                    print(abs(ra_count - last_ra_count), "new Resolution Advisories")
-                    for ra_num, ra in enumerate(ras[last_ra_count:]):
-                        ra = ast.literal_eval(ra)
-                        if ra['hex'].lower() in planes:
-                            if ra['hex'].lower() not in sorted_ras:
-                                sorted_ras[ra['hex'].lower()] = [ra]
-                            else:
-                                sorted_ras[ra['hex'].lower()].append(ra)
-                else:
-                    print("No new Resolution Advisories")
-                last_ra_count = ra_count
-            # Check for RAs for each plane
-            for plane in planes:
-                if sorted_ras != {} and plane.icao in sorted_ras:
-                    print(plane.icao, "has", len(sorted_ras[plane.icao]), "RAs")
-                    plane.check_new_ras(sorted_ras[plane.icao])
-                elif sorted_ras != {} and plane.pia_icao and plane.pia_icao in sorted_ras:
-                    print(plane.pia_icao, "has", len(sorted_ras[plane.pia_icao]), "RAs")
-                    plane.check_new_ras(sorted_ras[plane.pia_icao])
-                plane.expire_ra_types()
-            #from defRpdADSBX import pull_rpdadsbx
-            # Process each plane once
-            for plane in planes:
-                plane_info = pull_rpdadsbx(plane.icao)
-                if plane_info:
-                    if plane_info['ac']:
-                        plane.run_readsb(plane_info['ac'][0], is_pia=False)
-                    else:
-                        plane.run_empty()
-                else:
-                    print(f"No data for icao {plane.icao}. Skipping...")
-                    plane.run_empty()
+
 
         elapsed_calc_time = time.time() - start_time
         datetime_tz = datetime.now(tz)

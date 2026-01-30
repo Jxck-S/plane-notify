@@ -7,7 +7,8 @@ import json
 import re
 import praw
 import traceback
-import psycopg2, psycopg2.extras
+import praw
+import traceback
 from requests.exceptions import HTTPError, RequestException
 import os
 from flight_static_maps.map import generate_map
@@ -55,19 +56,6 @@ if main_config.getboolean("REDDIT", "ENABLE"):
         user_agent=main_config.get("REDDIT", "USER_AGENT"),
         username=main_config.get("REDDIT", "USERNAME"),
     )
-
-
-if main_config.has_section("DB") and main_config.getboolean("DB", "ENABLE"):
-    tracking_db = psycopg2.connect(
-    host=main_config.get("DB", "HOST"),
-    port=main_config.getint("DB", "PORT"),
-    user=main_config.get("DB", "USERNAME"),
-    password= main_config.get("DB", "PASSWORD"),
-    database= main_config.get("DB", "DATABASE"),
-    options="-c application_name=plane-notify"
-    )
-    print("Connected to db")
-    tracking_cursor = tracking_db.cursor(cursor_factory = psycopg2.extras.RealDictCursor)
 class Plane:
     def __init__(self, icao, config_path, config):
         """Initializes a plane object from its config file and given icao."""
@@ -266,7 +254,7 @@ class Plane:
     def route_info(self):
         from lookup_route import lookup_route, clean_data
         def route_format(extra_route_info, type):
-            to_airport = get_airport_by_icao(tracking_cursor, self.known_to_airport)
+            to_airport = get_airport_by_icao(self.known_to_airport)
             if to_airport:
                 code = to_airport['iata_code'] if to_airport['iata_code'] != "" else to_airport['icao_code']
                 airport_text = f"{code}, {to_airport['name']}"
@@ -371,7 +359,7 @@ class Plane:
                 trigger_type = "no longer on ground"
                 type_header = "Took off from"
             elif self.last_feeding is False and self.feeding and self.landing_plausible == False:
-                nearest_airport_dict = getClosestAirport(tracking_cursor, self.latitude, self.longitude, self.config.get("AIRPORT", "TYPES"))
+                nearest_airport_dict = getClosestAirport(self.latitude, self.longitude, self.config.get("AIRPORT", "TYPES"))
                 if nearest_airport_dict['elevation_ft']:
                     alt_above_airport = (self.alt_ft - int(nearest_airport_dict['elevation_ft']))
                     print(f"AGL nearest airport: {alt_above_airport}")
@@ -398,7 +386,7 @@ class Plane:
             print("Near landing conditions, if contiuned data loss for configured time, and  if under 10k AGL landing true")
 
         elif self.landing_plausible and self.feeding is False and time_since_contact.total_seconds() >= (self.data_loss_mins * 60):
-            nearest_airport_dict = getClosestAirport(tracking_cursor, self.latitude, self.longitude, self.config.get("AIRPORT", "TYPES"))
+            nearest_airport_dict = getClosestAirport(self.latitude, self.longitude, self.config.get("AIRPORT", "TYPES"))
             if nearest_airport_dict['elevation_ft']:
                 alt_above_airport = (self.alt_ft - int(nearest_airport_dict['elevation_ft']))
                 print(f"AGL nearest airport: {alt_above_airport}")
@@ -426,9 +414,9 @@ class Plane:
             if "nearest_airport_dict" in globals():
                 pass #Airport already set
             elif trigger_type in ["now on ground", "data acquisition", "data loss"]:
-                nearest_airport_dict = getClosestAirport(tracking_cursor, self.latitude, self.longitude, self.config.get("AIRPORT", "TYPES"))
+                nearest_airport_dict = getClosestAirport(self.latitude, self.longitude, self.config.get("AIRPORT", "TYPES"))
             elif trigger_type == "no longer on ground":
-                nearest_airport_dict = getClosestAirport(tracking_cursor, self.last_latitude, self.last_longitude, self.config.get("AIRPORT", "TYPES"))
+                nearest_airport_dict = getClosestAirport(self.last_latitude, self.last_longitude, self.config.get("AIRPORT", "TYPES"))
             #Convert dictionary keys to sep variables
             country = nearest_airport_dict['country']
             state = nearest_airport_dict['region']
@@ -455,8 +443,7 @@ class Plane:
                 self.takeoff_time = datetime.utcnow()
                 if main_config.has_section("DB") and main_config.getboolean("DB", "ENABLE"):
                     confirmed_takeoff = True if trigger_type == "no longer on ground" else False
-                    self.db_flight_id = add_flight(tracking_cursor, self.reg, self.icao, self.callsign, nearest_airport_dict['icao_code'], confirmed_takeoff, self.takeoff_time)
-                    tracking_db.commit()
+                    self.db_flight_id = add_flight(self.reg, self.icao, self.callsign, nearest_airport_dict['icao_code'], confirmed_takeoff, self.takeoff_time)
                 landed_time_msg = None
                 #Proprietary Route Lookup
                 if ENABLE_ROUTE_LOOKUP:
@@ -480,12 +467,11 @@ class Plane:
                     landed_time_msg = (f"Apx. flt. time {int(minutes)} {min_syntax}.")
                 if main_config.has_section("DB") and main_config.getboolean("DB", "ENABLE"):
                     confirmed_landing = True if trigger_type == "now on ground" else False
-                    update_flight(tracking_cursor, self.db_flight_id, nearest_airport_dict['icao_code'], confirmed_landing, datetime.utcnow())
-                    tracking_db.commit()
+                    update_flight(self.db_flight_id, nearest_airport_dict['icao_code'], confirmed_landing, datetime.utcnow())
                 #Start Secondary Output Creation, Miles and Fuel
                 if nearest_airport_dict is not None and self.nearest_from_airport is not None and nearest_airport_dict['icao'] != self.nearest_from_airport:
                     landed_airport = nearest_airport_dict
-                    nearest_from_airport = get_airport_by_icao(tracking_cursor, self.nearest_from_airport)
+                    nearest_from_airport = get_airport_by_icao(self.nearest_from_airport)
                     from_coord = (nearest_from_airport['lat'], nearest_from_airport['lon'])
                     to_coord =  (landed_airport['lat'], landed_airport['lon'])
                     distance_mi = float(geodesic(from_coord, to_coord).mi)
@@ -494,7 +480,7 @@ class Plane:
                 if self.type is not None:
                     print("Running fuel info calc")
                     flight_time_min = landed_time.total_seconds() / 60
-                    fuel_info = fuel_calculation(tracking_cursor,self.type, flight_time_min)
+                    fuel_info = fuel_calculation(self.type, flight_time_min)
                     if fuel_info is not None:
                         if second_message:
                             second_message += f"\n{fuel_message(fuel_info)}"
@@ -517,7 +503,7 @@ class Plane:
                 map_img_filename = os.path.join(tempfile.gettempdir(), "plane-notify", "imgs", f"{db_id}{self.active_icao.upper()}_{image_type}_{timestamp}_map")
                 print(map_img_filename)
                 if main_config.get('MAP', 'OPTION') == "fsm":
-                    info = pn_adapter(self, tracking_cursor)
+                    info = pn_adapter(self)
                     info['nearest_airport'] = nearest_airport_dict
 
                     generate_map(map_img_filename,
@@ -686,7 +672,7 @@ class Plane:
                     timestamp = datetime.utcnow().strftime("%Y-%m-%d_%H-%M")
                     map_img_filename = f"{tempfile.gettempdir()}/plane-notify/imgs/{self.active_icao.upper()}_{image_type}_{timestamp}_map"
                     if main_config.get('MAP', 'OPTION') == "fsm":
-                        info = pn_adapter(self, tracking_cursor)
+                        info = pn_adapter(self)
                         info['nearest_airport'] = None
                         generate_map(map_img_filename,
                                     self.traces,
@@ -715,7 +701,7 @@ class Plane:
                                 image_type = "approach"
                                 timestamp = datetime.utcnow().strftime("%Y-%m-%d_%H-%M")
                                 map_img_filename = f"{tempfile.gettempdir()}/plane-notify/imgs/{self.active_icao.upper()}_{image_type}_{timestamp}_map"
-                                info = pn_adapter(self, tracking_cursor)
+                                info = pn_adapter(self)
                                 info['nearest_airport'] = None
                                 generate_map(map_img_filename,
                                             self.traces,
@@ -770,7 +756,7 @@ class Plane:
                     if distance_to_centroid <= 15:
                         print("Within 15 miles of centroid, CIRCLING")
                         #Finds Nearest Airport
-                        nearest_airport_dict = getClosestAirport(tracking_cursor, self.latitude, self.longitude, self.config.get("AIRPORT", "TYPES"))
+                        nearest_airport_dict = getClosestAirport(self.latitude, self.longitude, self.config.get("AIRPORT", "TYPES"))
                         from_bearing = calculate_from_bearing((float(nearest_airport_dict['lat']), float(nearest_airport_dict['lon'])), (self.latitude, self.longitude))
                         cardinal = calculate_cardinal(from_bearing)
                         #Finds Nearest TFR or in TFR
@@ -870,7 +856,7 @@ class Plane:
                         timestamp = datetime.utcnow().strftime("%Y-%m-%d_%H-%M")
                         map_img_filename = f"{tempfile.gettempdir()}/plane-notify/imgs/{self.active_icao.upper()}_{image_type}_{timestamp}_map"
                         if main_config.get('MAP', 'OPTION') == "fsm":
-                                    info = pn_adapter(self, tracking_cursor)
+                                    info = pn_adapter(self)
                                     info['nearest_airport'] = nearest_airport_dict
                                     generate_map(map_img_filename,
                                                 self.traces,
@@ -980,7 +966,7 @@ class Plane:
                         ra_message += ", Multi threat"
 
                     if "threat_id_hex" in ra['acas_ra'].keys():
-                        threat_reg = get_aircraft_reg_by_icao(ra['acas_ra']['threat_id_hex'], tracking_cursor)
+                        threat_reg = get_aircraft_reg_by_icao(ra['acas_ra']['threat_id_hex'])
                         threat_id = threat_reg if threat_reg is not None else "ICAO: " + ra['acas_ra']['threat_id_hex']
                         ra_message += f", invader: {threat_id}"
 

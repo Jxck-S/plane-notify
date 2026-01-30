@@ -70,6 +70,8 @@ main_config = ConfigParserExt()
 print(os.getcwd())
 main_config.read('./configs/mainconf.ini')
 source = main_config.get('DATA', 'SOURCE')
+import db
+db.init_db(main_config)
 
 
 heartbeat = Heartbeat()

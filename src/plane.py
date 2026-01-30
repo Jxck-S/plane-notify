@@ -142,7 +142,7 @@ class Plane:
     def run_readsb(self, ac_dict, pia):
 
         #Parse READSB Vector
-        self.print_header("BEGIN")
+        self.print_header()
         self.pia_active = pia
         try:
             self.__dict__.update({'active_icao' : ac_dict['hex'].upper(), 'latitude' : float(ac_dict['lat']), 'longitude' : float(ac_dict['lon'])})
@@ -203,7 +203,7 @@ class Plane:
             print("Got data but some data is invalid!")
             print(e)
             print (Fore.YELLOW +"READSB Sourced Data: ", ac_dict, Style.RESET_ALL)
-            self.print_header("END")
+            self.print_footer()
         else:
             #Error Handling for bad data, sometimes it would seem to be ADSB Decode error
             if (not self.on_ground) and self.speed and self.speed <= 10:
@@ -237,18 +237,18 @@ class Plane:
         output_parts.append(f"{Fore.CYAN}Points:{Style.RESET_ALL} {Fore.LIGHTGREEN_EX}{len(self.traces)}{Style.RESET_ALL}")
 
         return " | ".join(output_parts)
-    def print_header(self, note):
-        if note == "BEGIN":
-            header = f"---BEGIN---------{self.conf_file_path}"
-        elif note == "END":
-            header = f"---END"
-        remaning_len = 85 - len(header)
-        for x in range(0, remaning_len):
-            header += "-"
-        header += f"ICAO: {self.active_icao}---"
-        if note =="END":
-            header += Style.RESET_ALL + "\n"
-        print(Back.MAGENTA + header + Style.RESET_ALL)
+    def _print_box_line(self, prefix, suffix=""):
+        line = prefix
+        remaning_len = 85 - len(line)
+        line += "-" * remaning_len
+        line += f"ICAO: {self.active_icao}---"
+        print(Back.MAGENTA + line + suffix + Style.RESET_ALL)
+
+    def print_header(self):
+        self._print_box_line(f"---BEGIN---------{self.conf_file_path}")
+
+    def print_footer(self):
+        self._print_box_line("---END", suffix=f"{Style.RESET_ALL}\n")
     def get_time_since(self, datetime_obj):
         if datetime_obj != None:
             time_since = datetime.now() - datetime_obj
@@ -316,7 +316,7 @@ class Plane:
 
         return route_to
     def run_empty(self):
-        self.print_header("BEGIN")
+        self.print_header()
         self.feeding = False
         self.run_check()
     def add_trace(self):
@@ -957,7 +957,7 @@ class Plane:
             hours, remainder = divmod(elapsed_time.total_seconds(), 3600)
             minutes, seconds = divmod(remainder, 60)
             print((f"Time Since Take off  {int(hours)} Hours : {int(minutes)} Mins : {int(seconds)} Secs"))
-        self.print_header("END")
+        self.print_footer()
     def check_new_ras(self, ras):
             for ra in ras:
                 if self.recent_ra_types == {} or ra['acas_ra']['advisory'] not in self.recent_ra_types.keys():

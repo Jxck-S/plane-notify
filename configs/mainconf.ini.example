@@ -37,18 +37,10 @@ SLEEPSEC = 60
 TYPES = small_airport,medium_airport,large_airport
 
 [MAP]
-# Map generation options: fsm (Flight Static Maps) or TAR1090 (screenshot)
+# Map generation options: fsm (Flight Static Maps)
 OPTION = fsm
 
-# TAR1090 Screenshot Configuration
-# The base URL of the tar1090 instance to screenshot (e.g., globe.theairtraffic.com)
-TAR1090_URL = https://globe.theairtraffic.com
-# URL or local file path to an icon to display in the map credits (bottom right)
-CREDIT_IMG_URL = https://theairtraffic.com/images/favicon.png
-# The text branding to display in the map credits (bottom right)
-TEXT_CREDIT = TheAirtraffic.com
-# Path to a logo to display in the center map when it fails to load screenshot/map (fallback)
-ERROR_LOGO = ./dependencies/GCLogo.png
+
 
 
 

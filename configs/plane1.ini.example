@@ -13,10 +13,6 @@ ICAO = icaohere
 ; CONCEAL_AC_ID = False
 ; CONCEAL_PIA = False
 
-[MAP]
-# Optional: map overlays per plane (e.g., nexrad)
-# Separate by comma, no space. Remove option to disable.
-OVERLAYS = nexrad
 
 [AIRPORT]
 # Required: List of airport types this plane could land/takeoff at

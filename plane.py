@@ -25,9 +25,7 @@ from socials.threads import Threads
 from defAirport import get_airport_by_icao, getClosestAirport
 from fuel_calc import fuel_calculation, fuel_message
 
-from defSS import get_tar1090_screenshot, generate_tar1090_screenshot_time_params
-from modify_image import append_airport
-from modify_image import cleanup_images
+from utils import cleanup_images
 import time
 import tempfile
 from calculate_headings import calculate_deg_change, calculate_from_bearing, calculate_cardinal
@@ -310,12 +308,7 @@ class Plane:
         else:
             time_since = None
         return time_since
-    def get_tar1090_map_overlays(self):
-        if self.config.has_option('MAP', 'OVERLAYS'):
-            overlays = self.config.get('MAP', 'OVERLAYS')
-        else:
-            overlays = "null"
-        return overlays
+
     def route_info(self):
         from lookup_route import lookup_route, clean_data
         def route_format(extra_route_info, type):
@@ -563,21 +556,16 @@ class Plane:
             print(message)
             message_w_title = apply_prefix(self.title, message)
             if (self.config.getboolean('TELEGRAM', 'ENABLE') or self.config.getboolean('MASTODON', 'ENABLE') or self.config.getboolean('DISCORD', 'ENABLE') or self.config.getboolean('X', 'ENABLE') or self.config.getboolean('META', 'ENABLE') or self.config.getboolean('BLUESKY', 'ENABLE') or self.config.getboolean('NOSTR', 'ENABLE') or self.config.getboolean('THREADS', 'ENABLE')):
-                #Google Map or tar1090 screenshot
+                # Map generation
                 image_type = "landed" if self.landed else "takeoff"
                 timestamp = datetime.utcnow().strftime("%Y-%m-%d_%H-%M")
                 db_id = f"{self.db_flight_id}_" if self.db_flight_id else ""
                 map_img_filename = os.path.join(tempfile.gettempdir(), "plane-notify", "imgs", f"{db_id}{self.active_icao.upper()}_{image_type}_{timestamp}_map")
                 print(map_img_filename)
-                if main_config.get('MAP', 'OPTION') == "TAR1090":
-                    url_params = f"largeMode=3&hideButtons&hideSidebar&mapDim=0&zoom=11&icao={self.active_icao}&overlays={self.get_tar1090_map_overlays()}&limitupdates=1"
-                    get_tar1090_screenshot(map_img_filename+".png", url_params, overrides=self.overrides, conceal_ac_id=self.conceal_ac_id, conceal_pia=self.conceal_pia, pia_active=self.pia_active)
-
-                    text_credit = self.config.get('MAP', 'TEXT_CREDIT') if self.config.has_option('MAP', 'TEXT_CREDIT') else None
-                    append_airport(map_img_filename, nearest_airport_dict, text_credit)
-                elif main_config.get('MAP', 'OPTION') == "fsm":
+                if main_config.get('MAP', 'OPTION') == "fsm":
                     info = pn_adapter(self, tracking_cursor)
                     info['nearest_airport'] = nearest_airport_dict
+
                     generate_map(map_img_filename,
                                 self.traces,
                                 info,
@@ -588,6 +576,7 @@ class Plane:
                 alt_text = f"Reg: {self.reg} On Ground: {str(self.on_ground)} Alt: {str(self.alt_ft)} Last Contact: {str(time_since_contact)} Trigger: {trigger_type}"
             else:
                 map_img_filename = None
+
             #Telegram
             if self.config.getboolean('TELEGRAM', 'ENABLE'):
                 photo = open(map_img_filename+".png", "rb")
@@ -738,14 +727,11 @@ class Plane:
                     self.emergency_already_triggered = True
                     squawk_message = (f"{self.title} Squawking {self.last_emergency[1]} {emergency_squawks[self.squawk]}").strip()
                     print(squawk_message)
-                    #Google Map or tar1090 screenshot
+                    # Map generation
                     image_type = "emergency"
                     timestamp = datetime.utcnow().strftime("%Y-%m-%d_%H-%M")
                     map_img_filename = f"{tempfile.gettempdir()}/plane-notify/imgs/{self.active_icao.upper()}_{image_type}_{timestamp}_map"
-                    if main_config.get('MAP', 'OPTION') == "TAR1090":
-                        url_params = f"largeMode=3&hideButtons&hideSidebar&mapDim=0&zoom=11&icao={self.active_icao}&overlays={self.get_tar1090_map_overlays()}&limitupdates=0"
-                        get_tar1090_screenshot(map_img_filename+".png", url_params, overrides=self.overrides, conceal_ac_id=self.conceal_ac_id, conceal_pia=self.conceal_pia, pia_active=self.pia_active)
-                    elif main_config.get('MAP', 'OPTION') == "fsm":
+                    if main_config.get('MAP', 'OPTION') == "fsm":
                         info = pn_adapter(self, tracking_cursor)
                         info['nearest_airport'] = None
                         generate_map(map_img_filename,
@@ -937,9 +923,7 @@ class Plane:
                                                 info,
                                                 True,
                                                 blur_identity=self.config.getboolean('DATA', 'BLUR_ID'))
-                        elif main_config.get('MAP', 'OPTION') == "TAR1090":
-                            url_params = f"largeMode=3&hideButtons&hideSidebar&mapDim=0&zoom=11&icao={self.active_icao}&overlays={self.get_tar1090_map_overlays()}&limitupdates=0"
-                            get_tar1090_screenshot(map_img_filename+".png", url_params, overrides=self.overrides, conceal_ac_id=self.conceal_ac_id, conceal_pia=self.conceal_pia, pia_active=self.pia_active)
+
                         if nearest_airport_dict['distance_mi'] < 3:
                             if "touchngo" in self.circle_history.keys():
                                 message = f"Doing touch and goes at {nearest_airport_dict['icao_code']}"
@@ -1040,19 +1024,16 @@ class Plane:
                         ra_message += f", {ra['acas_ra']['advisory_complement']}"
                     if bool(int(ra['acas_ra']['MTE'])):
                         ra_message += ", Multi threat"
-                    url_params = f"&lat={ra['lat']}&lon={ra['lon']}&zoom=11&largeMode=2&hideButtons&hideSidebar&mapDim=0&overlays={self.get_tar1090_map_overlays()}&limitupdates=0"
+
                     if "threat_id_hex" in ra['acas_ra'].keys():
                         threat_reg = get_aircraft_reg_by_icao(ra['acas_ra']['threat_id_hex'], tracking_cursor)
                         threat_id = threat_reg if threat_reg is not None else "ICAO: " + ra['acas_ra']['threat_id_hex']
                         ra_message += f", invader: {threat_id}"
-                        url_params += generate_tar1090_screenshot_time_params(ra['acas_ra']['unix_timestamp']) + f"&icao={ra['acas_ra']['threat_id_hex']},{self.active_icao.lower()}&timestamp={ra['acas_ra']['unix_timestamp']}"
-                    else:
-                        url_params += f"&icao={self.active_icao.lower()}&noIsolation"
-                    print(url_params)
+
                     image_type = "ra"
                     timestamp = datetime.utcnow().strftime("%Y-%m-%d_%H-%M")
                     map_img_filename = f"{tempfile.gettempdir()}/plane-notify/imgs/{self.active_icao.upper()}_{image_type}_{timestamp}_map"
-                    #get_tar1090_screenshot(map_img_filename+".png", url_params, True, True, overrides=self.overrides, conceal_ac_id=self.conceal_ac_id, conceal_pia=self.conceal_pia, pia_active=self.pia_active)
+                    # Map generation for RA is currently disabled, more complex data is needed
 
                     if self.config.getboolean('DISCORD', 'ENABLE'):
                         role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') and self.config.get('DISCORD', 'ROLE_ID').strip() != "" else None

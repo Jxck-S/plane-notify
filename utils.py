@@ -1,5 +1,14 @@
 import re
+import os
 import configparser
+
+def cleanup_images(path):
+    if path:
+        for ext in [".png", ".jpg"]:
+            try:
+                os.remove(path+ext)
+            except FileNotFoundError:
+                pass
 def set_dyn_title(title, *aircraft_info):
     if not title:
         return ""

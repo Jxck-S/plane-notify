@@ -33,8 +33,6 @@ if os.path.exists(notify_dir):
     shutil.rmtree(notify_dir)
 
 os.makedirs(notify_dir)
-os.makedirs(os.path.join(notify_dir, "chrome"))
-os.makedirs(os.path.join(notify_dir, "chrome", "user_data"))
 os.makedirs(os.path.join(notify_dir, "imgs"))
 
 abspath = os.path.abspath(__file__)
@@ -43,7 +41,6 @@ os.chdir(dname)
 
 sys.path.extend([os.getcwd()])
 
-os.makedirs("./logs/screenshot_logs", exist_ok=True)
 #Dependency Handling
 if not os.path.isdir("./dependencies/"):
     os.mkdir("./dependencies/")

@@ -24,4 +24,4 @@ COPY Pipfile* .
 RUN pipenv install
 
 COPY . .
-CMD pipenv run python /plane-notify/__main__.py
+CMD pipenv run python /plane-notify/src/__main__.py

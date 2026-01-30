@@ -37,9 +37,10 @@ os.makedirs(os.path.join(notify_dir, "imgs"))
 
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
-os.chdir(dname)
+project_root = os.path.dirname(dname)
+os.chdir(project_root)
 
-sys.path.extend([os.getcwd()])
+sys.path.extend([project_root, dname])
 
 #Dependency Handling
 if not os.path.isdir("./dependencies/"):

@@ -29,14 +29,8 @@ import requests
 from requests.exceptions import HTTPError, ConnectionError, Timeout
 import staticmaps
 from PIL import Image
-from enum import Enum
-class Flags(Enum):
-    LADD = "LADD"
-    PIA = "PIA"
-    MILITARY = "Military"
-    INTRESTING = "Interesting"
-    HEAVY = "Heavy"
-    SUPER = "Super"
+from constants import Flags, ImageTypes
+
 main_config = ConfigParserExt()
 main_config.read('./configs/mainconf.ini')
 from notification_manager import NotificationManager
@@ -479,7 +473,7 @@ class Plane:
             message_w_title = apply_prefix(self.title, message)
             if (self.config.getboolean('TELEGRAM', 'ENABLE') or self.config.getboolean('MASTODON', 'ENABLE') or self.config.getboolean('DISCORD', 'ENABLE') or self.config.getboolean('X', 'ENABLE') or self.config.getboolean('META', 'ENABLE') or self.config.getboolean('BLUESKY', 'ENABLE') or self.config.getboolean('NOSTR', 'ENABLE') or self.config.getboolean('THREADS', 'ENABLE')):
                 # Map generation
-                image_type = "landed" if self.landed else "takeoff"
+                image_type = ImageTypes.LANDED if self.landed else ImageTypes.TAKEOFF
                 timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H-%M")
                 db_id = f"{self.db_flight_id}_" if self.db_flight_id else ""
                 map_img_filename = os.path.join(tempfile.gettempdir(), "plane-notify", "imgs", f"{db_id}{self.active_icao.upper()}_{image_type}_{timestamp}_map")
@@ -560,7 +554,7 @@ class Plane:
                     squawk_message = (f"{self.title} Squawking {self.last_emergency[1]} {emergency_squawks[self.squawk]}").strip()
                     print(squawk_message)
                     # Map generation
-                    image_type = "emergency"
+                    image_type = ImageTypes.EMERGENCY
                     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H-%M")
                     map_img_filename = f"{tempfile.gettempdir()}/plane-notify/imgs/{self.active_icao.upper()}_{image_type}_{timestamp}_map"
                     if main_config.get('MAP', 'OPTION') == "fsm":
@@ -592,7 +586,7 @@ class Plane:
                         print(mode, "enabled")
                         message = f"{mode} mode enabled."
                         if mode == "Approach":
-                            image_type = "approach"
+                            image_type = ImageTypes.APPROACH
                             timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H-%M")
                             map_img_filename = f"{tempfile.gettempdir()}/plane-notify/imgs/{self.active_icao.upper()}_{image_type}_{timestamp}_map"
                             info = pn_adapter(self)
@@ -759,7 +753,7 @@ class Plane:
                                         center1 = staticmaps.create_latlng(center[0], center[1])
                                         context.add_object(staticmaps.Circle(center1, (float(shape['radius']) * 1.852), fill_color=staticmaps.parse_color("#FF000033"), color=staticmaps.parse_color("#8B0000"), width=2))
                                         context.add_object(staticmaps.Marker(center1, color=staticmaps.RED))
-                        image_type = "circling"
+                        image_type = ImageTypes.CIRCLING
                         timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H-%M")
                         map_img_filename = f"{tempfile.gettempdir()}/plane-notify/imgs/{self.active_icao.upper()}_{image_type}_{timestamp}_map"
                         if main_config.get('MAP', 'OPTION') == "fsm":

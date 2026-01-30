@@ -111,9 +111,3 @@ def post_with_media(message, file_name, private_key):
         # Fallback to posting without image
         event = post(message, private_key)
         return event 
-
-
-# #Test
-
-#private_key = ""
-#nostr_upload_post("ElonJet now flying with Blossom media https://github.com/Jxck-S/python-blossom", "blossomjet.png", private_key)

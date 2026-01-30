@@ -5,27 +5,13 @@ from cnf_parser_ext import ConfigParserExt
 import tempfile
 import json
 import re
-import praw
-import traceback
-import praw
-import traceback
 from requests.exceptions import HTTPError, RequestException
 import os
 from flight_static_maps.map import generate_map
 from flight_static_maps.data_adapters import pn_adapter
 from colorama import Fore, Style, Back
-
-import socials.discord as discord
-import socials.telegram as telegram
-import socials.mastodon as mastodon
-import socials.meta as meta
-import socials.nostr as nostr
-from socials.x import XED
-from atproto import Client, models, exceptions as ATexceptions
-from socials.threads import Threads
 from airport_lookup import get_airport_by_icao, getClosestAirport
 from fuel_calc import fuel_calculation, fuel_message
-
 from utils import cleanup_images
 import time
 import tempfile
@@ -48,14 +34,8 @@ class Flags(Enum):
     SUPER = "Super"
 main_config = ConfigParserExt()
 main_config.read('./configs/mainconf.ini')
-if main_config.getboolean("REDDIT", "ENABLE"):
-    reddit_client = praw.Reddit(
-        client_id=main_config.get("REDDIT", "CLIENT_ID"),
-        client_secret=main_config.get("REDDIT", "CLIENT_SECRET"),
-        password=main_config.get("REDDIT", "PASSWORD"),
-        user_agent=main_config.get("REDDIT", "USER_AGENT"),
-        username=main_config.get("REDDIT", "USERNAME"),
-    )
+from notification_manager import NotificationManager
+from providers import Providers
 class Plane:
     def __init__(self, icao, config_path, config):
         """Initializes a plane object from its config file and given icao."""
@@ -126,11 +106,10 @@ class Plane:
         self.pia_active = None
         self.flags = []
         self.category = None
-        self.latest_x_post_id = None
-        self.latest_reddit_submission = None
+        self.category = None
         if self.config.has_section('X') and self.config.getboolean('X', 'ENABLE'):
-            x_info = self.config['X']
-            self.x_client = XED(x_info['consumer_key'], x_info['consumer_secret'], x_info['access_token'], x_info['access_token_secret'])
+            pass # X client moved to NotificationManager
+        self.notification_manager = NotificationManager(self.config, main_config)
         if self.config.has_option('DATA', 'DATA_LOSS_MINS'):
             self.data_loss_mins = self.config.getint('DATA', 'DATA_LOSS_MINS')
         else:
@@ -520,112 +499,26 @@ class Plane:
             else:
                 map_img_filename = None
 
-            #Telegram
-            if self.config.getboolean('TELEGRAM', 'ENABLE'):
-                photo = open(map_img_filename+".png", "rb")
-                if second_message:
-                    telegram_message = f"{message_w_title}\n{second_message}".strip()
-                else:
-                    telegram_message = message_w_title
-                try:
-                    telegram.post(telegram_message, self.config, photo)
-                except RequestException as e:
-                    discord.post(f"Failed to post to Telegram for {self.reg} : {e}", main_config)
-            #Mastodon
-            if self.config.getboolean('MASTODON', 'ENABLE'):
-                try:
-                    mastodon_post_info = mastodon.post(message_w_title, self.config, map_img_filename+".png")
-                    if second_message and mastodon_post_info:
-                        mastodon.post(second_message, self.config, None, mastodon_post_info['id'])
-                except RequestException as e:
-                    discord.post(f"Failed to post to Mastodon for {self.reg} : {e}", main_config)
+            #Notifications
 
-            #Discord
-            if self.config.getboolean('DISCORD', 'ENABLE'):
-                role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') and self.config.get('DISCORD', 'ROLE_ID').strip() != "" else None
-                discord.post(message, self.config, role_id, map_img_filename+".png", username=self.title)
-                if second_message:
-                    discord.post(second_message, self.config, role_id, username=self.title)
-            #X
-            if self.config.getboolean('X', 'ENABLE'):
-                try:
-                    self.x_client.post(message_w_title, second_message, [(map_img_filename+".png", alt_text)])
-                except Exception as e:
-                    discord.post(f"Failed to post to X for {self.reg} : {e}", main_config)
-
-            #Meta
-            if self.config.getboolean('META', 'ENABLE'):
-                #FaceBook
-                try:
-                    if second_message:
-                        fb_post_info = meta.post_fb(self.config.get("META", "FB_PAGE_ID"), map_img_filename+".jpg", message_w_title, self.config.get("META", "ACCESS_TOKEN"))
-                        meta.post_fb_comment(self.config.get("META", "ACCESS_TOKEN"), fb_post_info['id'], second_message)
-                    else:
-                        meta.post_fb(self.config.get("META", "FB_PAGE_ID"), map_img_filename+".jpg", message_w_title, self.config.get("META", "ACCESS_TOKEN"))
-                except RequestException as e:
-                    discord.post(f"Failed to post to FaceBook for {self.reg} : {e}", main_config)
-                #Instagram
-                try:
-                    if second_message:
-                        insta_caption = f"{message_w_title}\n{second_message}"
-                    else:
-                        insta_caption = message_w_title
-                    files_url = main_config.get('HTTP_SERVE', 'IMAGE_URL')
-                    full_filename = map_img_filename+'.jpg'
-                    image_url = f"{files_url}/{os.path.basename(full_filename)}"
-                    meta.post_to_instagram(self.config.get("META", "IG_USER_ID"), self.config.get("META", "ACCESS_TOKEN"), image_url, insta_caption)
-                except Exception as e:
-                    discord.post(f"Failed to post to Instagram for {self.reg} : {e}", main_config)
-
-            #ATProtocol / BlueSky
-            if self.config.getboolean('BLUESKY', 'ENABLE'):
-                try:
-                    ATclient = Client()
-                    ATclient.login(self.config.get("BLUESKY", "USERNAME"), self.config.get("BLUESKY", "PASSWORD"))
-                    with open(map_img_filename+".jpg", 'rb') as f:
-                        img_data = f.read()
-                        first_post_ref = models.create_strong_ref(ATclient.send_image(text=message_w_title, image=img_data, image_alt=alt_text))
-                    if second_message:
-                        reply_ref = models.AppBskyFeedPost.ReplyRef(parent=first_post_ref, root=first_post_ref)
-                        ATclient.send_post(text= second_message, reply_to=reply_ref)
-                except Exception as e:
-                    discord.post(f"Failed to post to BlueSky for {self.reg} : {e} {type(e)}", main_config)
-            #NOSTR
-            if self.config.getboolean('NOSTR', 'ENABLE'):
-                try:
-                    first_event = nostr.post_with_media(message_w_title, map_img_filename+".png", self.config.get("NOSTR", "PK"))
-                    if second_message:
-                        nostr.post(second_message, self.config.get("NOSTR", "PK"), reply_to=first_event)
-                except Exception as e:
-                    discord.post(f"Failed to post to NOSTR for {self.reg} : {e}", main_config)
-            #Threads
-            if self.config.getboolean('THREADS', 'ENABLE'):
-                try:
-                    access_token = self.config.get('THREADS', 'ACCESS_TOKEN')
-                    threads_client = Threads(access_token)
-                    files_url = main_config.get('HTTP_SERVE', 'IMAGE_URL')
-                    full_filename = map_img_filename+'.png'
-                    image_url = f"{files_url}/{os.path.basename(full_filename)}"
-                    container_id = threads_client.create_image_container(image_url, text=message_w_title)
-                    rsp = threads_client.publish_container(container_id)
-
-
-                except Exception as e:
-                    discord.post(f"Failed to post to Threads for {self.reg} : {type(e)}, {e}\n\n{traceback.format_exc()}\n\n", main_config)
-            #Reddit
-            if self.config.getboolean('REDDIT', 'ENABLE'):
-                try:
-                    self.latest_reddit_submission = reddit_client.subreddit(self.config.get("REDDIT", "SUBREDDIT")).submit_image(message_w_title, map_img_filename+".png")
-                    if second_message:
-                        self.latest_reddit_submission.reply(second_message)
-                except Exception as e:
-                    discord.post(f"Failed to post to Reddit for {self.reg} : {type(e)}, {e}\n\n{traceback.format_exc()}\n\n", main_config)
+            self.notification_manager.post_to_all(
+                message=message,
+                title=self.title,
+                image_path=map_img_filename+".png",
+            )
+            if second_message:
+                self.notification_manager.post_to_all(
+                    message=second_message,
+                    title=self.title,
+                    image_path=None,
+                    is_reply=True
+                )
             #Cleanup Remove Image
             cleanup_images(map_img_filename)
             #Cleanup
             if self.landed:
                 self.traces.clear()
-                self.latest_tweet_id = None
+                self.notification_manager.reset_state()
                 self.recheck_route_time = None
                 self.known_to_airport = None
                 self.nearest_from_airport = None
@@ -636,17 +529,13 @@ class Plane:
             if route_to != None:
                 print(route_to)
                 route_to_w_title = apply_prefix(self.title, route_to)
-                #Telegram
-                if self.config.has_section('TELEGRAM') and self.config.getboolean('TELEGRAM', 'ENABLE'):
-                    telegram.post(route_to_w_title, self.config)
-                #Discord
-                if self.config.getboolean('DISCORD', 'ENABLE'):
-
-                    role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') and self.config.get('DISCORD', 'ROLE_ID').strip() != "" else None
-                    discord.post(route_to, self.config, role_id, username=self.title)
-                #X
-                if self.config.getboolean('X', 'ENABLE'):
-                    self.x_client.post(route_to_w_title, in_reply_to_id=self.x_client.latest_post_id)
+                self.notification_manager.set_one_time_exclusive([Providers.TELEGRAM, Providers.DISCORD, Providers.X])
+                self.notification_manager.post_to_all(
+                    message=route_to,
+                    title=self.title,
+                    is_reply=True,
+                    image_path=None
+                )
 
         if self.circle_history is not None:
             #Expires traces for circles
@@ -682,8 +571,12 @@ class Plane:
                                     info,
                                     True,
                                     blur_identity=self.config.getboolean('DATA', 'BLUR_ID'))
-                    if self.config.getboolean('DISCORD', 'ENABLE'):
-                        discord.post(squawk_message, self.config, None, map_img_filename+".png", username=self.title)
+                    self.notification_manager.set_one_time_exclusive([Providers.DISCORD])
+                    self.notification_manager.post_to_all(
+                        message=squawk_message,
+                        title=self.title,
+                        image_path=map_img_filename+".png",
+                    )
                     os.remove(map_img_filename+".png")
             #Realizes first time seeing emergency, stores time and type
             elif self.squawk in emergency_squawks.keys() and not self.emergency_already_triggered and not self.on_ground:
@@ -697,33 +590,44 @@ class Plane:
                 for mode in self.nav_modes:
                     if mode not in self.last_nav_modes:
                         print(mode, "enabled")
-                        #Discord
-                        if self.config.getboolean('DISCORD', 'ENABLE'):
-                            message = f"{mode} mode enabled."
-                            if mode == "Approach":
-                                image_type = "approach"
-                                timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H-%M")
-                                map_img_filename = f"{tempfile.gettempdir()}/plane-notify/imgs/{self.active_icao.upper()}_{image_type}_{timestamp}_map"
-                                info = pn_adapter(self)
-                                info['nearest_airport'] = None
-                                generate_map(map_img_filename,
-                                            self.traces,
-                                            info,
-                                            True,
-                                            blur_identity=self.config.getboolean('DATA', 'BLUR_ID'))
-                                discord.post(message, self.config, None, map_img_filename+".png", username=self.title)
-                                cleanup_images(map_img_filename)
-                            #elif mode in ["Althold", "VNAV", "LNAV"] and self.sel_nav_alt != None:
-                            #    discord.post((dis_message + ", Sel Alt. " + str(self.sel_nav_alt) + ", Current Alt. " + str(self.alt_ft)), self.config)
-                            else:
-                                discord.post(message, self.config, username=self.title)
+                        message = f"{mode} mode enabled."
+                        if mode == "Approach":
+                            image_type = "approach"
+                            timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H-%M")
+                            map_img_filename = f"{tempfile.gettempdir()}/plane-notify/imgs/{self.active_icao.upper()}_{image_type}_{timestamp}_map"
+                            info = pn_adapter(self)
+                            info['nearest_airport'] = None
+                            generate_map(map_img_filename,
+                                        self.traces,
+                                        info,
+                                        True,
+                                        blur_identity=self.config.getboolean('DATA', 'BLUR_ID'))
+                            self.notification_manager.set_one_time_exclusive([Providers.DISCORD])
+                            self.notification_manager.post_to_all(
+                                message=message,
+                                title=self.title,
+                                image_path=map_img_filename+".png",
+                            )
+                            cleanup_images(map_img_filename)
+                        #elif mode in ["Althold", "VNAV", "LNAV"] and self.sel_nav_alt != None:
+                        #    discord.post((dis_message + ", Sel Alt. " + str(self.sel_nav_alt) + ", Current Alt. " + str(self.alt_ft)), self.config)
+                        else:
+                            self.notification_manager.set_one_time_exclusive([Providers.DISCORD])
+                            self.notification_manager.post_to_all(
+                                message=message,
+                                title=self.title,
+                                image_path=None,
+                            )
             #Selected Altitude
             if self.sel_nav_alt is not None and self.last_sel_alt is not None and self.last_sel_alt != self.sel_nav_alt:
-                #Discord
                 print("Nav altitude is now", self.sel_nav_alt)
-                if self.config.getboolean('DISCORD', 'ENABLE'):
-                    message =  " Sel.  alt. " + str("{:,} ft".format(self.sel_nav_alt))
-                    discord.post(message, self.config, username=self.title)
+                message =  " Sel.  alt. " + str("{:,} ft".format(self.sel_nav_alt))
+                self.notification_manager.set_one_time_exclusive([Providers.DISCORD])
+                self.notification_manager.post_to_all(
+                    message=message,
+                    title=self.title,
+                    image_path=None,
+                )
             #Circling
             if self.last_track is not None:
                 if self.circle_history is None:
@@ -900,32 +804,16 @@ class Plane:
                         elif in_tfr is None and closest_tfr is not None and "distance" not in closest_tfr.keys():
                             message += f" near TFR {closest_tfr['info']['NOTAM']}, a TFR for {closest_tfr['info']['Type']}"
                             raise Exception(message)
-
+ß
                         print(message)
                         message_w_title = apply_prefix(self.title, message)
-                        #Telegram
-                        if self.config.has_section('TELEGRAM') and self.config.getboolean('TELEGRAM', 'ENABLE'):
-                            photo = open(map_img_filename+".png", "rb")
-                            telegram.post(message_w_title, self.config, photo)
-                        if self.config.getboolean('DISCORD', 'ENABLE'):
-                            role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') and self.config.get('DISCORD', 'ROLE_ID').strip() != "" else None
-                            if tfr_map_filename is not None:
-                                discord.post(message, self.config, role_id, map_img_filename+".png", tfr_map_filename, username=self.title)
-                            elif tfr_map_filename is None:
-                                discord.post(message, self.config, role_id, map_img_filename+".png", username=self.title)
-                        if self.config.getboolean('TWITTER', 'ENABLE'):
-                            media_list = [(map_img_filename+".png", "TFR Image1")]
-                            if tfr_map_filename is not None:
-                                media_list.append((tfr_map_filename, "TFR Image2"))
-                            elif tfr_map_filename is None:
-                                print("No TFR Map")
-                            self.x_client.post(message_w_title, media_list=media_list)
-                        #Meta
-                        if self.config.has_option('META', 'ENABLE') and self.config.getboolean('META', 'ENABLE'):
-                            meta.post_both(self.config.get("META", "FB_PAGE_ID"), self.config.get("META", "IG_USER_ID"), map_img_filename+".png", message_w_title, self.config.get("META", "ACCESS_TOKEN"))
-                        #Mastodon
-                        if self.config.has_section('MASTODON') and self.config.getboolean('MASTODON', 'ENABLE'):
-                            mastodon.post(message, self.config, map_img_filename+".png")
+                        #Notifications
+                        self.notification_manager.post_to_all(
+                            message=message,
+                            title=self.title,
+                            image_path=map_img_filename+".png",
+                            reg=self.reg,
+                        )
                         cleanup_images(map_img_filename)
                         if tfr_map_filename:
                             os.remove(tfr_map_filename)
@@ -978,9 +866,13 @@ class Plane:
                     map_img_filename = f"{tempfile.gettempdir()}/plane-notify/imgs/{self.active_icao.upper()}_{image_type}_{timestamp}_map"
                     # Map generation for RA is currently disabled, more complex data is needed
 
-                    if self.config.getboolean('DISCORD', 'ENABLE'):
-                        role_id = self.config.get('DISCORD', 'ROLE_ID') if self.config.has_option('DISCORD', 'ROLE_ID') and self.config.get('DISCORD', 'ROLE_ID').strip() != "" else None
-                        discord.post(ra_message, self.config, role_id, username=self.title)
+                    self.notification_manager.set_one_time_exclusive([Providers.DISCORD])
+                    self.notification_manager.post_to_all(
+                        message=ra_message,
+                        title=self.title,
+                        reg=self.reg,
+                        image_path=None,
+                    )
                     #cleanup_images(map_img_filename)
     def expire_ra_types(self):
         if self.recent_ra_types != {}:

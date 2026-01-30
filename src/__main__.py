@@ -83,6 +83,11 @@ try:
     import sys
     #Setup plane objects from plane configs using ConfigManager
     planes = []  # Changed from {} dict to [] list
+    from notification_manager import NotificationManager
+    
+    # Initialize global sources (Reddit)
+    NotificationManager.init_sources(main_config)
+    
     config_manager = ConfigManager("./configs")
     config_manager.load_all_configs(planes)
     

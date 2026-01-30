@@ -1,0 +1,10 @@
+class Providers:
+    DISCORD = "discord"
+    TELEGRAM = "telegram"
+    MASTODON = "mastodon"
+    X = "x"
+    META = "meta"
+    BLUESKY = "bluesky"
+    NOSTR = "nostr"
+    THREADS = "threads"
+    REDDIT = "reddit"

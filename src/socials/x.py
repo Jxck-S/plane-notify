@@ -4,9 +4,8 @@ class XED:
         self._api_key_seret = api_key_secret
         self._access_token = access_token
         self._access_token_secret = access_token_secret
-        self.latest_post_id = None
-    def post(self, message, reply_message=None, media_list=None, in_reply_to_id=None):        
-        print("Posting to X")
+
+    def post(self, message, media_list=None, in_reply_to_id=None):        
         import tweepy
         #V1 API For the Media Upload
         media_ids = []
@@ -31,8 +30,4 @@ class XED:
             media_ids = None
         tweet_rsp = v2_tweet_api.create_tweet(text=message, media_ids=media_ids, in_reply_to_tweet_id=in_reply_to_id)
         tweet_id = tweet_rsp.data['id']
-        self.latest_post_id = tweet_id
-        if reply_message:
-            rply_rsp = v2_tweet_api.create_tweet(text=reply_message, in_reply_to_tweet_id=tweet_id)
-            rply_id = rply_rsp.data['id']
-            self.latest_post_id = rply_id
+        return tweet_id

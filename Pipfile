@@ -8,7 +8,6 @@ verify_ssl = true
 [packages]
 colorama = "*"
 geopy = "*"
-tabulate = "*"
 pytz = "*"
 pillow = "*"
 tweepy = "*"

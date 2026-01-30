@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from db import add_flight, update_flight, get_aircraft_reg_by_icao, get_type_code_by_icao
 from utils import set_dyn_title, apply_prefix
 from cnf_parser_ext import ConfigParserExt
@@ -14,7 +14,7 @@ import os
 from flight_static_maps.map import generate_map
 from flight_static_maps.data_adapters import pn_adapter
 from colorama import Fore, Style, Back
-from tabulate import tabulate
+
 from socials.discord import sendDis
 from socials.telegram_toolkit import sendTeleg
 from socials.mastodon_toolkit import sendMastodon
@@ -140,7 +140,7 @@ class Plane:
 
 
     def run_readsb(self, ac_dict, pia):
-        print(ac_dict)
+
         #Parse READSB Vector
         self.print_header("BEGIN")
         self.pia_active = pia
@@ -215,23 +215,28 @@ class Plane:
         if self.last_pos_datetime is not None:
             time_since_contact = self.get_time_since(self.last_pos_datetime)
 
-        icao_line =[(Fore.CYAN + "ICAO" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.active_icao + Style.RESET_ALL)]
-        if self.pia_active:
-            icao_line.append(Fore.YELLOW + "PIA" + Style.RESET_ALL)
-        output = [
-        icao_line,
-        [(Fore.CYAN + "Callsign" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.callsign + Style.RESET_ALL)] if self.callsign is not None else None,
-        [(Fore.CYAN + "Reg" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.reg + Style.RESET_ALL)] if self.reg is not None else None,
-        [(Fore.CYAN + "Squawk" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + self.squawk + Style.RESET_ALL)] if self.squawk is not None else None,
-        [(Fore.CYAN + "Coordinates" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str(self.latitude) + ", " + str(self.longitude) + Style.RESET_ALL)] if self.latitude is not None and self.longitude is not None else None,
-        [(Fore.CYAN + "Last Contact" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str(time_since_contact).split(".")[0]+ Style.RESET_ALL)] if self.last_pos_datetime is not None else None,
-        [(Fore.CYAN + "On Ground" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str(self.on_ground) + Style.RESET_ALL)] if self.on_ground is not None else None,
-        [(Fore.CYAN + "Baro Altitude" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str("{:,} ft".format(self.alt_ft)) + Style.RESET_ALL)] if self.alt_ft is not None else None,
-        [(Fore.CYAN + "Nav Modes" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + ', '.join(self.nav_modes)  + Style.RESET_ALL)] if "nav_modes" in self.__dict__ and self.nav_modes != None else None,
-        [(Fore.CYAN + "Sel Alt Ft" + Style.RESET_ALL), (Fore.LIGHTGREEN_EX + str("{:,} ft".format(self.sel_nav_alt)) + Style.RESET_ALL)] if "sel_nav_alt" in self.__dict__ and self.sel_nav_alt is not None else None
+        output_parts = [
+            f"{Fore.CYAN}ICAO:{Style.RESET_ALL} {Fore.LIGHTGREEN_EX}{self.active_icao}{Style.RESET_ALL}" + (f" {Fore.YELLOW}(PIA){Style.RESET_ALL}" if self.pia_active else "")
         ]
-        output = list(filter(None, output))
-        return tabulate(output, [], 'fancy_grid')
+
+        if self.callsign:
+            output_parts.append(f"{Fore.CYAN}Call:{Style.RESET_ALL} {Fore.LIGHTGREEN_EX}{self.callsign.strip()}{Style.RESET_ALL}")
+        
+        if self.reg:
+            output_parts.append(f"{Fore.CYAN}Reg:{Style.RESET_ALL} {Fore.LIGHTGREEN_EX}{self.reg}{Style.RESET_ALL}")
+            
+        if self.alt_ft is not None:
+             output_parts.append(f"{Fore.CYAN}Alt:{Style.RESET_ALL} {Fore.LIGHTGREEN_EX}{self.alt_ft:,}ft{Style.RESET_ALL}")
+        
+        if self.on_ground is not None:
+             output_parts.append(f"{Fore.CYAN}Gnd:{Style.RESET_ALL} {Fore.LIGHTGREEN_EX}{self.on_ground}{Style.RESET_ALL}")
+
+        if self.last_pos_datetime:
+             output_parts.append(f"{Fore.CYAN}Seen:{Style.RESET_ALL} {Fore.LIGHTGREEN_EX}{str(time_since_contact).split('.')[0]}{Style.RESET_ALL}")
+        
+        output_parts.append(f"{Fore.CYAN}Points:{Style.RESET_ALL} {Fore.LIGHTGREEN_EX}{len(self.traces)}{Style.RESET_ALL}")
+
+        return " | ".join(output_parts)
     def print_header(self, note):
         if note == "BEGIN":
             header = f"---BEGIN---------{self.conf_file_path}"
@@ -334,9 +339,9 @@ class Plane:
             flags.append(Flags.PIA)
     def run_check(self):
         """Runs a check of a plane module to see if its landed or takenoff using plane data, and takes action if so."""
-        print(self)
+
         self.add_trace()
-        print(self.traces)
+        print(self)
         #Ability to Remove old Map
         #Proprietary Route Lookup
         if os.path.isfile("lookup_route.py") and (self.db_flags is None or not self.db_flags & 1):
@@ -440,7 +445,7 @@ class Plane:
             route_to = None
             second_message = None
             if self.tookoff:
-                self.takeoff_time = datetime.utcnow()
+                self.takeoff_time = datetime.now(timezone.utc)
                 confirmed_takeoff = True if trigger_type == "no longer on ground" else False
                 self.db_flight_id = add_flight(self.reg, self.icao, self.callsign, nearest_airport_dict['icao_code'], confirmed_takeoff, self.takeoff_time)
                 landed_time_msg = None
@@ -453,7 +458,7 @@ class Plane:
                     else:
                         self.recheck_route_time = 10
             elif self.landed and self.takeoff_time != None:
-                landed_time = datetime.utcnow() - self.takeoff_time
+                landed_time = datetime.now(timezone.utc) - self.takeoff_time
                 if trigger_type == "data loss":
                     landed_time -= timedelta(seconds=time_since_contact.total_seconds())
                 hours, remainder = divmod(landed_time.total_seconds(), 3600)
@@ -465,7 +470,7 @@ class Plane:
                 else:
                     landed_time_msg = (f"Apx. flt. time {int(minutes)} {min_syntax}.")
                 confirmed_landing = True if trigger_type == "now on ground" else False
-                update_flight(self.db_flight_id, nearest_airport_dict['icao_code'], confirmed_landing, datetime.utcnow())
+                update_flight(self.db_flight_id, nearest_airport_dict['icao_code'], confirmed_landing, datetime.now(timezone.utc))
                 #Start Secondary Output Creation, Miles and Fuel
                 if nearest_airport_dict is not None and self.nearest_from_airport is not None and nearest_airport_dict['icao'] != self.nearest_from_airport:
                     landed_airport = nearest_airport_dict
@@ -496,7 +501,7 @@ class Plane:
             if (self.config.getboolean('TELEGRAM', 'ENABLE') or self.config.getboolean('MASTODON', 'ENABLE') or self.config.getboolean('DISCORD', 'ENABLE') or self.config.getboolean('X', 'ENABLE') or self.config.getboolean('META', 'ENABLE') or self.config.getboolean('BLUESKY', 'ENABLE') or self.config.getboolean('NOSTR', 'ENABLE') or self.config.getboolean('THREADS', 'ENABLE')):
                 # Map generation
                 image_type = "landed" if self.landed else "takeoff"
-                timestamp = datetime.utcnow().strftime("%Y-%m-%d_%H-%M")
+                timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H-%M")
                 db_id = f"{self.db_flight_id}_" if self.db_flight_id else ""
                 map_img_filename = os.path.join(tempfile.gettempdir(), "plane-notify", "imgs", f"{db_id}{self.active_icao.upper()}_{image_type}_{timestamp}_map")
                 print(map_img_filename)
@@ -625,7 +630,7 @@ class Plane:
                 self.known_to_airport = None
                 self.nearest_from_airport = None
         #Recheck Proprietary Route Info.
-        if self.takeoff_time is not None and self.recheck_route_time is not None and (datetime.utcnow() - self.takeoff_time).total_seconds() > 60 * self.recheck_route_time:
+        if self.takeoff_time is not None and self.recheck_route_time is not None and (datetime.now(timezone.utc) - self.takeoff_time).total_seconds() > 60 * self.recheck_route_time:
             self.recheck_route_time += 10
             route_to = self.route_info()
             if route_to != None:
@@ -667,7 +672,7 @@ class Plane:
                     print(squawk_message)
                     # Map generation
                     image_type = "emergency"
-                    timestamp = datetime.utcnow().strftime("%Y-%m-%d_%H-%M")
+                    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H-%M")
                     map_img_filename = f"{tempfile.gettempdir()}/plane-notify/imgs/{self.active_icao.upper()}_{image_type}_{timestamp}_map"
                     if main_config.get('MAP', 'OPTION') == "fsm":
                         info = pn_adapter(self)
@@ -697,7 +702,7 @@ class Plane:
                             message = f"{mode} mode enabled."
                             if mode == "Approach":
                                 image_type = "approach"
-                                timestamp = datetime.utcnow().strftime("%Y-%m-%d_%H-%M")
+                                timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H-%M")
                                 map_img_filename = f"{tempfile.gettempdir()}/plane-notify/imgs/{self.active_icao.upper()}_{image_type}_{timestamp}_map"
                                 info = pn_adapter(self)
                                 info['nearest_airport'] = None
@@ -851,7 +856,7 @@ class Plane:
                                         context.add_object(staticmaps.Circle(center1, (float(shape['radius']) * 1.852), fill_color=staticmaps.parse_color("#FF000033"), color=staticmaps.parse_color("#8B0000"), width=2))
                                         context.add_object(staticmaps.Marker(center1, color=staticmaps.RED))
                         image_type = "circling"
-                        timestamp = datetime.utcnow().strftime("%Y-%m-%d_%H-%M")
+                        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H-%M")
                         map_img_filename = f"{tempfile.gettempdir()}/plane-notify/imgs/{self.active_icao.upper()}_{image_type}_{timestamp}_map"
                         if main_config.get('MAP', 'OPTION') == "fsm":
                                     info = pn_adapter(self)
@@ -948,7 +953,7 @@ class Plane:
         self.expire_traces()
 
         if self.takeoff_time != None:
-            elapsed_time = datetime.utcnow() - self.takeoff_time
+            elapsed_time = datetime.now(timezone.utc) - self.takeoff_time
             hours, remainder = divmod(elapsed_time.total_seconds(), 3600)
             minutes, seconds = divmod(remainder, 60)
             print((f"Time Since Take off  {int(hours)} Hours : {int(minutes)} Mins : {int(seconds)} Secs"))
@@ -969,7 +974,7 @@ class Plane:
                         ra_message += f", invader: {threat_id}"
 
                     image_type = "ra"
-                    timestamp = datetime.utcnow().strftime("%Y-%m-%d_%H-%M")
+                    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H-%M")
                     map_img_filename = f"{tempfile.gettempdir()}/plane-notify/imgs/{self.active_icao.upper()}_{image_type}_{timestamp}_map"
                     # Map generation for RA is currently disabled, more complex data is needed
 

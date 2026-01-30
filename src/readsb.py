@@ -8,7 +8,7 @@ It includes functions to fetch current aircraft states and historical ACAS/TCAS 
 import requests
 import json
 import configparser
-from datetime import datetime
+from datetime import datetime, timezone
 from http.client import IncompleteRead
 import urllib3
 import socket
@@ -89,7 +89,7 @@ def pull_readsb(planes):
             if "now" in data.keys():
                 data_now = float(data['now']) / 1000.0
                 print("Data now time:",datetime.utcfromtimestamp(data_now))
-        print("Current UTC:", datetime.utcnow())
+        print("Current UTC:", datetime.now(timezone.utc))
     else:
         data = None
     return data

@@ -8,7 +8,7 @@ import logging
 import tempfile
 import sys
 from plane import Plane
-from datetime import datetime
+from datetime import datetime, timezone
 import pytz
 import signal
 from colorama import init
@@ -129,7 +129,7 @@ try:
         print (Back.GREEN +  Fore.BLACK + header[0:100] + Style.RESET_ALL)
         if source == "READSB":
             #ACAS/TCAS data
-            today = datetime.utcnow()
+            today = datetime.now(timezone.utc)
             date = today.strftime("%Y/%m/%d")
             ras = pull_date_ras_readsb(date)
             sorted_ras = {}

@@ -31,4 +31,4 @@ python-blossom = "*"
 watchdog = "*"
 
 [requires]
-python_version = "3.11"
+python_version = "3.13"

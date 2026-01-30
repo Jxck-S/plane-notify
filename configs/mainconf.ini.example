@@ -1,5 +1,5 @@
 [DATA]
-# Source to pull data from: READSB, OPENSKY, or RpdADSBX (RapidAPI ADSBX)
+# Source to pull data from: READSB or RpdADSBX (RapidAPI ADSBX)
 # Default: READSB
 SOURCE = READSB
 # Default amount of time (mins) after data loss to trigger a landing when under 10k ft
@@ -17,11 +17,6 @@ ENDPOINT = http://127.0.0.1:8080/data/aircraft.json
 # URL to pull Resolution Advisory (ACAS) history from readsb
 RA_HOST = https://globe.theairtraffic.com
 
-[OPENSKY]
-# OpenSky Network Source (https://opensky-network.org)
-# Leave as None for anonymous access (lower rate limits)
-USERNAME = None
-PASSWORD = None
 
 [RpdADSBX]
 # RapidAPI ADS-B Exchange Source

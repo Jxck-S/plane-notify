@@ -148,35 +148,7 @@ class Plane:
         else:
             self.data_loss_mins = main_config.getint('DATA', 'DATA_LOSS_MINS')
 
-    def run_opens(self, ac_dict, pia):
-        #Parse OpenSky Vector
-        self.print_header("BEGIN")
-        self.pia = pia
-        #print (Fore.YELLOW + "OpenSky Sourced Data: ", ac_dict)
-        try:
-            self.__dict__.update({
-                'icao' : ac_dict.icao24.upper(),
-                'callsign' : ac_dict.callsign,
-                'latitude' : ac_dict.latitude,
-                'longitude' : ac_dict.longitude,
-                'on_ground' : bool(ac_dict.on_ground),
-                'squawk' : ac_dict.squawk,
-                'track' : float(ac_dict.true_track)})
-            if ac_dict.baro_altitude != None:
-                self.alt_ft = round(float(ac_dict.baro_altitude)  * 3.281)
-            elif self.on_ground:
-                self.alt_ft = 0
-            self.reg = get_aircraft_reg_by_icao(self.icao, tracking_cursor)
-            self.type = get_type_code_by_icao(self.icao, tracking_cursor)
-            if ac_dict.time_position is not None:
-                self.last_pos_datetime = datetime.fromtimestamp(ac_dict.time_position)
-        except ValueError as e:
-            print("Got data but some data is invalid!")
-            print(e)
-            self.print_header("END")
-        else:
-            self.feeding = True
-            self.run_check()
+
     def run_adsbx_v1(self, ac_dict, pia):
         #Parse ADBSX V1 Vector
         self.print_header("BEGIN")

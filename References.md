@@ -5,10 +5,6 @@
 -   <https://www.adsbexchange.com/data/>
 -   <https://www.adsbexchange.com/datafields/>
 
-## OpenSky
-
--   <https://opensky-network.org/apidoc/>
--   <https://github.com/openskynetwork/opensky-api>
 
 ## GeoPy - Location Name Lookup
 

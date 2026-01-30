@@ -22,7 +22,7 @@ import ast
 from readsb import pull_date_ras as pull_date_ras_readsb, pull_readsb
 from defADSBX import pull_date_ras as pull_date_ras_adsbx
 from defRpdADSBX import pull_rpdadsbx
-from defOpenSky import pull_opensky
+
 if platform.system() == "Windows":
     init(convert=True)
 
@@ -235,28 +235,7 @@ try:
                 else:
                     print(f"No data for icao {plane.icao}. Skipping...")
                     plane.run_empty()
-        elif source == "OPENS":
-            planeData, failed = pull_opensky(planes)
-            if failed == False:
-                if planeData != None and planeData.states != []:
-                    # Process each plane
-                    for plane in planes:
-                        has_data = False
-                        for dataState in planeData.states:
-                            if (dataState.icao24).lower() == plane.icao:
-                                plane.run_opens(dataState, is_pia=False)
-                                has_data = True
-                                break
-                            elif plane.pia_icao and (dataState.icao24).lower() == plane.pia_icao:
-                                plane.run_opens(dataState, is_pia=True)
-                                has_data = True
-                                break
-                        if has_data is False:
-                            plane.run_empty()
-                else:
-                    # No data, run empty for all planes
-                    for plane in planes:
-                        plane.run_empty()
+
         elapsed_calc_time = time.time() - start_time
         datetime_tz = datetime.now(tz)
         footer = "-------- " + str(running_Count) + " -------- " + str(datetime_tz.strftime("%I:%M:%S %p")) + " ------------------------Elapsed Time- " + str(round(elapsed_calc_time, 3)) + " -------------------------------------"

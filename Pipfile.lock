@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "d18387798f56c68d6ae6d1af3e67944684200feb43bc3b3457749d2a0be264b5"
+            "sha256": "f215d8f74fe7ce21baab1a793bfa9fc5c5e3c646387b4e081f7d382351b3c77b"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -874,12 +874,6 @@
             ],
             "markers": "python_version >= '3.8'",
             "version": "==3.3.1"
-        },
-        "opensky-api": {
-            "editable": true,
-            "git": "https://github.com/openskynetwork/opensky-api.git",
-            "ref": "18653b7450e9792d0e22263e445a39be511f191c",
-            "subdirectory": "python"
         },
         "pandas": {
             "hashes": [

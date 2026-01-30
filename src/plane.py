@@ -8,6 +8,11 @@ import re
 from requests.exceptions import HTTPError, RequestException
 import os
 from flight_static_maps.map import generate_map
+try:
+    from lookup_route import lookup_route
+    ENABLE_ROUTE_LOOKUP = True
+except ImportError:
+    ENABLE_ROUTE_LOOKUP = False
 from flight_static_maps.data_adapters import pn_adapter
 from colorama import Fore, Style, Back
 from airport_lookup import get_airport_by_icao, getClosestAirport
@@ -323,13 +328,6 @@ class Plane:
 
         self.add_trace()
         print(self)
-        #Ability to Remove old Map
-        #Proprietary Route Lookup
-        if os.path.isfile("lookup_route.py") and (self.db_flags is None or not self.db_flags & 1):
-            from lookup_route import lookup_route
-            ENABLE_ROUTE_LOOKUP = True
-        else:
-            ENABLE_ROUTE_LOOKUP = False
         if self.last_pos_datetime is not None:
             time_since_contact = self.get_time_since(self.last_pos_datetime)
 #Check if below desire ft
@@ -431,7 +429,7 @@ class Plane:
                 self.db_flight_id = add_flight(self.reg, self.icao, self.callsign, nearest_airport_dict['icao_code'], confirmed_takeoff, self.takeoff_time)
                 landed_time_msg = None
                 #Proprietary Route Lookup
-                if ENABLE_ROUTE_LOOKUP:
+                if ENABLE_ROUTE_LOOKUP and Flags.MILITARY not in self.flags:
                     self.nearest_from_airport = nearest_airport_dict['icao_code']
                     route_to = self.route_info()
                     if route_to is None:
@@ -525,7 +523,7 @@ class Plane:
                 self.known_to_airport = None
                 self.nearest_from_airport = None
         #Recheck Proprietary Route Info.
-        if self.takeoff_time is not None and self.recheck_route_time is not None and (datetime.now(timezone.utc) - self.takeoff_time).total_seconds() > 60 * self.recheck_route_time:
+        if self.takeoff_time and self.recheck_route_time and (datetime.now(timezone.utc) - self.takeoff_time).total_seconds() > 60 * self.recheck_route_time:
             self.recheck_route_time += 10
             route_to = self.route_info()
             if route_to != None:

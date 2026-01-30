@@ -37,7 +37,7 @@ SLEEPSEC = 60
 TYPES = small_airport,medium_airport,large_airport
 
 [MAP]
-# Map generation options: fsm (Flight Static Maps) or TAR1090 (screenshot) or GOOGLESTATICMAP (Google Static Maps)
+# Map generation options: fsm (Flight Static Maps) or TAR1090 (screenshot)
 OPTION = fsm
 
 # TAR1090 Screenshot Configuration
@@ -50,9 +50,7 @@ TEXT_CREDIT = TheAirtraffic.com
 # Path to a logo to display in the center map when it fails to load screenshot/map (fallback)
 ERROR_LOGO = ./dependencies/GCLogo.png
 
-[GOOGLE]
-# DEPRECATED
-API_KEY = 
+
 
 [TFRS]
 # Temporary Flight Restrictions (TFR) Service

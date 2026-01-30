@@ -24,7 +24,7 @@ from socials.nostr_post import nostr_upload_post, nostr_post
 from socials.threads import Threads
 from defAirport import get_airport_by_icao, getClosestAirport
 from fuel_calc import fuel_calculation, fuel_message
-from defMap import getMap
+
 from defSS import get_tar1090_screenshot, generate_tar1090_screenshot_time_params
 from modify_image import append_airport
 from modify_image import cleanup_images
@@ -569,9 +569,7 @@ class Plane:
                 db_id = f"{self.db_flight_id}_" if self.db_flight_id else ""
                 map_img_filename = os.path.join(tempfile.gettempdir(), "plane-notify", "imgs", f"{db_id}{self.active_icao.upper()}_{image_type}_{timestamp}_map")
                 print(map_img_filename)
-                if main_config.get('MAP', 'OPTION') == "GOOGLESTATICMAP":
-                    getMap((municipality + ", "  + state + ", "  + country_code), map_img_filename+".png")
-                elif main_config.get('MAP', 'OPTION') == "TAR1090":
+                if main_config.get('MAP', 'OPTION') == "TAR1090":
                     url_params = f"largeMode=3&hideButtons&hideSidebar&mapDim=0&zoom=11&icao={self.active_icao}&overlays={self.get_tar1090_map_overlays()}&limitupdates=1"
                     get_tar1090_screenshot(map_img_filename+".png", url_params, overrides=self.overrides, conceal_ac_id=self.conceal_ac_id, conceal_pia=self.conceal_pia, pia_active=self.pia_active)
 
@@ -744,9 +742,7 @@ class Plane:
                     image_type = "emergency"
                     timestamp = datetime.utcnow().strftime("%Y-%m-%d_%H-%M")
                     map_img_filename = f"{tempfile.gettempdir()}/plane-notify/imgs/{self.active_icao.upper()}_{image_type}_{timestamp}_map"
-                    if main_config.get('MAP', 'OPTION') == "GOOGLESTATICMAP":
-                        getMap((municipality + ", "  + state + ", "  + country_code), map_img_filename+".png")
-                    elif main_config.get('MAP', 'OPTION') == "TAR1090":
+                    if main_config.get('MAP', 'OPTION') == "TAR1090":
                         url_params = f"largeMode=3&hideButtons&hideSidebar&mapDim=0&zoom=11&icao={self.active_icao}&overlays={self.get_tar1090_map_overlays()}&limitupdates=0"
                         get_tar1090_screenshot(map_img_filename+".png", url_params, overrides=self.overrides, conceal_ac_id=self.conceal_ac_id, conceal_pia=self.conceal_pia, pia_active=self.pia_active)
                     elif main_config.get('MAP', 'OPTION') == "fsm":

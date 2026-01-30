@@ -68,7 +68,7 @@ PASSWORD =
 
 [DB]
 # PostgreSQL database for flight tracking history, and dependencies
-ENABLE = FALSE
+FLIGHT_LOGGING = TRUE
 HOST = localhost
 PORT = 5432
 USERNAME = 

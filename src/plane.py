@@ -441,9 +441,8 @@ class Plane:
             second_message = None
             if self.tookoff:
                 self.takeoff_time = datetime.utcnow()
-                if main_config.has_section("DB") and main_config.getboolean("DB", "ENABLE"):
-                    confirmed_takeoff = True if trigger_type == "no longer on ground" else False
-                    self.db_flight_id = add_flight(self.reg, self.icao, self.callsign, nearest_airport_dict['icao_code'], confirmed_takeoff, self.takeoff_time)
+                confirmed_takeoff = True if trigger_type == "no longer on ground" else False
+                self.db_flight_id = add_flight(self.reg, self.icao, self.callsign, nearest_airport_dict['icao_code'], confirmed_takeoff, self.takeoff_time)
                 landed_time_msg = None
                 #Proprietary Route Lookup
                 if ENABLE_ROUTE_LOOKUP:
@@ -465,9 +464,8 @@ class Plane:
                     landed_time_msg = (f"Apx. flt. time {int(hours)} {hour_syntax}" +  (f" {int(minutes)} {min_syntax}. " if minutes > 0 else "."))
                 else:
                     landed_time_msg = (f"Apx. flt. time {int(minutes)} {min_syntax}.")
-                if main_config.has_section("DB") and main_config.getboolean("DB", "ENABLE"):
-                    confirmed_landing = True if trigger_type == "now on ground" else False
-                    update_flight(self.db_flight_id, nearest_airport_dict['icao_code'], confirmed_landing, datetime.utcnow())
+                confirmed_landing = True if trigger_type == "now on ground" else False
+                update_flight(self.db_flight_id, nearest_airport_dict['icao_code'], confirmed_landing, datetime.utcnow())
                 #Start Secondary Output Creation, Miles and Fuel
                 if nearest_airport_dict is not None and self.nearest_from_airport is not None and nearest_airport_dict['icao'] != self.nearest_from_airport:
                     landed_airport = nearest_airport_dict

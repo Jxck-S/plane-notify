@@ -22,7 +22,7 @@ from socials.xed import XED
 from atproto import Client, models, exceptions as ATexceptions
 from socials.nostr_post import nostr_upload_post, nostr_post
 from socials.threads import Threads
-from defAirport import get_airport_by_icao, getClosestAirport
+from airport_lookup import get_airport_by_icao, getClosestAirport
 from fuel_calc import fuel_calculation, fuel_message
 
 from utils import cleanup_images

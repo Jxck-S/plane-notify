@@ -103,8 +103,11 @@ def post(message, private_key, image_url=None, reply_to=None):
 def post_with_media(message, file_name, private_key):
     """Upload file using blossom and post to nostr"""
     try:
-        url = upload_to_blossom(file_name, private_key)
-        event = post(message, private_key, url)
+        if file_name:
+            url = upload_to_blossom(file_name, private_key)
+            event = post(message, private_key, url)
+        else:
+            event = post(message, private_key)
         return event
     except Exception as e:
         logging.error(f"Failed to upload and post: {str(e)}")

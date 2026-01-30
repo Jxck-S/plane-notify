@@ -806,7 +806,6 @@ class Plane:
                         elif in_tfr is None and closest_tfr is not None and "distance" not in closest_tfr.keys():
                             message += f" near TFR {closest_tfr['info']['NOTAM']}, a TFR for {closest_tfr['info']['Type']}"
                             raise Exception(message)
-ß
                         print(message)
                         message_w_title = apply_prefix(self.title, message)
                         #Notifications

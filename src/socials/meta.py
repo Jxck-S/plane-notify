@@ -23,6 +23,14 @@ def post_fb(page_id, file_path, message, access_token):
     print("Facebook Post Response: ", resp.json())
     return resp.json()
 
+def post_fb_text(page_id, message, access_token):
+    """Posts text-only to Facebook"""
+    url = f"https://graph.facebook.com/{API_VERSION}/{page_id}/feed?message={message}&access_token={access_token}"
+    resp = requests.post(url)
+    raise_details(resp)
+    print("Facebook Text Post Response: ", resp.json())
+    return resp.json()
+
 def post_fb_comment(access_token, post_id, comment):
     """Comment on Facebook post"""
     comment_url = f'https://graph.facebook.com/{API_VERSION}/{post_id}/comments?message={comment}&access_token={access_token}'
@@ -67,10 +75,14 @@ def post_to_instagram(ig_user_id, access_token, image_url, caption):
     return result
 def post_both(fb_page_id, ig_user_id, file_path, message, access_token):
     """Posts to Facebook and Instagram"""
-    fb_post_info = post_fb(fb_page_id, file_path, message, access_token)
-    fb_image_link = get_fb_post_image_link(fb_post_info['id'], access_token)
-    ig_post_info = post_to_instagram(ig_user_id, access_token, fb_image_link, message)
-    return fb_post_info, ig_post_info
+    if file_path:
+        fb_post_info = post_fb(fb_page_id, file_path, message, access_token)
+        fb_image_link = get_fb_post_image_link(fb_post_info['id'], access_token)
+        ig_post_info = post_to_instagram(ig_user_id, access_token, fb_image_link, message)
+        return fb_post_info, ig_post_info
+    else:
+         fb_post_info = post_fb_text(fb_page_id, message, access_token)
+         return fb_post_info, None
 
 def post_to_meta_both_v(fb_page_id, ig_user_id, file_path, access_token, facebook_caption, insta_caption):
     """Posts to Facebook and Instagram with different captions"""

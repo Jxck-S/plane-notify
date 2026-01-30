@@ -5,10 +5,11 @@ def post(message, config, role_id = None, *file_names, username=None):
         message += f" <@&{role_id}>"
     webhook = DiscordWebhook(url=config.get('DISCORD', 'URL'), content=message[0:1999], username=username)
     
-    if file_names != []:
+    if file_names:
         for file_name in file_names:
-            with open(file_name, "rb") as f:
-                webhook.add_file(file=f.read(), filename=file_name)
+            if file_name:
+                with open(file_name, "rb") as f:
+                    webhook.add_file(file=f.read(), filename=file_name)
     try:
         webhook.execute()
     except requests.exceptions.RequestException:

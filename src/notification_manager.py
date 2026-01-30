@@ -123,8 +123,11 @@ class NotificationManager:
 
     def _post_telegram(self, message_w_title, image_path):
         try:
-            with open(image_path, "rb") as photo:
-                return telegram.post(message_w_title, self.config, photo)
+            if image_path:
+                with open(image_path, "rb") as photo:
+                    return telegram.post(message_w_title, self.config, photo)
+            else:
+                return telegram.post(message_w_title, self.config, None)
         except RequestException as e:
              discord.post(f"Failed to post to Telegram : {e}", self.main_config)
              return None
@@ -168,7 +171,10 @@ class NotificationManager:
                  fb_id = self.reply_refs.facebook # Keep original ID
             else:
                  # New Post
-                 fb_post_info = meta.post_fb(self.config.get("META", "FB_PAGE_ID"), image_path.replace(".png", ".jpg"), message_w_title, self.config.get("META", "ACCESS_TOKEN"))
+                 if image_path:
+                     fb_post_info = meta.post_fb(self.config.get("META", "FB_PAGE_ID"), image_path.replace(".png", ".jpg"), message_w_title, self.config.get("META", "ACCESS_TOKEN"))
+                 else:
+                     fb_post_info = meta.post_fb_text(self.config.get("META", "FB_PAGE_ID"), message_w_title, self.config.get("META", "ACCESS_TOKEN"))
                  fb_id = fb_post_info['id']
         except RequestException as e:
              discord.post(f"Failed to post to FaceBook : {e}", self.main_config)
@@ -201,9 +207,13 @@ class NotificationManager:
                  self.reply_refs.bluesky['parent'] = post_ref
                  return self.reply_refs.bluesky
             else:
-                with open(image_path.replace(".png", ".jpg"), 'rb') as f:
-                    img_data = f.read()
-                    first_post_ref = models.create_strong_ref(ATclient.send_image(text=message_w_title, image=img_data, image_alt="Map Image")) 
+                if image_path:
+                    with open(image_path.replace(".png", ".jpg"), 'rb') as f:
+                        img_data = f.read()
+                        first_post_ref = models.create_strong_ref(ATclient.send_image(text=message_w_title, image=img_data, image_alt="Map Image")) 
+                        return {'root': first_post_ref, 'parent': first_post_ref}
+                else:
+                    first_post_ref = models.create_strong_ref(ATclient.send_post(text=message_w_title))
                     return {'root': first_post_ref, 'parent': first_post_ref}
 
         except Exception as e:
@@ -233,8 +243,8 @@ class NotificationManager:
                 container_id = threads_client.create_image_container(image_url, text=message_w_title)
                 threads_client.publish_container(container_id)
             else:
-
-                 pass
+                 container_id = threads_client.create_text_container(message_w_title)
+                 threads_client.publish_container(container_id)
             return None
         except Exception as e:
              discord.post(f"Failed to post to Threads : {type(e)}, {e}", self.main_config)
@@ -249,7 +259,10 @@ class NotificationManager:
                     self.reply_refs.reddit.reply(message_w_title)
                     new_submission = self.reply_refs.reddit # Keep same submission as ref
                 else:
-                    new_submission = self.reddit_client.subreddit(self.config.get("REDDIT", "SUBREDDIT")).submit_image(message_w_title, image_path)
+                    if image_path:
+                        new_submission = self.reddit_client.subreddit(self.config.get("REDDIT", "SUBREDDIT")).submit_image(message_w_title, image_path)
+                    else:
+                        new_submission = self.reddit_client.subreddit(self.config.get("REDDIT", "SUBREDDIT")).submit(message_w_title, selftext="")
                 
                 return new_submission
             except Exception as e:

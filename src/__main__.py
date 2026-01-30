@@ -17,7 +17,7 @@ from threading import Thread
 from heartbeat_server import Heartbeat
 from config_manager import ConfigManager
 from heartbeat_server import run_heartbeat_server
-from socials.discord import sendDis
+import socials.discord as discord
 import ast
 from readsb import pull_date_ras as pull_date_ras_readsb, pull_readsb
 
@@ -63,11 +63,11 @@ server_thread.start()
 
 if main_config.getboolean('DISCORD', 'ENABLE'):
         role_id = main_config.get('DISCORD', 'ROLE_ID') if main_config.has_option('DISCORD', 'ROLE_ID') and main_config.get('DISCORD', 'ROLE_ID').strip() != "" else None
-        sendDis("Started", main_config, role_id = role_id)
+        discord.post("Started", main_config, role_id = role_id)
 def service_exit(signum, frame):
     if main_config.getboolean('DISCORD', 'ENABLE'):
         role_id = main_config.get('DISCORD', 'ROLE_ID') if main_config.has_option('DISCORD', 'ROLE_ID') and main_config.get('DISCORD', 'ROLE_ID').strip() != "" else None
-        sendDis("Service Stop", main_config, role_id = role_id)
+        discord.post("Service Stop", main_config, role_id = role_id)
     raise SystemExit("Service Stop")
 signal.signal(signal.SIGTERM, service_exit)
 if os.path.isfile("lookup_route.py"):
@@ -202,7 +202,7 @@ try:
 except KeyboardInterrupt as e:
     print(e)
     if main_config.getboolean('DISCORD', 'ENABLE'):
-        sendDis(str("Manual Exit: " + str(e)), main_config)
+        discord.post(str("Manual Exit: " + str(e)), main_config)
 except Exception as e:
     if main_config.getboolean('DISCORD', 'ENABLE'):
         try:
@@ -217,5 +217,5 @@ except Exception as e:
         error_message = f"Error Exiting: {type(e)} " + clean_e 
         if plane:
             error_message += f"\nFailed on ({plane.config_path}) - {plane.icao}"
-        sendDis(error_message, main_config, role_id, "crash_latest.log")
+        discord.post(error_message, main_config, role_id, "crash_latest.log")
     raise e

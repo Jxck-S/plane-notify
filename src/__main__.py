@@ -177,7 +177,7 @@ try:
                         else:
                             plane.run_empty()
                 else:
-                    for plane in planes.values():
+                    for plane in planes: # Changed from planes.values() to planes as it's a list
                         plane.run_empty()
 
 

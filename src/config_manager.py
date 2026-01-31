@@ -125,7 +125,7 @@ class ConfigManager:
                         self.validate_no_conflict(icao, pia_icao, file_path)
                         
                         # Create plane object
-                        plane = Plane(icao, file_path, plane_config)
+                        plane = Plane(icao, plane_config)
                         
                         # Add to planes list (only one entry per unique plane)
                         planes_list.append(plane)
@@ -188,7 +188,6 @@ class ConfigManager:
                                 
                                 # Update existing plane
                                 plane.config = plane_config
-                                plane.config_path = file_path
                                 plane.icao = icao
                                 plane.pia_icao = pia_icao
                                 plane._config_hash = file_hash
@@ -197,13 +196,13 @@ class ConfigManager:
                                 reloaded_count += 1
                             else:
                                 # Plane lost, create new
-                                plane = Plane(icao, file_path, plane_config)
+                                plane = Plane(icao, plane_config)
                                 plane._config_hash = file_hash
                                 new_planes.append(plane)
                                 added_count += 1
                         else:
                             # New file
-                            plane = Plane(icao, file_path, plane_config)
+                            plane = Plane(icao, plane_config)
                             plane._config_hash = file_hash
                             new_planes.append(plane)
                             added_count += 1

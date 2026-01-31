@@ -6,6 +6,7 @@ It adds helper methods to safely get values, booleans, and titles, handling miss
 It also strips quotes from values automatically.
 """
 from configparser import RawConfigParser
+import os
 
 class ConfigParserExt(RawConfigParser):
     def get(self, section, option, *, raw=False, vars=None, fallback=None):
@@ -27,3 +28,13 @@ class ConfigParserExt(RawConfigParser):
         else:
             return None
 
+    def read(self, filenames, encoding=None):
+        # Allow reading and storing the filename (assuming single file usage for Plane configs)
+        if isinstance(filenames, str):
+            self.filepath = os.path.basename(filenames)
+        elif isinstance(filenames, list) and len(filenames) > 0:
+            self.filepath = os.path.basename(filenames[0])
+        else:
+            self.filepath = None
+            
+        return super().read(filenames, encoding=encoding)

@@ -1,12 +1,6 @@
 [DATA]
-# Source to pull data from: READSB
-# Default: READSB
-SOURCE = READSB
 # Default amount of time (mins) after data loss to trigger a landing when under 10k ft
 DATA_LOSS_MINS = 5
-# Timezone for console and logs, list: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
-TZ = UTC
-
 
 [READSB]
 # READSB 

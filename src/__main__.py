@@ -50,7 +50,7 @@ if not os.path.isdir("./dependencies/"):
 main_config = ConfigParserExt()
 print(os.getcwd())
 main_config.read('./configs/mainconf.ini')
-source = main_config.get('DATA', 'SOURCE')
+
 import db
 db.init_db(main_config)
 
@@ -78,7 +78,6 @@ else:
 #For Error output
 plane = None
 try:
-    print("Source is set to", source)
     import sys
     #Setup plane objects from plane configs using ConfigManager
     planes = []  # Changed from {} dict to [] list
@@ -106,71 +105,70 @@ try:
         start_time = time.time()
         header = ("---------------- " + str(datetime_now.strftime("%I:%M:%S %p")) + " ---------------------------------------------------------------------------")
         print (Back.GREEN +  Fore.BLACK + header[0:100] + Style.RESET_ALL)
-        if source == "READSB":
-            #ACAS/TCAS data
-            today = datetime.now(timezone.utc)
-            date = today.strftime("%Y/%m/%d")
-            ras = pull_date_ras_readsb(date)
-            sorted_ras = {}
-            if ras is not None:
-                #Testing RAs
-                #if last_ra_count is not None:
-                #    with open('./testing/acastest.json') as f:
-                #        data = f.readlines()
-                #    ras += data
-                ra_count = len(ras)
-                if last_ra_count is not None and ra_count != last_ra_count:
-                    print(abs(ra_count - last_ra_count), "new Resolution Advisories")
-                    for ra_num, ra in enumerate(ras[last_ra_count:]):
-                        ra = ast.literal_eval(ra)
-                        if ra['hex'].lower() in planes:
-                            if ra['hex'].lower() not in sorted_ras:
-                                sorted_ras[ra['hex'].lower()] = [ra]
-                            else:
-                                sorted_ras[ra['hex'].lower()].append(ra)
-                else:
-                    print("No new Resolution Advisories")
-                last_ra_count = ra_count
-            # Check for RAs for each plane
-            for plane in planes:
-                if sorted_ras != {} and plane.icao in sorted_ras:
-                    print(plane.icao, "has", len(sorted_ras[plane.icao]), "RAs")
-                    plane.check_new_ras(sorted_ras[plane.icao])
-                elif sorted_ras != {} and plane.pia_icao and plane.pia_icao in sorted_ras:
-                    print(plane.pia_icao, "has", len(sorted_ras[plane.pia_icao]), "RAs")
-                    plane.check_new_ras(sorted_ras[plane.pia_icao])
-                plane.expire_ra_types()
-            #Normal API data
-            icao_key = 'hex'
-            data = pull_readsb(planes)
-            if data is not None:
-                main_key = 'aircraft' if 'aircraft' in data else 'ac'
-                if data[main_key]:
-                    data_indexed = {}
-                    #Indexing the data by hex/icao code
-                    for planeData in data[main_key]:
-                        hex_lower = planeData[icao_key].lower()
-                        data_indexed[hex_lower] = planeData
-                    #Iterating through planes and matching with indexed data
-                    for plane in planes:
-                        # Check if we have data for this plane's primary ICAO or PIA_ICAO
-                        hex_data = None
-                        is_pia = False
-                        
-                        if plane.icao in data_indexed:
-                            hex_data = data_indexed[plane.icao]
-                            is_pia = False
-                        elif plane.pia_icao and plane.pia_icao in data_indexed:
-                            hex_data = data_indexed[plane.pia_icao]
-                            is_pia = True
-                        
-                        if hex_data:
-                            plane.run_readsb(hex_data, is_pia)
+        #ACAS/TCAS data
+        today = datetime.now(timezone.utc)
+        date = today.strftime("%Y/%m/%d")
+        ras = pull_date_ras_readsb(date)
+        sorted_ras = {}
+        if ras is not None:
+            #Testing RAs
+            #if last_ra_count is not None:
+            #    with open('./testing/acastest.json') as f:
+            #        data = f.readlines()
+            #    ras += data
+            ra_count = len(ras)
+            if last_ra_count is not None and ra_count != last_ra_count:
+                print(abs(ra_count - last_ra_count), "new Resolution Advisories")
+                for ra_num, ra in enumerate(ras[last_ra_count:]):
+                    ra = ast.literal_eval(ra)
+                    if ra['hex'].lower() in planes:
+                        if ra['hex'].lower() not in sorted_ras:
+                            sorted_ras[ra['hex'].lower()] = [ra]
                         else:
-                            plane.run_empty()
-                else:
-                    for plane in planes: # Changed from planes.values() to planes as it's a list
+                            sorted_ras[ra['hex'].lower()].append(ra)
+            else:
+                print("No new Resolution Advisories")
+            last_ra_count = ra_count
+        # Check for RAs for each plane
+        for plane in planes:
+            if sorted_ras != {} and plane.icao in sorted_ras:
+                print(plane.icao, "has", len(sorted_ras[plane.icao]), "RAs")
+                plane.check_new_ras(sorted_ras[plane.icao])
+            elif sorted_ras != {} and plane.pia_icao and plane.pia_icao in sorted_ras:
+                print(plane.pia_icao, "has", len(sorted_ras[plane.pia_icao]), "RAs")
+                plane.check_new_ras(sorted_ras[plane.pia_icao])
+            plane.expire_ra_types()
+        #Normal API data
+        icao_key = 'hex'
+        data = pull_readsb(planes)
+        if data is not None:
+            main_key = 'aircraft' if 'aircraft' in data else 'ac'
+            if data[main_key]:
+                data_indexed = {}
+                #Indexing the data by hex/icao code
+                for planeData in data[main_key]:
+                    hex_lower = planeData[icao_key].lower()
+                    data_indexed[hex_lower] = planeData
+                #Iterating through planes and matching with indexed data
+                for plane in planes:
+                    # Check if we have data for this plane's primary ICAO or PIA_ICAO
+                    hex_data = None
+                    is_pia = False
+                    
+                    if plane.icao in data_indexed:
+                        hex_data = data_indexed[plane.icao]
+                        is_pia = False
+                    elif plane.pia_icao and plane.pia_icao in data_indexed:
+                        hex_data = data_indexed[plane.pia_icao]
+                        is_pia = True
+                    
+                    if hex_data:
+                        plane.run_readsb(hex_data, is_pia)
+                    else:
                         plane.run_empty()
+            else:
+                for plane in planes: # Changed from planes.values() to planes as it's a list
+                    plane.run_empty()
 
 
         elapsed_calc_time = time.time() - start_time

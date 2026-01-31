@@ -9,7 +9,6 @@ import tempfile
 import sys
 from plane import Plane
 from datetime import datetime, timezone
-import pytz
 import signal
 from colorama import init
 from utils import clean_stack_trace
@@ -94,12 +93,7 @@ try:
     # Link config manager to heartbeat for /reload endpoint
     heartbeat.set_config_manager(config_manager, planes)
 
-    running_Count = 0
-    try:
-        tz = pytz.timezone(main_config.get('DATA', 'TZ'))
-    except pytz.exceptions.UnknownTimeZoneError:
-        tz = pytz.UTC
-    last_ra_count = None
+
     while True:
         # Check for reload request from /reload endpoint
         if heartbeat.check_and_clear_reload():
@@ -107,12 +101,10 @@ try:
             heartbeat.reload_stats = stats
         
         heartbeat.update_timestamp()
-        datetime_tz = datetime.now(tz)
-        if datetime_tz.hour == 0 and datetime_tz.minute == 0:
-            running_Count = 0
-        running_Count +=1
+        
+        datetime_now = datetime.now()
         start_time = time.time()
-        header = ("-------- " + str(running_Count) + " -------- " + str(datetime_tz.strftime("%I:%M:%S %p")) + " ---------------------------------------------------------------------------")
+        header = ("---------------- " + str(datetime_now.strftime("%I:%M:%S %p")) + " ---------------------------------------------------------------------------")
         print (Back.GREEN +  Fore.BLACK + header[0:100] + Style.RESET_ALL)
         if source == "READSB":
             #ACAS/TCAS data
@@ -182,8 +174,7 @@ try:
 
 
         elapsed_calc_time = time.time() - start_time
-        datetime_tz = datetime.now(tz)
-        footer = "-------- " + str(running_Count) + " -------- " + str(datetime_tz.strftime("%I:%M:%S %p")) + " ------------------------Elapsed Time- " + str(round(elapsed_calc_time, 3)) + " -------------------------------------"
+        footer = "---------------- " + str(datetime_now.strftime("%I:%M:%S %p")) + " ------------------------Elapsed Time- " + str(round(elapsed_calc_time, 3)) + " -------------------------------------"
         print (Back.GREEN + Fore.BLACK + footer[0:100] + Style.RESET_ALL)
 
         if main_config.has_section('SLEEP'):

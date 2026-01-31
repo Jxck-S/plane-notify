@@ -8,7 +8,6 @@ verify_ssl = true
 [packages]
 colorama = "*"
 geopy = "*"
-pytz = "*"
 pillow = "*"
 tweepy = "*"
 discord-webhook = "*"

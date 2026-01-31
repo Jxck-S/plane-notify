@@ -29,14 +29,14 @@ import requests
 from requests.exceptions import HTTPError, ConnectionError, Timeout
 import staticmaps
 from PIL import Image
-from constants import Flags, ImageTypes
+from constants import Flags, ImageTypes, NavModes, normalize_nav_modes
 
 main_config = ConfigParserExt()
 main_config.read('./configs/mainconf.ini')
 from notification_manager import NotificationManager
 from providers import Providers
 class Plane:
-    def __init__(self, icao, config_path, config):
+    def __init__(self, icao, config):
         """Initializes a plane object from its config file and given icao."""
         self.icao = icao.lower()
         self.active_icao = self.icao
@@ -45,7 +45,6 @@ class Plane:
             self.pia_icao = config.get('DATA', 'PIA_ICAO').lower()
         self.callsign = None
         self.config = config
-        self.config_path = config_path
         self.overrides = {}
         if self.config.has_option('DATA', 'OVERRIDE_REG'):
             self.reg = self.config.get('DATA', 'OVERRIDE_REG')
@@ -69,7 +68,6 @@ class Plane:
             self.conceal_pia = self.config.getboolean('DATA', 'CONCEAL_PIA')
         else:
             self.conceal_pia = False
-        self.conf_file_path = config_path
         self.alt_ft = None
         self.below_desired_ft = None
         self.last_below_desired_ft = None
@@ -158,14 +156,7 @@ class Plane:
                     self.flags.append(Flags.LADD)
 
             if 'nav_modes' in ac_dict:
-                self.nav_modes = ac_dict['nav_modes']
-                for idx, mode in enumerate(self.nav_modes):
-                    if mode.upper() in ['TCAS', 'LNAV', 'VNAV']:
-                        self.nav_modes[idx] = self.nav_modes[idx].upper()
-                    elif re.sub(r"[ _]", "", mode) == "althold":
-                        self.nav_modes[idx] = "Altitude hold"
-                    else:
-                        self.nav_modes[idx] = self.nav_modes[idx].capitalize()
+                self.nav_modes = normalize_nav_modes(ac_dict['nav_modes'])
             self.squawk = ac_dict.get('squawk')
             if "track" in ac_dict:
                 self.track = ac_dict['track']
@@ -225,7 +216,7 @@ class Plane:
         print(Back.MAGENTA + line + suffix + Style.RESET_ALL)
 
     def print_header(self):
-        self._print_box_line(f"---BEGIN---------{self.conf_file_path}")
+        self._print_box_line(f"---BEGIN---------{self.config.filepath}")
 
     def print_footer(self):
         self._print_box_line("---END", suffix=f"{Style.RESET_ALL}\n")
@@ -585,7 +576,7 @@ class Plane:
                     if mode not in self.last_nav_modes:
                         print(mode, "enabled")
                         message = f"{mode} mode enabled."
-                        if mode == "Approach":
+                        if mode == NavModes.APPROACH:
                             image_type = ImageTypes.APPROACH
                             timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H-%M")
                             map_img_filename = f"{tempfile.gettempdir()}/plane-notify/imgs/{self.active_icao.upper()}_{image_type}_{timestamp}_map"

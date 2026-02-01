@@ -547,7 +547,7 @@ class Plane:
                     # Map generation
                     image_type = ImageTypes.EMERGENCY
                     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H-%M")
-                    map_img_filename = f"{tempfile.gettempdir()}/plane-notify/imgs/{self.active_icao.upper()}_{image_type}_{timestamp}_map"
+                    map_img_filename = os.path.join(tempfile.gettempdir(), "plane-notify", "imgs", f"{self.active_icao.upper()}_{image_type}_{timestamp}_map")
                     if main_config.get('MAP', 'OPTION') == "fsm":
                         info = pn_adapter(self)
                         info['nearest_airport'] = None
@@ -579,7 +579,7 @@ class Plane:
                         if mode == NavModes.APPROACH:
                             image_type = ImageTypes.APPROACH
                             timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H-%M")
-                            map_img_filename = f"{tempfile.gettempdir()}/plane-notify/imgs/{self.active_icao.upper()}_{image_type}_{timestamp}_map"
+                            map_img_filename = os.path.join(tempfile.gettempdir(), "plane-notify", "imgs", f"{self.active_icao.upper()}_{image_type}_{timestamp}_map")
                             info = pn_adapter(self)
                             info['nearest_airport'] = None
                             generate_map(map_img_filename,
@@ -746,7 +746,7 @@ class Plane:
                                         context.add_object(staticmaps.Marker(center1, color=staticmaps.RED))
                         image_type = ImageTypes.CIRCLING
                         timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H-%M")
-                        map_img_filename = f"{tempfile.gettempdir()}/plane-notify/imgs/{self.active_icao.upper()}_{image_type}_{timestamp}_map"
+                        map_img_filename = os.path.join(tempfile.gettempdir(), "plane-notify", "imgs", f"{self.active_icao.upper()}_{image_type}_{timestamp}_map")
                         if main_config.get('MAP', 'OPTION') == "fsm":
                                     info = pn_adapter(self)
                                     info['nearest_airport'] = nearest_airport_dict
@@ -845,9 +845,9 @@ class Plane:
                         threat_id = threat_reg if threat_reg is not None else "ICAO: " + ra['acas_ra']['threat_id_hex']
                         ra_message += f", invader: {threat_id}"
 
-                    image_type = "ra"
+                    image_type = ImageTypes.RA
                     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H-%M")
-                    map_img_filename = f"{tempfile.gettempdir()}/plane-notify/imgs/{self.active_icao.upper()}_{image_type}_{timestamp}_map"
+                    map_img_filename = os.path.join(tempfile.gettempdir(), "plane-notify", "imgs", f"{self.active_icao.upper()}_{image_type}_{timestamp}_map")
                     # Map generation for RA is currently disabled, more complex data is needed
 
                     self.notification_manager.set_one_time_exclusive([Providers.DISCORD])

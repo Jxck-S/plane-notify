@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, StrEnum
 
 class Flags(Enum):
     LADD = "LADD"
@@ -8,12 +8,13 @@ class Flags(Enum):
     HEAVY = "Heavy"
     SUPER = "Super"
 
-class ImageTypes(str, Enum):
+class ImageTypes(StrEnum):
     LANDED = "landed"
     TAKEOFF = "takeoff"
     EMERGENCY = "emergency"
     APPROACH = "approach"
     CIRCLING = "circling"
+    RA = "ra"
 
 class NavModes(Enum):
     TCAS = ("tcas", "TCAS")

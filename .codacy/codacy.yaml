@@ -1,0 +1,20 @@
+---
+engines:
+  ruff:
+    enabled: true
+    python_version: 3.13
+  trivy:
+    enabled: true
+  markdownlint:
+    enabled: true
+  shellcheck:
+    enabled: true
+  yamllint:
+    enabled: true
+
+exclude_paths:
+  - ".git/"
+  - ".github/"
+  - "configs/"
+  - "logs/"
+  - "__pycache__/"

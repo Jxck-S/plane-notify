@@ -26,7 +26,7 @@ def init_db(config):
             options="-c application_name=plane-notify",
         )
         logger.info(
-            f"Connected to db at {config.get('DB', 'HOST')}:{config.getint('DB', 'PORT')} | Flight Logging: {flight_logging_status}"
+            f"""Connected to db at {config.get("DB", "HOST")}:{config.getint("DB", "PORT")} | Flight Logging: {flight_logging_status}"""
         )
         tracking_cursor = tracking_db.cursor(
             cursor_factory=psycopg2.extras.RealDictCursor
@@ -38,7 +38,7 @@ def init_db(config):
 # Flight Logging Functions
 def add_flight(reg, icao, callsign, origin, takeoff_confirmed, takeoff_time):
     """Adds a flight record to the flight table, meant for use on takeoff"""
-    global tracking_config
+
     if not tracking_cursor:
         return None
     if tracking_config.getboolean("DB", "FLIGHT_LOGGING") is False:
@@ -55,7 +55,7 @@ def add_flight(reg, icao, callsign, origin, takeoff_confirmed, takeoff_time):
 
 def update_flight(db_flight_id, destination, landing_confirmed, landing_time):
     """Updates a flight record in the flight table, meant for use on landing"""
-    global tracking_config
+
     if not tracking_cursor:
         return
     if tracking_config.getboolean("DB", "FLIGHT_LOGGING") is False:

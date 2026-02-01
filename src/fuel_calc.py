@@ -54,6 +54,6 @@ def fuel_message(fuel_info):
     lters = "{:,}".format(fuel_info["fuel_used_lters"])
     lbs = "{:,}".format(fuel_info["fuel_used_lbs"])
     kgs = "{:,}".format(fuel_info["fuel_used_kg"])
-    fuel_message = f"\n~ {gallons} gallons ({lters} liters). \n~ {lbs} lbs ({kgs} kg) of jet fuel used. \n{(f'~ ${cost} cost of fuel.' if have_cost else 'Cost of fuel unavailable')} \n~ {fuel_info['c02_tons']} tons of CO2 emissions."
+    fuel_message = f"""\n~ {gallons} gallons ({lters} liters). \n~ {lbs} lbs ({kgs} kg) of jet fuel used. \n{(f"~ ${cost} cost of fuel." if have_cost else "Cost of fuel unavailable")} \n~ {fuel_info["c02_tons"]} tons of CO2 emissions."""
     print(fuel_message)
     return fuel_message

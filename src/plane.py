@@ -10,7 +10,13 @@ import staticmaps
 from colorama import Back, Fore, Style
 from geopy.distance import geodesic
 from PIL import Image
-from requests.exceptions import ConnectionError, HTTPError, Timeout
+from requests.exceptions import (
+    ConnectionError as RequestsConnectionError,
+)
+from requests.exceptions import (
+    HTTPError,
+    Timeout,
+)
 from shapely.geometry import MultiPoint, Point
 from shapely.geometry.polygon import Polygon
 
@@ -224,7 +230,7 @@ class Plane:
 
         if self.last_pos_datetime:
             output_parts.append(
-                f"{Fore.CYAN}Seen:{Style.RESET_ALL} {Fore.LIGHTGREEN_EX}{str(time_since_contact).split('.')[0]}{Style.RESET_ALL}"
+                f"""{Fore.CYAN}Seen:{Style.RESET_ALL} {Fore.LIGHTGREEN_EX}{str(time_since_contact).split(".")[0]}{Style.RESET_ALL}"""
             )
 
         output_parts.append(
@@ -264,11 +270,11 @@ class Plane:
                     if to_airport["iata_code"] != ""
                     else to_airport["icao_code"]
                 )
-                airport_text = f"{code}, {to_airport['name']}"
+                airport_text = f"""{code}, {to_airport["name"]}"""
             else:
                 airport_text = f"{self.known_to_airport}"
             if "time_to" in extra_route_info.keys() and type != "divert":
-                arrival_rel = "in ~" + extra_route_info["time_to"]
+                arrival_rel = f"""in ~{extra_route_info["time_to"]}"""
             else:
                 arrival_rel = None
             if self.known_to_airport != self.nearest_from_airport:
@@ -279,7 +285,7 @@ class Plane:
                 elif type == "divert":
                     header = "Now diverting to"
                 if to_airport:
-                    area = f"{to_airport['municipality']}, {to_airport['region']}, {to_airport['iso_country']}"
+                    area = f"""{to_airport["municipality"]}, {to_airport["region"]}, {to_airport["iso_country"]}"""
                 else:
                     area = ""
                 route_to = f"{header} {area} ({airport_text})" + (
@@ -571,7 +577,7 @@ class Plane:
                     to_coord = (landed_airport["lat"], landed_airport["lon"])
                     distance_mi = float(geodesic(from_coord, to_coord).mi)
                     distance_nm = distance_mi / 1.150779448
-                    second_message = f"{f'{round(distance_mi):,}'} mile ({f'{round(distance_nm):,}'} NM) flight from {nearest_from_airport['iata_code'] if nearest_from_airport['iata_code'] != '' else nearest_from_airport['ident']} to {nearest_airport_dict['iata_code'] if nearest_airport_dict['iata_code'] != '' else nearest_airport_dict['ident']}"
+                    second_message = f"""{f"{round(distance_mi):,}"} mile ({f"{round(distance_nm):,}"} NM) flight from {nearest_from_airport["iata_code"] if nearest_from_airport["iata_code"] != "" else nearest_from_airport["ident"]} to {nearest_airport_dict["iata_code"] if nearest_airport_dict["iata_code"] != "" else nearest_airport_dict["ident"]}"""
                 if self.type is not None:
                     logger.info("Running fuel info calc")
                     flight_time_min = landed_time.total_seconds() / 60
@@ -888,7 +894,7 @@ class Plane:
                             except (
                                 HTTPError,
                                 Timeout,
-                                ConnectionError,
+                                RequestsConnectionError,
                                 json.decoder.JSONDecodeError,
                             ) as err:
                                 logger.error(f"Error with TFRS: {err}")
@@ -904,8 +910,7 @@ class Plane:
                                         for index, shape in enumerate(
                                             tfr["details"]["shapes"]
                                         ):
-                                            if "txtName" not in shape.keys():
-                                                shape["txtName"] = "shape_" + str(index)
+                                            shape["txtName"] = f"shape_{index}"
                                             polygon = None
                                             if shape["type"] == "poly":
                                                 points = shape["points"]
@@ -1080,11 +1085,11 @@ class Plane:
 
                         if nearest_airport_dict["distance_mi"] < 3:
                             if "touchngo" in self.circle_history.keys():
-                                message = f"Doing touch and goes at {nearest_airport_dict['icao_code']}"
+                                message = f"""Doing touch and goes at {nearest_airport_dict["icao_code"]}"""
                             else:
-                                message = f"Circling over {nearest_airport_dict['icao_code']} at {self.alt_ft}ft."
+                                message = f"""Circling over {nearest_airport_dict["icao_code"]} at {self.alt_ft}ft."""
                         else:
-                            message = f"Circling {round(nearest_airport_dict['distance_mi'], 2)}mi {cardinal} of {nearest_airport_dict['icao_code']}, {nearest_airport_dict['name']} at {self.alt_ft}ft. "
+                            message = f"""Circling {round(nearest_airport_dict["distance_mi"], 2)}mi {cardinal} of {nearest_airport_dict["icao_code"]}, {nearest_airport_dict["name"]} at {self.alt_ft}ft. """
                         tfr_map_filename = None
 
                         def tfr_image(context, aircraft_coords):
@@ -1116,8 +1121,10 @@ class Plane:
                                 else "Above"
                                 if in_tfr["context"] == "above"
                                 else "Below"
+                                if in_tfr["context"] == "below"
+                                else "Near"
                             )
-                            message += f" {wording_context} TFR {in_tfr['info']['NOTAM']}, a TFR for {in_tfr['info']['Type'].title()}"
+                            message += f""" {wording_context} TFR {in_tfr["info"]["NOTAM"]}, a TFR for {in_tfr["info"]["Type"].title()}"""
                             tfr_map_filename = tfr_image(
                                 context, (self.latitude, self.longitude)
                             )
@@ -1127,7 +1134,7 @@ class Plane:
                             and "distance" in closest_tfr.keys()
                             and closest_tfr["distance"] <= 20
                         ):
-                            message += f" {closest_tfr['distance']} miles from TFR {closest_tfr['info']['NOTAM']}, a TFR for {closest_tfr['info']['Type']}"
+                            message += f""" {closest_tfr["distance"]} miles from TFR {closest_tfr["info"]["NOTAM"]}, a TFR for {closest_tfr["info"]["Type"]}"""
                             tfr_map_filename = tfr_image(
                                 context, (self.latitude, self.longitude)
                             )
@@ -1136,7 +1143,7 @@ class Plane:
                             and closest_tfr is not None
                             and "distance" not in closest_tfr.keys()
                         ):
-                            message += f" near TFR {closest_tfr['info']['NOTAM']}, a TFR for {closest_tfr['info']['Type']}"
+                            message += f""" near TFR {closest_tfr["info"]["NOTAM"]}, a TFR for {closest_tfr["info"]["Type"]}"""
                             raise Exception(message)
                         logger.info(message)
                         # Notifications
@@ -1189,7 +1196,9 @@ class Plane:
                 self.recent_ra_types[ra["acas_ra"]["advisory"]] = ra["acas_ra"][
                     "unix_timestamp"
                 ]
-                ra_message = f"TCAS Resolution Advisory: {ra['acas_ra']['advisory']}"
+                ra_message = (
+                    f"""TCAS Resolution Advisory: {ra["acas_ra"]["advisory"]}"""
+                )
                 if ra["acas_ra"]["advisory_complement"] != "":
                     ra_message += f", {ra['acas_ra']['advisory_complement']}"
                 if bool(int(ra["acas_ra"]["MTE"])):
@@ -1202,7 +1211,7 @@ class Plane:
                     threat_id = (
                         threat_reg
                         if threat_reg is not None
-                        else "ICAO: " + ra["acas_ra"]["threat_id_hex"]
+                        else f"""ICAO: {ra["acas_ra"]["threat_id_hex"]}"""
                     )
                     ra_message += f", invader: {threat_id}"
 

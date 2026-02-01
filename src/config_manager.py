@@ -199,7 +199,7 @@ class ConfigManager:
                         # Check if this is a modification or addition
                         if file_path in self.file_to_icaos:
                             # Existing file - find the plane object from current list
-                            old_icao, old_pia_icao = self.file_to_icaos[file_path]
+                            old_icao, _ = self.file_to_icaos[file_path]
                             plane = None
                             for p in planes_list:
                                 if p.icao == old_icao:
@@ -342,9 +342,7 @@ def verify_configs_only(config_dir="./configs"):
 
                 try:
                     # Load config
-                    plane_config, icao, pia_icao = config_manager.load_config_file(
-                        file_path
-                    )
+                    _, icao, pia_icao = config_manager.load_config_file(file_path)
 
                     # Validate no conflicts
                     config_manager.validate_no_conflict(icao, pia_icao, file_path)
@@ -398,6 +396,5 @@ def verify_configs_only(config_dir="./configs"):
 
 
 if __name__ == "__main__":
-    """Run standalone config verification"""
     success = verify_configs_only()
     sys.exit(0 if success else 1)

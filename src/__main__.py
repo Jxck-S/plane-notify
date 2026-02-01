@@ -95,7 +95,9 @@ try:
     config_manager.load_all_configs(planes)
 
     # Link config manager to heartbeat for /reload endpoint
-    start_web_server(config_manager, planes)
+    web_host = main_config.get("WEB", "HOST", fallback="127.0.0.1")
+    web_port = int(main_config.get("WEB", "PORT", fallback=8778))
+    start_web_server(config_manager, planes, host=web_host, port=web_port)
 
     last_ra_count = None
     while True:
@@ -123,7 +125,7 @@ try:
             ra_count = len(ras)
             if last_ra_count is not None and ra_count != last_ra_count:
                 print(abs(ra_count - last_ra_count), "new Resolution Advisories")
-                for ra_num, ra in enumerate(ras[last_ra_count:]):
+                for ra in ras[last_ra_count:]:
                     ra = ast.literal_eval(ra)
                     if ra["hex"].lower() in planes:
                         if ra["hex"].lower() not in sorted_ras:
@@ -158,9 +160,9 @@ try:
                 if data[main_key]:
                     data_indexed = {}
                     # Indexing the data by hex/icao code
-                    for planeData in data[main_key]:
-                        hex_lower = planeData[icao_key].lower()
-                        data_indexed[hex_lower] = planeData
+                    for plane_data in data[main_key]:
+                        hex_lower = plane_data[icao_key].lower()
+                        data_indexed[hex_lower] = plane_data
                     # Iterating through planes and matching with indexed data
                     for plane in planes:
                         # Check if we have data for this plane's primary ICAO or PIA_ICAO

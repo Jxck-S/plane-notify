@@ -1,20 +1,10 @@
----
-engines:
-  ruff:
-    enabled: true
-    python_version: 3.13
-  trivy:
-    enabled: true
-  markdownlint:
-    enabled: true
-  shellcheck:
-    enabled: true
-  yamllint:
-    enabled: true
-
-exclude_paths:
-  - ".git/"
-  - ".github/"
-  - "configs/"
-  - "logs/"
-  - "__pycache__/"
+runtimes:
+    - node@22.2.0
+    - python@3.11.11
+tools:
+    - eslint@8.57.0
+    - lizard@1.17.31
+    - ruff@0.9.3
+    - pylint@3.3.9
+    - semgrep@1.78.0
+    - trivy@0.66.0

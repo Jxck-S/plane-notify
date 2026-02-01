@@ -1,5 +1,5 @@
 let ws;
-const wsUrl = (window.location.protocol === "https:" ? "wss://" : "ws://") + window.location.host + "/ws";
+const wsUrl = (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/ws';
 
 function connect() {
     ws = new WebSocket(wsUrl);
@@ -43,9 +43,9 @@ function connect() {
             summaryDiv.appendChild(innerDiv);
             resultContainer.appendChild(summaryDiv);
 
-            // If no changes, the "Reload complete" message from backend might be suppressed or different.
+            // If no changes, the 'Reload complete' message from backend might be suppressed or different.
             // We can rely on the last message or just set a standard one.
-            // But the backend sends a "Configuration unchanged" status message before the result msg usually.
+            // But the backend sends a 'Configuration unchanged' status message before the result msg usually.
             // Actually, let's just use a clear success message here.
 
             if (stats.modified === 0 && stats.added === 0 && stats.removed === 0) {
@@ -63,7 +63,7 @@ function connect() {
             // Refresh stats
             pollHeartbeat();
         } else if (data.type === 'error') {
-            statusLine.textContent = "Error: " + data.message;
+            statusLine.textContent = 'Error: ' + data.message;
             statusLine.style.color = '#dc3545';
             statusLine.style.fontWeight = 'bold';
 
@@ -89,12 +89,12 @@ function requestReload() {
     if (ws && ws.readyState === WebSocket.OPEN) {
         // Clear log on new request
         document.getElementById('action-status').textContent = 'Requesting reload...';
-        document.getElementById('result-container').innerHTML = '';
-        ws.send(JSON.stringify({ action: "reload" }));
+        document.getElementById('result-container').textContent = '';
+        ws.send(JSON.stringify({ action: 'reload' }));
     } else {
         const statusLine = document.getElementById('action-status');
         if (statusLine) {
-            statusLine.textContent = "WebSocket not connected. Please wait.";
+            statusLine.textContent = 'WebSocket not connected. Please wait.';
             statusLine.style.color = '#dc3545';
         }
     }
@@ -151,7 +151,7 @@ function pollHeartbeat() {
             }
         })
         .catch(error => {
-            console.error("Heartbeat failed:", error);
+            console.error('Heartbeat failed:', error);
             updateStatus('Backend Unreachable', 'status-error');
         });
 }

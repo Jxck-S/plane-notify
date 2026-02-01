@@ -150,7 +150,7 @@ async def reload_config_http():
     return stats
 
 
-def run_server(host: str = "0.0.0.0", port: int = 8778):
+def run_server(host: str = "127.0.0.1", port: int = 8778):
     """Run Uvicorn server"""
     # install_signal_handlers=False is CRITICAL to allow the main thread
     # to handle shutdown (Ctrl+C) correctly.
@@ -165,13 +165,18 @@ def run_server(host: str = "0.0.0.0", port: int = 8778):
     server.run()
 
 
-def start_web_server(cm, planes):
+def start_web_server(cm, planes, host: str = "127.0.0.1", port: int = 8778):
     """Start the web server in a background thread"""
     global config_manager, planes_list
     config_manager = cm
     planes_list = planes
 
-    server_thread = threading.Thread(target=run_server, name="web_server", daemon=True)
+    server_thread = threading.Thread(
+        target=run_server,
+        kwargs={"host": host, "port": port},
+        name="web_server",
+        daemon=True,
+    )
     server_thread.start()
-    logger.info("Web server thread started")
+    logger.info(f"Web server thread started on {host}:{port}")
     return server_thread

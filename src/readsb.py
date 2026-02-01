@@ -72,7 +72,7 @@ def pull_readsb(planes):
         dict: A dictionary containing the parsed JSON data from ReadSB, or None if an error occurred.
 
     Raises:
-        ValueError: If 'ENDPOINT' is not set in the READSB configuration.
+        ValueError: If "ENDPOINT" is not set in the READSB configuration.
         ValueError: If the API returns an error message.
     """
     if main_config.has_option("READSB", "ENDPOINT"):

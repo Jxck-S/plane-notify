@@ -27,6 +27,8 @@ py-staticmaps = {git = "https://github.com/Jxck-S/py-staticmaps"}
 praw = "*"
 python-blossom = "*"
 watchdog = "*"
+fastapi = "*"
+uvicorn = "*"
 
 [requires]
 python_version = "3.13"

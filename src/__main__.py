@@ -13,9 +13,8 @@ import signal
 from colorama import init
 from utils import clean_stack_trace
 from threading import Thread
-from heartbeat_server import Heartbeat
 from config_manager import ConfigManager
-from heartbeat_server import run_heartbeat_server
+from web.server import start_web_server
 import socials.discord as discord
 import ast
 from readsb import pull_date_ras as pull_date_ras_readsb, pull_readsb
@@ -55,10 +54,8 @@ import db
 db.init_db(main_config)
 
 
-heartbeat = Heartbeat()
-server_thread = Thread(target=run_heartbeat_server, args=(heartbeat,), name="heartbeat")  # Pass function and arguments properly
-server_thread.daemon = True
-server_thread.start()
+
+
 
 if main_config.getboolean('DISCORD', 'ENABLE'):
         role_id = main_config.get('DISCORD', 'ROLE_ID') if main_config.has_option('DISCORD', 'ROLE_ID') and main_config.get('DISCORD', 'ROLE_ID').strip() != "" else None
@@ -90,16 +87,12 @@ try:
     config_manager.load_all_configs(planes)
     
     # Link config manager to heartbeat for /reload endpoint
-    heartbeat.set_config_manager(config_manager, planes)
+    start_web_server(config_manager, planes)
 
 
     while True:
         # Check for reload request from /reload endpoint
-        if heartbeat.check_and_clear_reload():
-            stats = config_manager.reload_all_configs(planes)
-            heartbeat.reload_stats = stats
-        
-        heartbeat.update_timestamp()
+
         
         datetime_now = datetime.now()
         start_time = time.time()
@@ -130,45 +123,52 @@ try:
                 print("No new Resolution Advisories")
             last_ra_count = ra_count
         # Check for RAs for each plane
-        for plane in planes:
-            if sorted_ras != {} and plane.icao in sorted_ras:
-                print(plane.icao, "has", len(sorted_ras[plane.icao]), "RAs")
-                plane.check_new_ras(sorted_ras[plane.icao])
-            elif sorted_ras != {} and plane.pia_icao and plane.pia_icao in sorted_ras:
-                print(plane.pia_icao, "has", len(sorted_ras[plane.pia_icao]), "RAs")
-                plane.check_new_ras(sorted_ras[plane.pia_icao])
-            plane.expire_ra_types()
-        #Normal API data
-        icao_key = 'hex'
-        data = pull_readsb(planes)
-        if data is not None:
-            main_key = 'aircraft' if 'aircraft' in data else 'ac'
-            if data[main_key]:
-                data_indexed = {}
-                #Indexing the data by hex/icao code
-                for planeData in data[main_key]:
-                    hex_lower = planeData[icao_key].lower()
-                    data_indexed[hex_lower] = planeData
-                #Iterating through planes and matching with indexed data
-                for plane in planes:
-                    # Check if we have data for this plane's primary ICAO or PIA_ICAO
-                    hex_data = None
-                    is_pia = False
-                    
-                    if plane.icao in data_indexed:
-                        hex_data = data_indexed[plane.icao]
+        # Check for RAs for each plane
+        # Use config_manager lock to safely iterate planes during potential reload
+        # Lock covers the entire processing block to prevent interleaved logs with reload
+        with config_manager.lock:
+            for plane in planes:
+                if sorted_ras != {} and plane.icao in sorted_ras:
+                    print(plane.icao, "has", len(sorted_ras[plane.icao]), "RAs")
+                    plane.check_new_ras(sorted_ras[plane.icao])
+                elif sorted_ras != {} and plane.pia_icao and plane.pia_icao in sorted_ras:
+                    print(plane.pia_icao, "has", len(sorted_ras[plane.pia_icao]), "RAs")
+                    plane.check_new_ras(sorted_ras[plane.pia_icao])
+                plane.expire_ra_types()
+            
+            #Normal API data
+            icao_key = 'hex'
+            
+            # Pass safe copy if needed, but we hold lock now so safe to access planes
+            data = pull_readsb(planes)
+            if data is not None:
+                main_key = 'aircraft' if 'aircraft' in data else 'ac'
+                if data[main_key]:
+                    data_indexed = {}
+                    #Indexing the data by hex/icao code
+                    for planeData in data[main_key]:
+                        hex_lower = planeData[icao_key].lower()
+                        data_indexed[hex_lower] = planeData
+                    #Iterating through planes and matching with indexed data
+                    for plane in planes:
+                        # Check if we have data for this plane's primary ICAO or PIA_ICAO
+                        hex_data = None
                         is_pia = False
-                    elif plane.pia_icao and plane.pia_icao in data_indexed:
-                        hex_data = data_indexed[plane.pia_icao]
-                        is_pia = True
-                    
-                    if hex_data:
-                        plane.run_readsb(hex_data, is_pia)
-                    else:
+                        
+                        if plane.icao in data_indexed:
+                            hex_data = data_indexed[plane.icao]
+                            is_pia = False
+                        elif plane.pia_icao and plane.pia_icao in data_indexed:
+                            hex_data = data_indexed[plane.pia_icao]
+                            is_pia = True
+                        
+                        if hex_data:
+                            plane.run_readsb(hex_data, is_pia)
+                        else:
+                            plane.run_empty()
+                else:
+                    for plane in planes: # Changed from planes.values() to planes as it's a list
                         plane.run_empty()
-            else:
-                for plane in planes: # Changed from planes.values() to planes as it's a list
-                    plane.run_empty()
 
 
         elapsed_calc_time = time.time() - start_time
@@ -199,10 +199,13 @@ except Exception as e:
         except OSError:
             pass
         clean_e = clean_stack_trace(str(e))
-        logging.basicConfig(filename='crash_latest.log', filemode='w', format='%(asctime)s - %(message)s')
-        logging.Formatter.converter = time.gmtime
-        logging.error(e)
-        logging.error(clean_stack_trace(str(traceback.format_exc())))
+        clean_e = clean_stack_trace(str(e))
+        trace_output = clean_stack_trace(str(traceback.format_exc()))
+        
+        # Write directly to file to ensure it exists (basicConfig is ignored if already configured)
+        with open('crash_latest.log', 'w') as f:
+            f.write(f"{datetime.now(timezone.utc)} - {e}\n")
+            f.write(f"{trace_output}\n")
         error_message = f"Error Exiting: {type(e)} " + clean_e 
         if plane:
             error_message += f"\nFailed on ({plane.config_path}) - {plane.icao}"

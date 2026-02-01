@@ -127,6 +127,10 @@ class ConfigManager:
                         # Create plane object
                         plane = Plane(icao, plane_config)
                         
+                        # Calculate and store initial file hash for change detection
+                        with open(file_path, 'rb') as f:
+                            plane._config_hash = hashlib.md5(f.read()).hexdigest()
+                        
                         # Add to planes list (only one entry per unique plane)
                         planes_list.append(plane)
                         
@@ -140,11 +144,17 @@ class ConfigManager:
         print(f"{len(planes_list)} planes configured.")
         return len(planes_list)
     
-    def reload_all_configs(self, planes_list):
+    def reload_all_configs(self, planes_list, status_callback=None):
         """Reload all config files and update planes list"""
         import hashlib
         
-        print(f"\n{Fore.CYAN}=== Reloading all configs ==={Style.RESET_ALL}")
+        # Helper for dual logging (console + callback)
+        def log(msg, color=Fore.CYAN):
+            print(f"{color}{msg}{Style.RESET_ALL}")
+            if status_callback:
+                status_callback(msg)
+        
+        log("Checking configurations...")
         
         # Get current files and their hashes
         current_files = set()
@@ -184,7 +194,7 @@ class ConfigManager:
                                 if old_hash != file_hash:
                                     modified_count += 1
                                     rel_path = self.get_relative_path(file_path)
-                                    print(f"{Fore.YELLOW}Modified: {rel_path}{Style.RESET_ALL}")
+                                    log(f"Modified: {rel_path}", Fore.YELLOW)
                                 
                                 # Update existing plane
                                 plane.config = plane_config
@@ -207,7 +217,7 @@ class ConfigManager:
                             new_planes.append(plane)
                             added_count += 1
                             rel_path = self.get_relative_path(file_path)
-                            print(f"{Fore.GREEN}Added: {rel_path}{Style.RESET_ALL}")
+                            log(f"Added: {rel_path}", Fore.GREEN)
                         
                         # Update tracking
                         self.file_to_icaos[file_path] = (icao, pia_icao)
@@ -217,7 +227,7 @@ class ConfigManager:
                         
                     except Exception as e:
                         rel_path = self.get_relative_path(file_path)
-                        print(f"{Fore.RED}Error reloading {rel_path}: {e}{Style.RESET_ALL}")
+                        log(f"Error reloading {rel_path}: {e}", Fore.RED)
         
         # Find removed files
         removed_files = set(self.file_to_icaos.keys()) - current_files
@@ -226,11 +236,39 @@ class ConfigManager:
             icao, pia_icao = self.file_to_icaos.get(file_path, (None, None))
             if icao:
                 rel_path = self.get_relative_path(file_path)
-                print(f"{Fore.RED}Removed: {rel_path} (ICAO: {icao}){Style.RESET_ALL}")
+                log(f"Removed: {rel_path} (ICAO: {icao})", Fore.RED)
         
-        # Clear and update planes list
-        planes_list.clear()
-        planes_list.extend(new_planes)
+        
+        # Check if actual updates are needed
+        total_changes = modified_count + added_count + removed_count
+        
+        if total_changes == 0:
+             log("No changes found. Configuration is up to date.", Fore.GREEN)
+             # Log the reload (internal only)
+             self.change_logger.info(f"RELOAD | No changes | Total planes: {len(planes_list)}")
+             return {
+                "total": len(planes_list),
+                "modified": 0,
+                "added": 0,
+                "removed": 0,
+                "unchanged": reloaded_count
+             }
+
+        # Update planes list safely with serialization
+        if self.lock.acquire(blocking=False):
+             # Lock acquired immediately
+             try:
+                 planes_list.clear()
+                 planes_list.extend(new_planes)
+             finally:
+                 self.lock.release()
+        else:
+             # Lock is busy, must wait
+             log("Waiting for lock... (System busy)")
+             with self.lock:
+                 planes_list.clear()
+                 planes_list.extend(new_planes)
+             log("Lock released.")
         
         # Clean up tracking for removed files
         for file_path in removed_files:
@@ -238,14 +276,14 @@ class ConfigManager:
         
         unchanged_count = reloaded_count - modified_count
         
-        print(f"{Fore.GREEN}Reload complete: {len(planes_list)} planes configured{Style.RESET_ALL}")
-        print(f"  Modified: {modified_count}, Added: {added_count}, Removed: {removed_count}, Unchanged: {unchanged_count}")
+        log(f"Reload complete: {len(planes_list)} planes configured", Fore.GREEN)
+        log(f"Details: {modified_count} mod, {added_count} add, {removed_count} del", Fore.RESET)
         
         # Log the reload
         self.change_logger.info(f"RELOAD | Total: {len(planes_list)} | Modified: {modified_count} | Added: {added_count} | Removed: {removed_count} | Unchanged: {unchanged_count}")
         
         return {
-            "total_planes": len(planes_list),
+            "total": len(planes_list),
             "modified": modified_count,
             "added": added_count,
             "removed": removed_count,

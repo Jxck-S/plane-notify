@@ -77,12 +77,14 @@ button:disabled {
 .badge {
     display: inline-block;
     padding: 6px 10px;
+
     /* Larger touch target */
     border-radius: 12px;
     font-size: 0.85em;
     font-weight: 600;
     margin-right: 8px;
     margin-bottom: 8px;
+
     /* Mobile spacing */
     color: white;
 }

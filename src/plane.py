@@ -1,52 +1,51 @@
 import json
+import logging
 import os
 import tempfile
-from datetime import UTC, datetime, timedelta
-
-from requests.exceptions import HTTPError
-
-from cnf_parser_ext import ConfigParserExt
-from db import (
-    add_flight,
-    get_aircraft_reg_by_icao,
-    update_flight,
-)
-from flight_static_maps.map import generate_map
-from utils import apply_prefix, set_dyn_title
-
-try:
-    from lookup_route import lookup_route
-
-    ENABLE_ROUTE_LOOKUP = True
-except ImportError:
-    ENABLE_ROUTE_LOOKUP = False
 import time
+from datetime import UTC, datetime, timedelta
 
 import requests
 import staticmaps
 from colorama import Back, Fore, Style
 from geopy.distance import geodesic
 from PIL import Image
-from requests.exceptions import ConnectionError, Timeout
+from requests.exceptions import ConnectionError, HTTPError, Timeout
 from shapely.geometry import MultiPoint, Point
 from shapely.geometry.polygon import Polygon
 
-from airport_lookup import get_airport_by_icao, getClosestAirport
+from airport_lookup import get_airport_by_icao, get_closest_airport
 from calculate_headings import (
     calculate_cardinal,
     calculate_deg_change,
     calculate_from_bearing,
 )
+from cnf_parser_ext import ConfigParserExt
 from constants import Flags, ImageTypes, NavModes, normalize_nav_modes
+from db import (
+    add_flight,
+    get_aircraft_reg_by_icao,
+    update_flight,
+)
 from flight_static_maps.data_adapters import pn_adapter
+from flight_static_maps.map import generate_map
 from fuel_calc import fuel_calculation, fuel_message
 from geo import get_circle_perimeter_coords
-from utils import cleanup_images
+from notification_manager import NotificationManager
+from providers import Providers
+from utils import cleanup_images, set_dyn_title
+
+try:
+    import lookup_route  # noqa: F401
+
+    ENABLE_ROUTE_LOOKUP = True
+except ImportError:
+    ENABLE_ROUTE_LOOKUP = False
+
+logger = logging.getLogger(__name__)
 
 main_config = ConfigParserExt()
 main_config.read("./configs/mainconf.ini")
-from notification_manager import NotificationManager
-from providers import Providers
 
 
 class Plane:
@@ -182,14 +181,14 @@ class Plane:
                 seconds=ac_dict["seen_pos"]
             )
         except (ValueError, KeyError) as e:
-            print("Got data but some data is invalid!")
-            print(e)
+            logger.warning("Got data but some data is invalid!")
+            logger.warning(e)
             print(Fore.YELLOW + "READSB Sourced Data: ", ac_dict, Style.RESET_ALL)
             self.print_footer()
         else:
             # Error Handling for bad data, sometimes it would seem to be ADSB Decode error
             if (not self.on_ground) and self.speed and self.speed <= 10:
-                print("Not running check, appears to be bad ADSB Decode")
+                logger.debug("Not running check, appears to be bad ADSB Decode")
             else:
                 self.feeding = True
                 self.run_check()
@@ -239,7 +238,7 @@ class Plane:
         remaning_len = 85 - len(line)
         line += "-" * remaning_len
         line += f"ICAO: {self.active_icao}---"
-        print(Back.MAGENTA + line + suffix + Style.RESET_ALL)
+        logger.info(Back.MAGENTA + line + suffix + Style.RESET_ALL)
 
     def print_header(self):
         self._print_box_line(f"---BEGIN---------{self.config.filepath}")
@@ -248,7 +247,7 @@ class Plane:
         self._print_box_line("---END", suffix=f"{Style.RESET_ALL}\n")
 
     def get_time_since(self, datetime_obj):
-        if datetime_obj != None:
+        if datetime_obj is not None:
             time_since = datetime.now() - datetime_obj
         else:
             time_since = None
@@ -388,20 +387,20 @@ class Plane:
             elif (
                 self.last_feeding is False
                 and self.feeding
-                and self.landing_plausible == False
+                and not self.landing_plausible
             ):
-                nearest_airport_dict = getClosestAirport(
+                nearest_airport_dict = get_closest_airport(
                     self.latitude, self.longitude, self.config.get("AIRPORT", "TYPES")
                 )
                 if nearest_airport_dict["elevation_ft"]:
                     alt_above_airport = self.alt_ft - int(
                         nearest_airport_dict["elevation_ft"]
                     )
-                    print(f"AGL nearest airport: {alt_above_airport}")
+                    logger.info(f"AGL nearest airport: {alt_above_airport}")
                 else:
                     alt_above_airport = None
                 if (
-                    alt_above_airport != None and alt_above_airport <= 10000
+                    alt_above_airport is not None and alt_above_airport <= 10000
                 ) or self.alt_ft <= 15000:
                     self.tookoff = True
                     trigger_type = "data acquisition"
@@ -429,7 +428,7 @@ class Plane:
             and self.last_on_ground is False
         ):
             self.landing_plausible = True
-            print(
+            logger.info(
                 "Near landing conditions, if contiuned data loss for configured time, and  if under 10k AGL landing true"
             )
 
@@ -438,7 +437,7 @@ class Plane:
             and self.feeding is False
             and time_since_contact.total_seconds() >= (self.data_loss_mins * 60)
         ):
-            nearest_airport_dict = getClosestAirport(
+            nearest_airport_dict = get_closest_airport(
                 self.latitude, self.longitude, self.config.get("AIRPORT", "TYPES")
             )
             if nearest_airport_dict["elevation_ft"]:
@@ -449,7 +448,7 @@ class Plane:
             else:
                 alt_above_airport = None
             if (
-                alt_above_airport != None and alt_above_airport <= 10000
+                alt_above_airport is not None and alt_above_airport <= 10000
             ) or self.alt_ft <= 15000:
                 self.landing_plausible = False
                 self.on_ground = None
@@ -457,26 +456,26 @@ class Plane:
                 trigger_type = "data loss"
                 type_header = "Landed near"
             else:
-                print("Alt greater then 10k AGL")
+                logger.info("Alt greater then 10k AGL")
                 self.landing_plausible = False
                 self.on_ground = None
         else:
             self.landed = False
 
         if self.landed:
-            print("Landed by", trigger_type)
+            logger.info(f"Landed by {trigger_type}")
         if self.tookoff:
-            print("Tookoff by", trigger_type)
+            logger.info(f"Tookoff by {trigger_type}")
         # Find nearest airport, and location
         if self.landed or self.tookoff:
             if "nearest_airport_dict" in globals():
                 pass  # Airport already set
             elif trigger_type in ["now on ground", "data acquisition", "data loss"]:
-                nearest_airport_dict = getClosestAirport(
+                nearest_airport_dict = get_closest_airport(
                     self.latitude, self.longitude, self.config.get("AIRPORT", "TYPES")
                 )
             elif trigger_type == "no longer on ground":
-                nearest_airport_dict = getClosestAirport(
+                nearest_airport_dict = get_closest_airport(
                     self.last_latitude,
                     self.last_longitude,
                     self.config.get("AIRPORT", "TYPES"),
@@ -495,13 +494,15 @@ class Plane:
                     location_string += f", {loc}"
                 last_loc = loc
 
-            print(
-                Fore.GREEN + "Country:",
-                country,
-                "State:",
-                state,
-                "City:",
-                city + Style.RESET_ALL,
+            logger.info(
+                Fore.GREEN
+                + "Country: "
+                + country
+                + " State: "
+                + state
+                + " City: "
+                + city
+                + Style.RESET_ALL
             )
         # Title
         title = self.config.get_title("DATA")
@@ -532,7 +533,7 @@ class Plane:
                         self.recheck_route_time = 1
                     else:
                         self.recheck_route_time = 10
-            elif self.landed and self.takeoff_time != None:
+            elif self.landed and self.takeoff_time is not None:
                 landed_time = datetime.now(UTC) - self.takeoff_time
                 if trigger_type == "data loss":
                     landed_time -= timedelta(seconds=time_since_contact.total_seconds())
@@ -572,7 +573,7 @@ class Plane:
                     distance_nm = distance_mi / 1.150779448
                     second_message = f"{f'{round(distance_mi):,}'} mile ({f'{round(distance_nm):,}'} NM) flight from {nearest_from_airport['iata_code'] if nearest_from_airport['iata_code'] != '' else nearest_from_airport['ident']} to {nearest_airport_dict['iata_code'] if nearest_airport_dict['iata_code'] != '' else nearest_airport_dict['ident']}"
                 if self.type is not None:
-                    print("Running fuel info calc")
+                    logger.info("Running fuel info calc")
                     flight_time_min = landed_time.total_seconds() / 60
                     fuel_info = fuel_calculation(self.type, flight_time_min)
                     if fuel_info is not None:
@@ -589,10 +590,10 @@ class Plane:
             message = (
                 (f"{type_header} {location_string}.")
                 + ("" if route_to is None else f" {route_to}.")
-                + ((f" {landed_time_msg}") if landed_time_msg != None else "")
+                + ((f" {landed_time_msg}") if landed_time_msg is not None else "")
             )
-            print(message)
-            message_w_title = apply_prefix(self.title, message)
+            logger.info(message)
+
             if (
                 self.config.getboolean("TELEGRAM", "ENABLE")
                 or self.config.getboolean("MASTODON", "ENABLE")
@@ -613,7 +614,7 @@ class Plane:
                     "imgs",
                     f"{db_id}{self.active_icao.upper()}_{image_type}_{timestamp}_map",
                 )
-                print(map_img_filename)
+                logger.debug(map_img_filename)
                 if main_config.get("MAP", "OPTION") == "fsm":
                     info = pn_adapter(self)
                     info["nearest_airport"] = nearest_airport_dict
@@ -627,7 +628,7 @@ class Plane:
                     )
                 else:
                     raise ValueError("Map option not set correctly in this planes conf")
-                alt_text = f"Reg: {self.reg} On Ground: {str(self.on_ground)} Alt: {str(self.alt_ft)} Last Contact: {str(time_since_contact)} Trigger: {trigger_type}"
+                # alt_text = f"Reg: {self.reg} On Ground: {str(self.on_ground)} Alt: {str(self.alt_ft)} Last Contact: {str(time_since_contact)} Trigger: {trigger_type}"
             else:
                 map_img_filename = None
 
@@ -663,9 +664,8 @@ class Plane:
         ):
             self.recheck_route_time += 10
             route_to = self.route_info()
-            if route_to != None:
-                print(route_to)
-                route_to_w_title = apply_prefix(self.title, route_to)
+            if route_to is not None:
+                logger.info(route_to)
                 self.notification_manager.set_one_time_exclusive(
                     [Providers.TELEGRAM, Providers.DISCORD, Providers.X]
                 )
@@ -680,7 +680,7 @@ class Plane:
                     if (
                         datetime.now() - datetime.fromtimestamp(trace[0])
                     ).total_seconds() >= 20 * 60:
-                        print("Trace Expire, removed")
+                        logger.info("Trace Expire, removed")
                         self.circle_history["traces"].remove(trace)
             # Expire touchngo
             if (
@@ -713,7 +713,7 @@ class Plane:
                     squawk_message = (
                         f"{self.title} Squawking {self.last_emergency[1]} {emergency_squawks[self.squawk]}"
                     ).strip()
-                    print(squawk_message)
+                    logger.info(squawk_message)
                     # Map generation
                     image_type = ImageTypes.EMERGENCY
                     timestamp = datetime.now(UTC).strftime("%Y-%m-%d_%H-%M")
@@ -748,10 +748,8 @@ class Plane:
                 and not self.emergency_already_triggered
                 and not self.on_ground
             ):
-                print(
-                    "Emergency",
-                    self.squawk,
-                    "detected storing code and time and waiting to trigger",
+                logger.info(
+                    f"Emergency {self.squawk} detected storing code and time and waiting to trigger"
                 )
                 self.last_emergency = (self.last_pos_datetime, self.squawk)
             elif (
@@ -761,10 +759,10 @@ class Plane:
                 self.emergency_already_triggered = None
 
             # Nav Modes Notifications
-            if self.nav_modes != None and self.last_nav_modes != None:
+            if self.nav_modes is not None and self.last_nav_modes is not None:
                 for mode in self.nav_modes:
                     if mode not in self.last_nav_modes:
-                        print(mode, "enabled")
+                        logger.info(f"{mode} enabled")
                         message = f"{mode} mode enabled."
                         if mode == NavModes.APPROACH:
                             image_type = ImageTypes.APPROACH
@@ -810,7 +808,7 @@ class Plane:
                 and self.last_sel_alt is not None
                 and self.last_sel_alt != self.sel_nav_alt
             ):
-                print("Nav altitude is now", self.sel_nav_alt)
+                logger.info(f"Nav altitude is now {self.sel_nav_alt}")
                 message = " Sel.  alt. " + str(f"{self.sel_nav_alt:,} ft")
                 self.notification_manager.set_one_time_exclusive([Providers.DISCORD])
                 self.notification_manager.post_to_all(
@@ -840,31 +838,31 @@ class Plane:
                     total_change += float(trace[3])
                     coords.append((float(trace[1]), float(trace[2])))
 
-                print("Total Bearing Change", round(total_change, 3))
+                logger.info(f"Total Bearing Change {round(total_change, 3)}")
                 # Check Centroid when Bearing change meets req
                 if (
                     abs(total_change) >= 720
                     and self.circle_history["triggered"] is False
                 ):
-                    print("Circling Bearing Change Met")
+                    logger.info("Circling Bearing Change Met")
                     aircraft_coords = (self.latitude, self.longitude)
                     points = MultiPoint(coords)
                     cent = (
                         points.centroid
                     )  # True centroid, not necessarily an existing point
                     # rp =  (points.representative_point()) #A represenative point, not centroid,
-                    print(cent)
+                    logger.debug(cent)
                     # print(rp)
                     distance_to_centroid = round(
                         geodesic(aircraft_coords, cent.coords).mi, 2
                     )
-                    print(
+                    logger.info(
                         f"Distance to centroid of circling coordinates {distance_to_centroid} miles"
                     )
                     if distance_to_centroid <= 15:
-                        print("Within 15 miles of centroid, CIRCLING")
+                        logger.info("Within 15 miles of centroid, CIRCLING")
                         # Finds Nearest Airport
-                        nearest_airport_dict = getClosestAirport(
+                        nearest_airport_dict = get_closest_airport(
                             self.latitude,
                             self.longitude,
                             self.config.get("AIRPORT", "TYPES"),
@@ -893,7 +891,7 @@ class Plane:
                                 ConnectionError,
                                 json.decoder.JSONDecodeError,
                             ) as err:
-                                print("Error with TFRS:", err)
+                                logger.error(f"Error with TFRS: {err}")
                                 tfrs = None
                             else:
                                 for tfr in tfrs:
@@ -982,29 +980,28 @@ class Plane:
                                             shape["txtName"]
                                             == in_tfr["closest_shape_name"]
                                         ):
-                                            valDistVerUpper, valDistVerLower = (
+                                            val_dist_ver_upper, val_dist_ver_lower = (
                                                 int(shape["valDistVerUpper"]),
                                                 int(shape["valDistVerLower"]),
                                             )
-                                            print(
-                                                "In TFR based off location checking alt next",
-                                                in_tfr,
+                                            logger.info(
+                                                f"In TFR based off location checking alt next {in_tfr}"
                                             )
                                             break
                                     if not (
-                                        self.alt_ft >= valDistVerLower
-                                        and self.alt_ft <= valDistVerUpper
+                                        self.alt_ft >= val_dist_ver_lower
+                                        and self.alt_ft <= val_dist_ver_upper
                                     ):
-                                        if self.alt_ft > valDistVerUpper:
+                                        if self.alt_ft > val_dist_ver_upper:
                                             in_tfr["context"] = "above"
-                                        elif self.alt_ft < valDistVerLower:
+                                        elif self.alt_ft < val_dist_ver_lower:
                                             in_tfr["context"] = "below"
-                                        print(
-                                            "But not in alt of TFR", in_tfr["context"]
+                                        logger.info(
+                                            f"But not in alt of TFR {in_tfr['context']}"
                                         )
 
                                 if in_tfr is None:
-                                    print("Closest TFR", closest_tfr)
+                                    logger.info(f"Closest TFR {closest_tfr}")
                             # Generate Map
                             context = staticmaps.Context()
                             context.set_tile_provider(staticmaps.tile_provider_OSM)
@@ -1141,8 +1138,7 @@ class Plane:
                         ):
                             message += f" near TFR {closest_tfr['info']['NOTAM']}, a TFR for {closest_tfr['info']['Type']}"
                             raise Exception(message)
-                        print(message)
-                        message_w_title = apply_prefix(self.title, message)
+                        logger.info(message)
                         # Notifications
                         self.notification_manager.post_to_all(
                             message=message,
@@ -1155,7 +1151,7 @@ class Plane:
                             os.remove(tfr_map_filename)
                         self.circle_history["triggered"] = True
                 elif abs(total_change) <= 360 and self.circle_history["triggered"]:
-                    print("No Longer Circling, trigger cleared")
+                    logger.info("No Longer Circling, trigger cleared")
                     self.circle_history["triggered"] = False
             # #Power Up
             # if self.last_feeding == False and self.speed == 0 and self.on_ground:
@@ -1175,11 +1171,11 @@ class Plane:
 
         self.expire_traces()
 
-        if self.takeoff_time != None:
+        if self.takeoff_time is not None:
             elapsed_time = datetime.now(UTC) - self.takeoff_time
             hours, remainder = divmod(elapsed_time.total_seconds(), 3600)
             minutes, seconds = divmod(remainder, 60)
-            print(
+            logger.info(
                 f"Time Since Take off  {int(hours)} Hours : {int(minutes)} Mins : {int(seconds)} Secs"
             )
         self.print_footer()
@@ -1210,14 +1206,12 @@ class Plane:
                     )
                     ra_message += f", invader: {threat_id}"
 
-                image_type = ImageTypes.RA
-                timestamp = datetime.now(UTC).strftime("%Y-%m-%d_%H-%M")
-                map_img_filename = os.path.join(
-                    tempfile.gettempdir(),
-                    "plane-notify",
-                    "imgs",
-                    f"{self.active_icao.upper()}_{image_type}_{timestamp}_map",
-                )
+                # map_img_filename = os.path.join(
+                #     tempfile.gettempdir(),
+                #     "plane-notify",
+                #     "imgs",
+                #     f"{self.active_icao.upper()}_{image_type}_{timestamp}_map",
+                # )
                 # Map generation for RA is currently disabled, more complex data is needed
 
                 self.notification_manager.set_one_time_exclusive([Providers.DISCORD])
@@ -1234,7 +1228,7 @@ class Plane:
             for ra_type, postime in self.recent_ra_types.copy().items():
                 timestamp = datetime.fromtimestamp(postime)
                 time_since_ra = datetime.now() - timestamp
-                print(time_since_ra)
+                logger.debug(time_since_ra)
                 if time_since_ra.seconds >= 600:
-                    print(ra_type)
+                    logger.info(f"Expiring RA: {ra_type}")
                     self.recent_ra_types.pop(ra_type)

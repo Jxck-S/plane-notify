@@ -4,7 +4,7 @@ const wsUrl = (window.location.protocol === "https:" ? "wss://" : "ws://") + win
 function connect() {
     ws = new WebSocket(wsUrl);
 
-    ws.onmessage = function (event) {
+    ws.addEventListener('message', function (event) {
         const data = JSON.parse(event.data);
         const statusLine = document.getElementById('action-status');
         const btn = document.getElementById('reload-btn');
@@ -18,17 +18,30 @@ function connect() {
             btn.textContent = 'Processing...';
         } else if (data.type === 'result') {
             const stats = data.data;
-            resultContainer.innerHTML = `
-                <div class="result-summary">
-                    <div>
-                        <span class="badge badge-modified">Modified: ${stats.modified}</span>
-                        <span class="badge badge-added">Added: ${stats.added}</span>
-                        <span class="badge badge-removed">Removed: ${stats.removed}</span>
-                        <span class="badge badge-unchanged">Unchanged: ${stats.unchanged}</span>
-                        <span class="badge badge-unchanged" style="background-color: #17a2b8;">Total: ${stats.total}</span>
-                    </div>
-                </div>
-                `;
+            resultContainer.textContent = '';
+            const summaryDiv = document.createElement('div');
+            summaryDiv.className = 'result-summary';
+
+            const innerDiv = document.createElement('div');
+
+            const createBadge = (label, count, className, styles = {}) => {
+                const span = document.createElement('span');
+                span.className = `badge ${className}`;
+                span.textContent = `${label}: ${count}`;
+                for (const [key, value] of Object.entries(styles)) {
+                    span.style[key] = value;
+                }
+                return span;
+            };
+
+            innerDiv.appendChild(createBadge('Modified', stats.modified, 'badge-modified'));
+            innerDiv.appendChild(createBadge('Added', stats.added, 'badge-added'));
+            innerDiv.appendChild(createBadge('Removed', stats.removed, 'badge-removed'));
+            innerDiv.appendChild(createBadge('Unchanged', stats.unchanged, 'badge-unchanged'));
+            innerDiv.appendChild(createBadge('Total', stats.total, 'badge-unchanged', { backgroundColor: '#17a2b8' }));
+
+            summaryDiv.appendChild(innerDiv);
+            resultContainer.appendChild(summaryDiv);
 
             // If no changes, the "Reload complete" message from backend might be suppressed or different.
             // We can rely on the last message or just set a standard one.
@@ -57,19 +70,19 @@ function connect() {
             btn.disabled = false;
             btn.textContent = 'Reload Config';
         }
-    };
+    });
 
-    ws.onclose = function (e) {
-        console.log('Socket is closed. Reconnect will be attempted in 1 second.', e.reason);
+    ws.addEventListener('close', function (e) {
+        // Reconnect will be attempted
         setTimeout(function () {
             connect();
         }, 1000);
-    };
+    });
 
-    ws.onerror = function (err) {
+    ws.addEventListener('error', function (err) {
         console.error('Socket encountered error: ', err.message, 'Closing socket');
         ws.close();
-    };
+    });
 }
 
 function requestReload() {
@@ -79,7 +92,11 @@ function requestReload() {
         document.getElementById('result-container').innerHTML = '';
         ws.send(JSON.stringify({ action: "reload" }));
     } else {
-        alert("WebSocket not connected. Please wait.");
+        const statusLine = document.getElementById('action-status');
+        if (statusLine) {
+            statusLine.textContent = "WebSocket not connected. Please wait.";
+            statusLine.style.color = '#dc3545';
+        }
     }
 }
 
@@ -150,9 +167,9 @@ function checkStaleness() {
     }
 }
 
-window.onload = function () {
+window.addEventListener('load', function () {
     connect();
     setInterval(pollHeartbeat, 2000);
     setInterval(checkStaleness, 1000);
     pollHeartbeat();
-};
+});

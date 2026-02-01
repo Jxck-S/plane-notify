@@ -67,7 +67,6 @@ def upload_to_blossom(file_path, private_key):
         for server, result in upload_results.items():
             if "url" in result and "error" not in result:
                 primary_url = result["url"]
-                sha256 = result["sha256"]
                 logging.info(f"✓ Uploaded to {server}: {primary_url}")
                 break
 
@@ -78,7 +77,7 @@ def upload_to_blossom(file_path, private_key):
 
     except Exception as e:
         logging.error(f"Failed to upload to blossom servers: {str(e)}")
-        raise Exception("Failed to upload to any blossom server")
+        raise Exception("Failed to upload to any blossom server") from e
 
 
 def post(message, private_key, image_url=None, reply_to=None):

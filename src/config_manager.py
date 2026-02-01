@@ -124,7 +124,7 @@ class ConfigManager:
     def load_all_configs(self, planes_list):
         """Load all config files on startup and populate planes list"""
         print("Found the following configs")
-        for dirpath, dirname, filenames in os.walk(self.config_dir):
+        for dirpath, _dirname, filenames in os.walk(self.config_dir):
             for filename in [
                 f for f in filenames if f.endswith(".ini") and f != "mainconf.ini"
             ]:
@@ -181,7 +181,7 @@ class ConfigManager:
         removed_count = 0
 
         # Scan for all config files
-        for dirpath, dirname, filenames in os.walk(self.config_dir):
+        for dirpath, _dirname, filenames in os.walk(self.config_dir):
             for filename in [
                 f for f in filenames if f.endswith(".ini") and f != "mainconf.ini"
             ]:
@@ -331,7 +331,7 @@ def verify_configs_only(config_dir="./configs"):
 
     print("Scanning config files...\n")
 
-    for dirpath, dirname, filenames in os.walk(config_manager.config_dir):
+    for dirpath, _dirname, filenames in os.walk(config_manager.config_dir):
         for filename in [
             f for f in filenames if f.endswith(".ini") and f != "mainconf.ini"
         ]:

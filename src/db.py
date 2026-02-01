@@ -1,9 +1,13 @@
+import logging
+
 import psycopg2
 import psycopg2.extras
 
 tracking_db = None
 tracking_cursor = None
 tracking_config = None
+
+logger = logging.getLogger(__name__)
 
 
 def init_db(config):
@@ -21,14 +25,14 @@ def init_db(config):
             database=config.get("DB", "DATABASE"),
             options="-c application_name=plane-notify",
         )
-        print(
+        logger.info(
             f"Connected to db at {config.get('DB', 'HOST')}:{config.getint('DB', 'PORT')} | Flight Logging: {flight_logging_status}"
         )
         tracking_cursor = tracking_db.cursor(
             cursor_factory=psycopg2.extras.RealDictCursor
         )
     else:
-        print("DB section missing in config, cannot connect.")
+        logger.info("DB section missing in config, cannot connect.")
 
 
 # Flight Logging Functions
@@ -40,13 +44,12 @@ def add_flight(reg, icao, callsign, origin, takeoff_confirmed, takeoff_time):
     if tracking_config.getboolean("DB", "FLIGHT_LOGGING") is False:
         return None
     sql = """INSERT INTO "plane-notify".flights (reg, icao, origin, callsign, takeoff_confirmed, takeoff_time) VALUES (%s, %s, %s, %s, %s, %s) RETURNING id"""
-    print(sql)
     tracking_cursor.execute(
         sql, (reg, icao, origin, callsign, takeoff_confirmed, takeoff_time)
     )
     db_flight_id = tracking_cursor.fetchone()["id"]
     tracking_db.commit()
-    print(f"Added flight to db with id: {db_flight_id}")
+    logger.info(f"Added flight to db with id: {db_flight_id}")
     return db_flight_id
 
 
@@ -62,7 +65,7 @@ def update_flight(db_flight_id, destination, landing_confirmed, landing_time):
             landing_confirmed = %s,
             landing_time = %s
         WHERE id = %s"""
-    print(f"Updated flight with id: {db_flight_id}")
+    logger.info(f"Updated flight with id: {db_flight_id}")
     tracking_cursor.execute(
         sql, (destination, landing_confirmed, landing_time, db_flight_id)
     )

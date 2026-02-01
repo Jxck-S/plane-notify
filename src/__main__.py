@@ -11,6 +11,7 @@ from datetime import UTC, datetime
 
 from colorama import Back, Fore, Style, init
 
+import db
 import socials.discord as discord
 from cnf_parser_ext import ConfigParserExt
 from config_manager import ConfigManager
@@ -47,11 +48,10 @@ main_config = ConfigParserExt()
 print(os.getcwd())
 main_config.read("./configs/mainconf.ini")
 
-import db
-
 db.init_db(main_config)
 
 
+role_id = None
 if main_config.getboolean("DISCORD", "ENABLE"):
     role_id = (
         main_config.get("DISCORD", "ROLE_ID")
@@ -84,8 +84,6 @@ else:
 # For Error output
 plane = None
 try:
-    import sys
-
     # Setup plane objects from plane configs using ConfigManager
     planes = []  # Changed from {} dict to [] list
     from notification_manager import NotificationManager
@@ -99,6 +97,7 @@ try:
     # Link config manager to heartbeat for /reload endpoint
     start_web_server(config_manager, planes)
 
+    last_ra_count = None
     while True:
         # Check for reload request from /reload endpoint
 
@@ -134,7 +133,6 @@ try:
             else:
                 print("No new Resolution Advisories")
             last_ra_count = ra_count
-        # Check for RAs for each plane
         # Check for RAs for each plane
         # Use config_manager lock to safely iterate planes during potential reload
         # Lock covers the entire processing block to prevent interleaved logs with reload
@@ -221,7 +219,6 @@ except Exception as e:
             os.remove("crash_latest.log")
         except OSError:
             pass
-        clean_e = clean_stack_trace(str(e))
         clean_e = clean_stack_trace(str(e))
         trace_output = clean_stack_trace(str(traceback.format_exc()))
 

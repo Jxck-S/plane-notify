@@ -1,7 +1,7 @@
 import db
 
 
-def getClosestAirport(latitude, longitude, allowed_types):
+def get_closest_airport(latitude, longitude, allowed_types):
     if not db.tracking_cursor:
         return None
     allowed_types = allowed_types.strip("[]").split(", ")

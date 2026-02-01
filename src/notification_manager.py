@@ -162,10 +162,6 @@ class NotificationManager:
                 message_w_title, image_path, is_reply
             )
 
-    def reset_state(self):
-        self.latest_reddit_submission = None
-        self.exclusive_platforms = None
-
     def _post_telegram(self, message_w_title, image_path):
         try:
             if image_path:
@@ -248,7 +244,6 @@ class NotificationManager:
         except RequestException as e:
             discord.post(f"Failed to post to FaceBook : {e}", self.main_config)
 
-        ig_id = None
         if not is_reply:
             try:
                 # This requires HTTP_SERVE config from main_config to construct URL
@@ -270,8 +265,8 @@ class NotificationManager:
 
     def _post_bluesky(self, message_w_title, image_path, is_reply):
         try:
-            ATclient = Client()
-            ATclient.login(
+            at_client = Client()
+            at_client.login(
                 self.config.get("BLUESKY", "USERNAME"),
                 self.config.get("BLUESKY", "PASSWORD"),
             )
@@ -282,7 +277,7 @@ class NotificationManager:
                     parent=parent_ref, root=root_ref
                 )
                 post_ref = models.create_strong_ref(
-                    ATclient.send_post(text=message_w_title, reply_to=reply_ref)
+                    at_client.send_post(text=message_w_title, reply_to=reply_ref)
                 )
                 self.reply_refs.bluesky["parent"] = post_ref
                 return self.reply_refs.bluesky
@@ -291,7 +286,7 @@ class NotificationManager:
                     with open(image_path.replace(".png", ".jpg"), "rb") as f:
                         img_data = f.read()
                         first_post_ref = models.create_strong_ref(
-                            ATclient.send_image(
+                            at_client.send_image(
                                 text=message_w_title,
                                 image=img_data,
                                 image_alt="Map Image",
@@ -300,7 +295,7 @@ class NotificationManager:
                         return {"root": first_post_ref, "parent": first_post_ref}
                 else:
                     first_post_ref = models.create_strong_ref(
-                        ATclient.send_post(text=message_w_title)
+                        at_client.send_post(text=message_w_title)
                     )
                     return {"root": first_post_ref, "parent": first_post_ref}
 

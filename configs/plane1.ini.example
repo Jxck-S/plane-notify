@@ -2,13 +2,13 @@
 #Plane to track, based off ICAO or ICAO24 which is the unique transponder address of a plane.
 ICAO = icaohere
 # Optional: PIA ICAO if the plane is part of the Privacy ICAO Address program
-; PIA_ICAO = 
+; PIA_ICAO =
 
 #Optional Per Plane Overrides
-; OVERRIDE_REG= 
-; OVERRIDE_ICAO_TYPE= 
-; OVERRIDE_TYPELONG = 
-; OVERRIDE_OWNER = 
+; OVERRIDE_REG=
+; OVERRIDE_ICAO_TYPE=
+; OVERRIDE_TYPELONG =
+; OVERRIDE_OWNER =
 ; DATA_LOSS_MINS = 20
 ; CONCEAL_AC_ID = False
 ; CONCEAL_PIA = False
@@ -22,43 +22,43 @@ TYPES = [small_airport, medium_airport, large_airport]
 [X]
 # X (formerly Twitter) Configuration
 ENABLE = FALSE
-CONSUMER_KEY = 
-CONSUMER_SECRET = 
-ACCESS_TOKEN = 
-ACCESS_TOKEN_SECRET = 
+CONSUMER_KEY =
+CONSUMER_SECRET =
+ACCESS_TOKEN =
+ACCESS_TOKEN_SECRET =
 
 [DISCORD]
 # Discord Webhook Configuration
 ENABLE = FALSE
 URL = https://discord.com/api/webhooks/...
 # Optional: Role ID to mention
-ROLE_ID = 
+ROLE_ID =
 USERNAME = plane-notify
 
 [META]
 # Meta (Facebook/Instagram) Configuration
 ENABLE = FALSE
-FB_PAGE_ID = 
-IG_USER_ID = 
-ACCESS_TOKEN = 
+FB_PAGE_ID =
+IG_USER_ID =
+ACCESS_TOKEN =
 
 [TELEGRAM]
 # Telegram Bot Configuration
 ENABLE = FALSE
-ROOM_ID = 
-BOT_TOKEN = 
+ROOM_ID =
+BOT_TOKEN =
 
 [MASTODON]
 # Mastodon Configuration
 ENABLE = FALSE
-ACCESS_TOKEN = 
+ACCESS_TOKEN =
 APP_URL = https://mastodon.social/
 
 [BLUESKY]
 # Bluesky Configuration
 ENABLE = FALSE
-USERNAME = 
-PASSWORD = 
+USERNAME =
+PASSWORD =
 
 [NOSTR]
 # Nostr Configuration
@@ -68,10 +68,9 @@ PK = nsec...
 [THREADS]
 # Threads Configuration
 ENABLE = FALSE
-ACCESS_TOKEN = 
+ACCESS_TOKEN =
 
 [REDDIT]
 # Reddit Configuration (Global keys in mainconf.ini)
 ENABLE = FALSE
-SUBREDDIT = 
-
+SUBREDDIT =

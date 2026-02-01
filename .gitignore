@@ -12,3 +12,6 @@ testing
 stats
 flight_static_maps
 tools
+
+#Ignore vscode AI rules
+.github/instructions/codacy.instructions.md

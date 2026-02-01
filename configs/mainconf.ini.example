@@ -3,10 +3,10 @@
 DATA_LOSS_MINS = 5
 
 [READSB]
-# READSB 
-# API KEY if required 
-API_KEY = 
-# Full path to readsb all.json endpoint 
+# READSB
+# API KEY if required
+API_KEY =
+# Full path to readsb all.json endpoint
 ENDPOINT = http://127.0.0.1:8080/data/aircraft.json
 # URL to pull Resolution Advisory (ACAS) history from readsb
 RA_HOST = https://globe.theairtraffic.com
@@ -35,29 +35,29 @@ URL = http://127.0.0.1:5000/detailed_all
 ENABLE = FALSE
 
 [HTTP_SERVE]
-# Base URL where serve_images.py or your reverse proxy is reachable. 
+# Base URL where serve_images.py or your reverse proxy is reachable.
 # Required for services that need public image URLs (Instagram, Threads)
-IMAGE_URL = 
+IMAGE_URL =
 
 
 [DISCORD]
 # Global Discord settings for System/Error notifications
 ENABLE = FALSE
 USERNAME = plane-notify
-URL = 
+URL =
 # Optional: URL for important system/warning messages
-WARNING_URL = 
+WARNING_URL =
 # Optional: Role ID to mention in alerts
-ROLE_ID = 
+ROLE_ID =
 
 [REDDIT]
 # Global Reddit Application Keys
 ENABLE = FALSE
-CLIENT_ID = 
-CLIENT_SECRET = 
+CLIENT_ID =
+CLIENT_SECRET =
 USER_AGENT = plane-notify
-USERNAME = 
-PASSWORD = 
+USERNAME =
+PASSWORD =
 # Note: SUBREDDIT is configured per-plane in the plane config file.
 
 [DB]
@@ -65,6 +65,6 @@ PASSWORD =
 FLIGHT_LOGGING = TRUE
 HOST = localhost
 PORT = 5432
-USERNAME = 
-PASSWORD = 
+USERNAME =
+PASSWORD =
 DATABASE = tracking

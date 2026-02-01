@@ -1,6 +1,5 @@
-import json
-import requests
 import db
+
 
 def get_avg_fuel_price():
     if not db.tracking_cursor:
@@ -8,7 +7,7 @@ def get_avg_fuel_price():
     sql = """SELECT cost::numeric::float FROM "plane-notify".fuel"""
     db.tracking_cursor.execute(sql)
     if db.tracking_cursor.rowcount > 0:
-        cost = db.tracking_cursor.fetchone()['cost']
+        cost = db.tracking_cursor.fetchone()["cost"]
         print(f"AVG fuel cost per gallong is ${cost}")
         return cost
     else:
@@ -23,34 +22,38 @@ def fuel_calculation(aircraft_icao_type, minutes):
     db.tracking_cursor.execute(sql, (aircraft_icao_type,))
     if db.tracking_cursor.rowcount > 0:
         fuel_flight_info = {}
-        galph = db.tracking_cursor.fetchone()['galph']
+        galph = db.tracking_cursor.fetchone()["galph"]
         avg_fuel_price_per_gallon = get_avg_fuel_price()
-        fuel_used_gal = galph * (minutes/60)
+        fuel_used_gal = galph * (minutes / 60)
         if avg_fuel_price_per_gallon:
-            fuel_flight_info["fuel_price"] = round(fuel_used_gal * avg_fuel_price_per_gallon)
+            fuel_flight_info["fuel_price"] = round(
+                fuel_used_gal * avg_fuel_price_per_gallon
+            )
         fuel_used_kg = fuel_used_gal * 3.04
-        c02_tons = (fuel_used_kg * 3.15 ) / 907.185
-        fuel_flight_info['fuel_used_kg'] = round(fuel_used_kg)
+        c02_tons = (fuel_used_kg * 3.15) / 907.185
+        fuel_flight_info["fuel_used_kg"] = round(fuel_used_kg)
         fuel_flight_info["fuel_used_gal"] = round(fuel_used_gal)
-        fuel_flight_info['fuel_used_lters'] = round(fuel_used_gal*3.78541)
+        fuel_flight_info["fuel_used_lters"] = round(fuel_used_gal * 3.78541)
         fuel_flight_info["fuel_used_lbs"] = round(fuel_used_kg * 2.20462)
-        fuel_flight_info["c02_tons"] = round(c02_tons) if c02_tons > 1 else round(c02_tons, 4)
-        print ("Fuel info", fuel_flight_info)
+        fuel_flight_info["c02_tons"] = (
+            round(c02_tons) if c02_tons > 1 else round(c02_tons, 4)
+        )
+        print("Fuel info", fuel_flight_info)
         return fuel_flight_info
     else:
         print("Can't calculate fuel info unknown aircraft ICAO type")
         return None
 
+
 def fuel_message(fuel_info):
     have_cost = False
     if "fuel_price" in fuel_info.keys():
-        cost = "{:,}".format(fuel_info['fuel_price'])
+        cost = "{:,}".format(fuel_info["fuel_price"])
         have_cost = True
-    gallons = "{:,}".format(fuel_info['fuel_used_gal'])
-    lters = "{:,}".format(fuel_info['fuel_used_lters'])
-    lbs = "{:,}".format(fuel_info['fuel_used_lbs'])
-    kgs = "{:,}".format(fuel_info['fuel_used_kg'])
+    gallons = "{:,}".format(fuel_info["fuel_used_gal"])
+    lters = "{:,}".format(fuel_info["fuel_used_lters"])
+    lbs = "{:,}".format(fuel_info["fuel_used_lbs"])
+    kgs = "{:,}".format(fuel_info["fuel_used_kg"])
     fuel_message = f"\n~ {gallons} gallons ({lters} liters). \n~ {lbs} lbs ({kgs} kg) of jet fuel used. \n{(f'~ ${cost} cost of fuel.' if have_cost else 'Cost of fuel unavailable')} \n~ {fuel_info['c02_tons']} tons of CO2 emissions."
     print(fuel_message)
     return fuel_message
-

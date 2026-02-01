@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <!-- Background Circle -->
   <circle cx="50" cy="50" r="48" fill="#007bff" />
-  
+
   <!-- Paper Airplane (White) -->
   <!-- Classic sharp design -->
   <path d="M22 78 L80 20 L48 80 L44 54 Z" fill="white" stroke-linejoin="round"/>
-  
+
   <!-- Notification Dot -->
   <circle cx="78" cy="22" r="10" fill="#dc3545" stroke="#007bff" stroke-width="3"/>
 </svg>

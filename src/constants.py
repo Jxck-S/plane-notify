@@ -1,5 +1,6 @@
 from enum import Enum, StrEnum
 
+
 class Flags(Enum):
     LADD = "LADD"
     PIA = "PIA"
@@ -8,6 +9,7 @@ class Flags(Enum):
     HEAVY = "Heavy"
     SUPER = "Super"
 
+
 class ImageTypes(StrEnum):
     LANDED = "landed"
     TAKEOFF = "takeoff"
@@ -15,6 +17,7 @@ class ImageTypes(StrEnum):
     APPROACH = "approach"
     CIRCLING = "circling"
     RA = "ra"
+
 
 class NavModes(Enum):
     TCAS = ("tcas", "TCAS")
@@ -26,16 +29,18 @@ class NavModes(Enum):
     def __str__(self):
         return self.value[1]
 
+
 # Create a lookup dictionary for O(1) access
 NAV_MODE_LOOKUP = {nav.value[0]: nav for nav in NavModes}
+
 
 def normalize_nav_modes(modes: list) -> list:
     normalized_modes = []
     for mode in modes:
         # Direct lookup using the lowercased input string
         normalized_mode = NAV_MODE_LOOKUP.get(mode.lower())
-        
+
         if normalized_mode:
             normalized_modes.append(normalized_mode)
- 
+
     return normalized_modes

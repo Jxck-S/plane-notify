@@ -5,5 +5,5 @@ services:
         shm_size: 2gb
         build:
             context: .
-        volumes: 
+        volumes:
             - ./:/plane-notify

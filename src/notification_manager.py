@@ -1,8 +1,6 @@
+import logging
 import os
 
-import logging
-
-logger = logging.getLogger(__name__)
 import praw
 from atproto import Client, models
 from requests.exceptions import RequestException
@@ -15,6 +13,8 @@ import socials.telegram as telegram
 from providers import Providers
 from socials.threads import Threads
 from socials.x import XED
+
+logger = logging.getLogger(__name__)
 
 
 class ReplyRefs:
@@ -167,25 +167,27 @@ class NotificationManager:
 
     def _post_telegram(self, message_w_title, image_path):
         try:
-            if image_path:
-                with open(image_path, "rb") as photo:
-                    return telegram.post(message_w_title, self.config, photo)
-            else:
-                return telegram.post(message_w_title, self.config, None)
+            bot_token = self.config.get("TELEGRAM", "BOT_TOKEN")
+            chat_id = self.config.get("TELEGRAM", "ROOM_ID")
+            return telegram.post(message_w_title, bot_token, chat_id, image_path)
         except RequestException as e:
             logger.error(f"Failed to post to Telegram : {e}")
             return None
 
     def _post_mastodon(self, message_w_title, image_path, is_reply):
         try:
+            access_token = self.config.get("MASTODON", "ACCESS_TOKEN")
+            app_url = self.config.get("MASTODON", "APP_URL")
             reply_id = self.reply_refs.mastodon if is_reply else None
-            mastodon_post_info = mastodon.post(
+
+            post_resp = mastodon.post(
                 message_w_title,
-                self.config,
+                access_token,
+                app_url,
                 image_path if not is_reply else None,
                 reply_id,
             )
-            return mastodon_post_info["id"] if mastodon_post_info else None
+            return post_resp["id"] if post_resp else None
         except RequestException as e:
             logger.error(f"Failed to post to Mastodon : {e}")
             return None

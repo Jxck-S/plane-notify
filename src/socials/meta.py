@@ -1,9 +1,7 @@
 import json
+import logging
 
 import requests
-
-
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +16,7 @@ def raise_details(resp):
             # Facebook 500 is usually bad auth but they don't say. Zuck makes me angry
             raise requests.exceptions.HTTPError(
                 f"{e}, Likely bad Meta auth or permissions."
-            )
+            ) from e
         else:
             raise (e)
 

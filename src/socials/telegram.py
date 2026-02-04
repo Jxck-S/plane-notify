@@ -1,62 +1,44 @@
 import asyncio
+import logging
 
 import telegram
-
-
-import logging
 
 logger = logging.getLogger(__name__)
 
 
-def post(message, config, photo=None):
-    return asyncio.run(telegram_send(message, config, photo))
+def post(message, bot_token, chat_id, photo=None):
+    sent = asyncio.run(_send_telegram_async(message, bot_token, chat_id, photo))
+    return sent
 
 
-async def telegram_send(message, config, photo=None):
+async def _send_telegram_async(message, bot_token, chat_id, photo=None):
     sent = False
     retry_c = 0
-    while sent == False:
+    while not sent:
         try:
-            bot = telegram.Bot(token=config.get("TELEGRAM", "BOT_TOKEN"))
+            if photo and hasattr(photo, "seek"):
+                photo.seek(0)
+            bot = telegram.Bot(token=bot_token)
             if photo:
                 sent = await bot.send_photo(
-                    chat_id=config.get("TELEGRAM", "ROOM_ID"),
-                    photo=photo,
-                    caption=message,
+                    chat_id=chat_id, photo=photo, caption=message
                 )
             else:
-                sent = await bot.send_message(
-                    chat_id=config.get("TELEGRAM", "ROOM_ID"), text=message
-                )
+                sent = await bot.send_message(chat_id=chat_id, text=message)
+        except telegram.error.TimedOut:
+            retry_c += 1
+            logger.warning(f"Telegram timeout count: {retry_c}")
+            pass
+        except telegram.error.TelegramError as e:
+            logger.error(f"Telegram error: {e}")
+            break
+        except FileNotFoundError:
+            logger.error("Telegram module couldn't find an image to send.")
+            break
         except Exception as err:
-            logger.error("err.args:")
-            logger.error(err.args)
-            logger.error(f"Unexpected {err=}, {type(err)=}")
-            logger.error("\nString err:\n" + str(err))
-            if retry_c > 4:
-                logger.error("Telegram attempts exceeded. Message not sent.")
-                break
-            elif str(err) == "Unauthorized":
-                logger.error("Invalid Telegram bot token, message not sent.")
-                break
-            elif str(err) == "Timed out":
-                retry_c += 1
-                logger.warning("Telegram timeout count: " + str(retry_c))
-
-            elif str(err) == "Chat not found":
-                logger.error("Invalid Telegram Chat ID, message not sent.")
-                break
-            elif str(err)[:35] == "[Errno 2] No such file or directory":
-                logger.error("Telegram module couldn't find an image to send.")
-                break
-            elif str(err) == "Media_caption_too_long":
-                logger.error(
-                    "Telegram image caption length exceeds 1024 characters. Message not sent."
-                )
-                break
-            else:
-                logger.error("[X] Unknown Telegram error. Message not sent.")
-                break
+            logger.error(f"Unexpected Telegram error: {err}")
+            break
         else:
             logger.info("Telegram message successfully sent.")
+            return True
     return sent

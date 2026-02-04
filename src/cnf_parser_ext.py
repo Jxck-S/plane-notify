@@ -1,5 +1,5 @@
 """
-cnf_parser_ext.py: Direct Config Parser Extension
+cnf_parser_ext.py: Direct Config Parser Extension.
 
 This module provides an extended `ConfigParserExt` class that inherits from `RawConfigParser`.
 It adds helper methods to safely get values, booleans, and titles, handling missing sections or keys gracefully by returning fallbacks.
@@ -27,17 +27,14 @@ class ConfigParserExt(RawConfigParser):
         if not self.has_section(section) or not self.has_option(section, option):
             return fallback
 
-        value = super().getboolean(
+        return super().getboolean(
             section, option, raw=raw, vars=vars_, fallback=fallback, **kwargs
         )
-        return value
 
     def get_title(self, section):
         if self.has_option(section, "TITLE"):
-            modified_value = self.get(section, "TITLE")
-            return modified_value
-        else:
-            return None
+            return self.get(section, "TITLE")
+        return None
 
     def read(self, filenames, encoding=None):
         # Allow reading and storing the filename (assuming single file usage for Plane configs)

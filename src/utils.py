@@ -1,25 +1,23 @@
+import contextlib
 import os
 
 
-def cleanup_images(path):
+def cleanup_images(path) -> None:
     if path:
         for ext in [".png", ".jpg"]:
-            try:
+            with contextlib.suppress(FileNotFoundError):
                 os.remove(path + ext)
-            except FileNotFoundError:
-                pass
 
 
 def set_dyn_title(title, *aircraft_info):
     if not title:
         return ""
-    elif title.upper() in ["DYNAMIC", "CALLSIGN"]:
+    if title.upper() in ["DYNAMIC", "CALLSIGN"]:
         for info in aircraft_info:
             if info:
                 return info
         return None
-    else:
-        return title
+    return title
 
 
 def clean_stack_trace(stack_trace):
@@ -43,19 +41,21 @@ def clean_stack_trace(stack_trace):
 def apply_prefix(prefix, message):
     if prefix:
         return f"{prefix} {message}"
-    else:
-        return message
+    return message
 
 
 def extract_operator_icao(callsign: str) -> str | None:
     """
     Extracts the ICAO operator code from a callsign.
 
-    Parameters:
+    Parameters
+    ----------
     callsign (str): The callsign from which to extract the ICAO operator code.
 
-    Returns:
+    Returns
+    -------
     str | None: The extracted ICAO operator code if the callsign is valid, otherwise None.
+
     """
     if (
         callsign
@@ -64,5 +64,4 @@ def extract_operator_icao(callsign: str) -> str | None:
         and callsign[3].isdigit()
     ):
         return callsign[0:3]
-    else:
-        return None
+    return None

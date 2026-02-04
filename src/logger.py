@@ -1,19 +1,17 @@
 import logging
 
-import socials.discord as discord
+from socials import discord
 
 
 class DiscordHandler(logging.Handler):
-    """
-    Custom logging handler that sends records to a Discord webhook.
-    """
+    """Custom logging handler that sends records to a Discord webhook."""
 
-    def __init__(self, config, role_id=None):
+    def __init__(self, config, role_id=None) -> None:
         super().__init__()
         self.config = config
         self.role_id = role_id
 
-    def emit(self, record):
+    def emit(self, record) -> None:
         if not self.config.getboolean("DISCORD", "ENABLE"):
             return
 
@@ -35,9 +33,7 @@ class DiscordHandler(logging.Handler):
 
 
 def setup_logging(config, debug=False):
-    """
-    Configures the root logger with console and Discord handlers.
-    """
+    """Configures the root logger with console and Discord handlers."""
     logger = logging.getLogger()
     if logger.hasHandlers():
         logger.handlers.clear()

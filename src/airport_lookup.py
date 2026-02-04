@@ -32,8 +32,7 @@ def get_closest_airport(latitude, longitude, allowed_types):
     """
     vals = [longitude, latitude, longitude, latitude, allowed_types_list]
     db.tracking_cursor.execute(sql, vals)
-    closest_airport_dict = dict(db.tracking_cursor.fetchone())
-    return closest_airport_dict
+    return dict(db.tracking_cursor.fetchone())
 
 
 def get_airport_by_icao(icao):

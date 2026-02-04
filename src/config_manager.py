@@ -13,9 +13,9 @@ logger = logging.getLogger(__name__)
 
 
 class ConfigManager:
-    """Manages plane configurations with conflict detection and hot-reloading"""
+    """Manages plane configurations with conflict detection and hot-reloading."""
 
-    def __init__(self, config_dir="./configs"):
+    def __init__(self, config_dir="./configs") -> None:
         self.config_dir = os.path.abspath(config_dir)
         # Maps: file_path -> (icao, pia_icao_or_None)
         self.file_to_icaos = {}
@@ -28,7 +28,7 @@ class ConfigManager:
         self.change_logger = self._setup_change_logger()
 
     def _setup_change_logger(self):
-        """Setup dedicated logger for config changes"""
+        """Setup dedicated logger for config changes."""
         logger = logging.getLogger("config_changes")
         logger.setLevel(logging.INFO)
 
@@ -54,12 +54,11 @@ class ConfigManager:
         return logger
 
     def get_relative_path(self, abs_path):
-        """Convert absolute path to relative path from config directory"""
-        rel_path = os.path.relpath(abs_path, self.config_dir)
-        return rel_path
+        """Convert absolute path to relative path from config directory."""
+        return os.path.relpath(abs_path, self.config_dir)
 
-    def validate_no_conflict(self, icao, pia_icao, file_path):
-        """Check if ICAO or PIA_ICAO conflicts with existing configs"""
+    def validate_no_conflict(self, icao, pia_icao, file_path) -> None:
+        """Check if ICAO or PIA_ICAO conflicts with existing configs."""
         rel_path = self.get_relative_path(file_path)
 
         # Check ICAO conflict
@@ -67,8 +66,9 @@ class ConfigManager:
             existing_file = self.icao_to_file[icao]
             if existing_file != file_path:
                 existing_rel = self.get_relative_path(existing_file)
+                msg = f"ICAO conflict: {icao} in {rel_path} conflicts with {existing_rel}"
                 raise ValueError(
-                    f"ICAO conflict: {icao} in {rel_path} conflicts with {existing_rel}"
+                    msg
                 )
 
         # Check PIA_ICAO conflict
@@ -76,12 +76,13 @@ class ConfigManager:
             existing_file = self.icao_to_file[pia_icao]
             if existing_file != file_path:
                 existing_rel = self.get_relative_path(existing_file)
+                msg = f"PIA_ICAO conflict: {pia_icao} in {rel_path} conflicts with {existing_rel}"
                 raise ValueError(
-                    f"PIA_ICAO conflict: {pia_icao} in {rel_path} conflicts with {existing_rel}"
+                    msg
                 )
 
     def load_config_file(self, file_path):
-        """Load and parse a single config file, return (config, icao, pia_icao_or_None)"""
+        """Load and parse a single config file, return (config, icao, pia_icao_or_None)."""
         plane_config = ConfigParserExt()
         plane_config.read(file_path)
 
@@ -92,8 +93,8 @@ class ConfigManager:
 
         return plane_config, icao, pia_icao
 
-    def register_config(self, file_path, icao, pia_icao):
-        """Register config file and its ICAOs in tracking dicts"""
+    def register_config(self, file_path, icao, pia_icao) -> None:
+        """Register config file and its ICAOs in tracking dicts."""
         with self.lock:
             self.file_to_icaos[file_path] = (icao, pia_icao)
             self.icao_to_file[icao] = file_path
@@ -101,7 +102,7 @@ class ConfigManager:
                 self.icao_to_file[pia_icao] = file_path
 
     def unregister_config(self, file_path):
-        """Remove config file and its ICAOs from tracking dicts"""
+        """Remove config file and its ICAOs from tracking dicts."""
         with self.lock:
             if file_path in self.file_to_icaos:
                 icao, pia_icao = self.file_to_icaos[file_path]
@@ -124,7 +125,7 @@ class ConfigManager:
         return None, None
 
     def load_all_configs(self, planes_list):
-        """Load all config files on startup and populate planes list"""
+        """Load all config files on startup and populate planes list."""
         logger.info("Found the following configs")
         for dirpath, _dirname, filenames in os.walk(self.config_dir):
             for filename in [
@@ -154,7 +155,7 @@ class ConfigManager:
                         self.register_config(file_path, icao, pia_icao)
 
                     except Exception as e:
-                        logger.error(
+                        logger.exception(
                             "%sError loading %s: %s%s",
                             Fore.RED,
                             self.get_relative_path(file_path),
@@ -167,10 +168,10 @@ class ConfigManager:
         return len(planes_list)
 
     def reload_all_configs(self, planes_list, status_callback=None):
-        """Reload all config files and update planes list"""
+        """Reload all config files and update planes list."""
 
         # Helper for dual logging (console + callback)
-        def log(msg, color=Fore.CYAN):
+        def log(msg, color=Fore.CYAN) -> None:
             logger.info("%s%s%s", color, msg, Style.RESET_ALL)
             if status_callback:
                 status_callback(msg)
@@ -325,8 +326,8 @@ class ConfigManager:
         }
 
 
-def verify_configs_only(config_dir="./configs"):
-    """Verify all configs without creating plane objects - for standalone validation"""
+def verify_configs_only(config_dir="./configs") -> bool:
+    """Verify all configs without creating plane objects - for standalone validation."""
     logger.info("%s=== Config Verification Mode ===%s\n", Fore.CYAN, Style.RESET_ALL)
 
     config_manager = ConfigManager(config_dir)
@@ -388,7 +389,7 @@ def verify_configs_only(config_dir="./configs"):
 
                 except Exception as e:
                     errors.append((rel_path, str(e)))
-                    logger.error(
+                    logger.exception(
                         "%s✗%s %-50s %sERROR: %s%s",
                         Fore.RED,
                         Style.RESET_ALL,
@@ -422,13 +423,12 @@ def verify_configs_only(config_dir="./configs"):
             logger.info("  %s✗%s %s", Fore.RED, Style.RESET_ALL, rel_path)
             logger.info("    %s", error)
         return False
-    else:
-        logger.info(
-            "\n%s✓ All configs valid - no conflicts detected%s",
-            Fore.GREEN,
-            Style.RESET_ALL,
-        )
-        return True
+    logger.info(
+        "\n%s✓ All configs valid - no conflicts detected%s",
+        Fore.GREEN,
+        Style.RESET_ALL,
+    )
+    return True
 
 
 if __name__ == "__main__":

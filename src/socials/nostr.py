@@ -9,7 +9,7 @@ from python_blossom import BlossomClient
 
 
 def get_blossom_servers():
-    """Load blossom servers from CSV file"""
+    """Load blossom servers from CSV file."""
     # Get the directory of this script and look for CSV there
     script_dir = os.path.dirname(__file__)
     csv_file_path = os.path.join(script_dir, "blossom_servers.csv")
@@ -25,13 +25,14 @@ def get_blossom_servers():
 
 
 def get_nostr_relays():
-    """Load nostr relays from CSV file"""
+    """Load nostr relays from CSV file."""
     script_dir = os.path.dirname(__file__)
     csv_file_path = os.path.join(script_dir, "nostr_relays.csv")
     relays_list = []
 
     if not os.path.exists(csv_file_path):
-        raise FileNotFoundError(f"Nostr relays CSV file not found at {csv_file_path}")
+        msg = f"Nostr relays CSV file not found at {csv_file_path}"
+        raise FileNotFoundError(msg)
 
     with open(csv_file_path) as file:
         reader = csv.reader(file)
@@ -42,13 +43,14 @@ def get_nostr_relays():
                 relays_list.append(row[0].strip())
 
     if not relays_list:
-        raise Exception(f"No valid relays found in {csv_file_path}")
+        msg = f"No valid relays found in {csv_file_path}"
+        raise Exception(msg)
 
     return relays_list
 
 
 def upload_to_blossom(file_path, private_key):
-    """Upload file to blossom server and return URL"""
+    """Upload file to blossom server and return URL."""
     servers = get_blossom_servers()
 
     try:
@@ -72,12 +74,13 @@ def upload_to_blossom(file_path, private_key):
 
         if primary_url:
             return primary_url
-        else:
-            raise Exception("Failed to upload to any blossom server")
+        msg = "Failed to upload to any blossom server"
+        raise Exception(msg)
 
     except Exception as e:
-        logging.error("Failed to upload to blossom servers: %s", str(e))
-        raise Exception("Failed to upload to any blossom server") from e
+        logging.exception("Failed to upload to blossom servers: %s", str(e))
+        msg = "Failed to upload to any blossom server"
+        raise Exception(msg) from e
 
 
 def post(message, private_key, image_url=None, reply_to=None):
@@ -106,7 +109,7 @@ def post(message, private_key, image_url=None, reply_to=None):
 
 
 def post_with_media(message, file_name, private_key):
-    """Upload file using blossom and post to nostr"""
+    """Upload file using blossom and post to nostr."""
     try:
         if file_name:
             url = upload_to_blossom(file_name, private_key)
@@ -115,7 +118,6 @@ def post_with_media(message, file_name, private_key):
             event = post(message, private_key)
         return event
     except Exception as e:
-        logging.error("Failed to upload and post: %s", str(e))
+        logging.exception("Failed to upload and post: %s", str(e))
         # Fallback to posting without image
-        event = post(message, private_key)
-        return event
+        return post(message, private_key)

@@ -26,7 +26,7 @@ class NavModes(Enum):
     ALTHOLD = ("alt_hold", "Altitude hold")
     APPROACH = ("approach", "Approach")
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.value[1]
 
 

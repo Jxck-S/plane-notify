@@ -14,12 +14,11 @@ def get_avg_fuel_price():
         cost = db.tracking_cursor.fetchone()["cost"]
         logger.debug("AVG fuel cost per gallong is $%s", cost)
         return cost
-    else:
-        return None
+    return None
 
 
 def fuel_calculation(aircraft_icao_type, minutes):
-    """Calculates fuel usage, price, c02 output of a flight depending on aircraft type and flight length"""
+    """Calculates fuel usage, price, c02 output of a flight depending on aircraft type and flight length."""
     if not db.tracking_cursor:
         return None
     sql = """SELECT galph FROM "plane-notify".icao_type_info WHERE icao_code = %s """
@@ -44,14 +43,13 @@ def fuel_calculation(aircraft_icao_type, minutes):
         )
         logger.debug("Fuel info %s", fuel_flight_info)
         return fuel_flight_info
-    else:
-        logger.warning("Can't calculate fuel info unknown aircraft ICAO type")
-        return None
+    logger.warning("Can't calculate fuel info unknown aircraft ICAO type")
+    return None
 
 
 def fuel_message(fuel_info):
     have_cost = False
-    if "fuel_price" in fuel_info.keys():
+    if "fuel_price" in fuel_info:
         cost = "{:,}".format(fuel_info["fuel_price"])
         have_cost = True
     gallons = "{:,}".format(fuel_info["fuel_used_gal"])

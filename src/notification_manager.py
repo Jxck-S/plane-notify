@@ -5,12 +5,8 @@ import praw
 from atproto import Client, models
 from requests.exceptions import RequestException
 
-import socials.discord as discord
-import socials.mastodon as mastodon
-import socials.meta as meta
-import socials.nostr as nostr
-import socials.telegram as telegram
 from providers import Providers
+from socials import discord, mastodon, meta, nostr, telegram
 from socials.threads import Threads
 from socials.x import XED
 
@@ -18,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class ReplyRefs:
-    def __init__(self):
+    def __init__(self) -> None:
         self.mastodon = None
         self.x = None
         self.facebook = None
@@ -31,7 +27,7 @@ class NotificationManager:
     reddit_client = None
 
     @classmethod
-    def init_sources(cls, main_config):
+    def init_sources(cls, main_config) -> None:
         # Initialize Reddit Client (Global)
         if (
             cls.reddit_client is None
@@ -47,7 +43,7 @@ class NotificationManager:
                     username=main_config.get("REDDIT", "USERNAME"),
                 )
             except Exception as e:
-                logger.error("Failed to initialize Reddit client: %s", e)
+                logger.exception("Failed to initialize Reddit client: %s", e)
 
     def __init__(self, config, main_config) -> None:
         self.config = config
@@ -67,16 +63,16 @@ class NotificationManager:
                     x_info["access_token_secret"],
                 )
             except Exception as e:
-                logger.error("Failed to initialize X client: %s", e)
+                logger.exception("Failed to initialize X client: %s", e)
 
-    def set_one_time_exclusive(self, platforms):
+    def set_one_time_exclusive(self, platforms) -> None:
         self.exclusive_platforms = platforms
 
-    def reset_state(self):
+    def reset_state(self) -> None:
         self.reply_refs = ReplyRefs()
         self.exclusive_platforms = None
 
-    def post_to_all(self, message, title, image_path, is_reply=False):
+    def post_to_all(self, message, title, image_path, is_reply=False) -> None:
         """
         Post notification to all enabled platforms.
         If is_reply is True, attempts to reply to the thread started by the previous post.
@@ -171,7 +167,7 @@ class NotificationManager:
             chat_id = self.config.get("TELEGRAM", "ROOM_ID")
             return telegram.post(message_w_title, bot_token, chat_id, image_path)
         except RequestException as e:
-            logger.error("Failed to post to Telegram : %s", e)
+            logger.exception("Failed to post to Telegram : %s", e)
             return None
 
     def _post_mastodon(self, message_w_title, image_path, is_reply):
@@ -189,7 +185,7 @@ class NotificationManager:
             )
             return post_resp["id"] if post_resp else None
         except RequestException as e:
-            logger.error("Failed to post to Mastodon : %s", e)
+            logger.exception("Failed to post to Mastodon : %s", e)
             return None
 
     def _post_discord(self, message, title, image_path):
@@ -221,7 +217,7 @@ class NotificationManager:
                 message_w_title, media_list, in_reply_to_id=in_reply_to_id
             )
         except Exception as e:
-            logger.error("Failed to post to X : %s", e)
+            logger.exception("Failed to post to X : %s", e)
             return None
 
     def _post_meta(self, message_w_title, image_path, is_reply):
@@ -253,7 +249,7 @@ class NotificationManager:
                     )
                 fb_id = fb_post_info["id"]
         except RequestException as e:
-            logger.error("Failed to post to FaceBook : %s", e)
+            logger.exception("Failed to post to FaceBook : %s", e)
 
         if not is_reply:
             try:
@@ -270,7 +266,7 @@ class NotificationManager:
                 )
                 # IG ID logic?
             except Exception as e:
-                logger.error("Failed to post to Instagram : %s", e)
+                logger.exception("Failed to post to Instagram : %s", e)
 
         return fb_id
 
@@ -292,47 +288,43 @@ class NotificationManager:
                 )
                 self.reply_refs.bluesky["parent"] = post_ref
                 return self.reply_refs.bluesky
-            else:
-                if image_path:
-                    with open(image_path.replace(".png", ".jpg"), "rb") as f:
-                        img_data = f.read()
-                        first_post_ref = models.create_strong_ref(
-                            at_client.send_image(
-                                text=message_w_title,
-                                image=img_data,
-                                image_alt="Map Image",
-                            )
-                        )
-                        return {"root": first_post_ref, "parent": first_post_ref}
-                else:
+            if image_path:
+                with open(image_path.replace(".png", ".jpg"), "rb") as f:
+                    img_data = f.read()
                     first_post_ref = models.create_strong_ref(
-                        at_client.send_post(text=message_w_title)
+                        at_client.send_image(
+                            text=message_w_title,
+                            image=img_data,
+                            image_alt="Map Image",
+                        )
                     )
                     return {"root": first_post_ref, "parent": first_post_ref}
+            else:
+                first_post_ref = models.create_strong_ref(
+                    at_client.send_post(text=message_w_title)
+                )
+                return {"root": first_post_ref, "parent": first_post_ref}
 
         except Exception as e:
-            logger.error("Failed to post to BlueSky : %s %s", e, type(e))
+            logger.exception("Failed to post to BlueSky : %s %s", e, type(e))
             return None
 
     def _post_nostr(self, message_w_title, image_path, is_reply):
         try:
             if is_reply and self.reply_refs.nostr:
-                new_event = nostr.post(
+                return nostr.post(
                     message_w_title,
                     self.config.get("NOSTR", "PK"),
                     reply_to=self.reply_refs.nostr,
                 )
-                return new_event
-            else:
-                first_event = nostr.post_with_media(
-                    message_w_title, image_path, self.config.get("NOSTR", "PK")
-                )
-                return first_event
+            return nostr.post_with_media(
+                message_w_title, image_path, self.config.get("NOSTR", "PK")
+            )
         except Exception as e:
-            logger.error("Failed to post to NOSTR : %s", e)
+            logger.exception("Failed to post to NOSTR : %s", e)
             return None
 
-    def _post_threads(self, message_w_title, image_path):
+    def _post_threads(self, message_w_title, image_path) -> None:
         try:
             access_token = self.config.get("THREADS", "ACCESS_TOKEN")
             threads_client = Threads(access_token)
@@ -347,10 +339,10 @@ class NotificationManager:
             else:
                 container_id = threads_client.create_text_container(message_w_title)
                 threads_client.publish_container(container_id)
-            return None
+            return
         except Exception as e:
-            logger.error("Failed to post to Threads : %s, %s", type(e), e)
-            return None
+            logger.exception("Failed to post to Threads : %s, %s", type(e), e)
+            return
 
     def _post_reddit(self, message_w_title, image_path, is_reply):
         if self.reddit_client:
@@ -362,18 +354,17 @@ class NotificationManager:
                     new_submission = (
                         self.reply_refs.reddit
                     )  # Keep same submission as ref
+                elif image_path:
+                    new_submission = self.reddit_client.subreddit(
+                        self.config.get("REDDIT", "SUBREDDIT")
+                    ).submit_image(message_w_title, image_path)
                 else:
-                    if image_path:
-                        new_submission = self.reddit_client.subreddit(
-                            self.config.get("REDDIT", "SUBREDDIT")
-                        ).submit_image(message_w_title, image_path)
-                    else:
-                        new_submission = self.reddit_client.subreddit(
-                            self.config.get("REDDIT", "SUBREDDIT")
-                        ).submit(message_w_title, selftext="")
+                    new_submission = self.reddit_client.subreddit(
+                        self.config.get("REDDIT", "SUBREDDIT")
+                    ).submit(message_w_title, selftext="")
 
                 return new_submission
             except Exception as e:
-                logger.error("Failed to post to Reddit : %s, %s", type(e), e)
+                logger.exception("Failed to post to Reddit : %s, %s", type(e), e)
                 return self.reply_refs.reddit
         return None

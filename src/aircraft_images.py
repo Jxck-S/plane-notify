@@ -38,26 +38,24 @@ def get_planespotters_net_aircraft_photo(reg):
             photo = ps_reg_photo_info["photos"][0]
             url = photo["thumbnail"]["src"]
             credit = photo["photographer"]
-            data = {
+            return {
                 "image_url": url,
                 "credit": credit,
             }
-            return data
-        else:
-            return None
+        return None
     except json.JSONDecodeError as e:
-        logger.error(
+        logger.exception(
             f"Failed to parse JSON response from Planespotters API for {reg}: {e}"
         )
         logger.debug("Response content: %s...", rsp.text[:200])  # Show first 200 chars
         return None
     except requests.exceptions.RequestException as e:
-        logger.error(
+        logger.exception(
             f"Request error when fetching from Planespotters API for {reg}: {e}"
         )
         return None
     except Exception as e:
-        logger.error(
+        logger.exception(
             f"Unexpected error in get_planespotters_net_aircraft_photo for {reg}: {e}"
         )
         return None
@@ -83,23 +81,22 @@ def get_github_aircraft_photo(reg):
             return None
 
         photo_list = json.loads(rsp.text)
-        if reg in photo_list.keys():
+        if reg in photo_list:
             photo_name = photo_list[reg]["photo"]
             url = f"https://raw.githubusercontent.com/Jxck-S/aircraft-photos/main/images/{photo_name}"
             credit = photo_list[reg]["photographer"]
             return {"image_url": url, "credit": credit}
-        else:
-            return None
+        return None
     except json.JSONDecodeError as e:
-        logger.error(
+        logger.exception(
             f"Failed to parse JSON response from GitHub photo list for {reg}: {e}"
         )
         return None
     except requests.exceptions.RequestException as e:
-        logger.error("Request error when fetching GitHub photo list for %s: %s", reg, e)
+        logger.exception("Request error when fetching GitHub photo list for %s: %s", reg, e)
         return None
     except Exception as e:
-        logger.error("Unexpected error in get_github_aircraft_photo for %s: %s", reg, e)
+        logger.exception("Unexpected error in get_github_aircraft_photo for %s: %s", reg, e)
         return None
 
 
@@ -110,15 +107,12 @@ def get_aircraft_sil(type_code):
         logger.debug(sil_path)
 
         return sil_path
-    else:
-        return None
+    return None
 
 
 def get_aircraft_image_url(reg):
     photo = None
-    if photo := get_github_aircraft_photo(reg):
-        pass
-    elif photo := get_planespotters_net_aircraft_photo(reg):
+    if (photo := get_github_aircraft_photo(reg)) or (photo := get_planespotters_net_aircraft_photo(reg)):
         pass
 
     return photo
@@ -133,14 +127,12 @@ def get_image_from_url(photo):
 
         if response.status_code == 200:
             # Read image data from the response content
-            image_data = BytesIO(response.content)
-            return image_data
-        else:
-            logger.error("Failed to fetch image. Status code: %s", response.status_code)
-            return None
+            return BytesIO(response.content)
+        logger.error("Failed to fetch image. Status code: %s", response.status_code)
+        return None
     except requests.exceptions.RequestException as e:
-        logger.error("Request error when fetching image from %s: %s", url, e)
+        logger.exception("Request error when fetching image from %s: %s", url, e)
         return None
     except Exception as e:
-        logger.error("Unexpected error in get_image_from_url for %s: %s", url, e)
+        logger.exception("Unexpected error in get_image_from_url for %s: %s", url, e)
         return None

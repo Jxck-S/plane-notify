@@ -31,22 +31,22 @@ start_time = time.time()
 
 
 class ConnectionManager:
-    def __init__(self):
+    def __init__(self) -> None:
         self.active_connections: list[WebSocket] = []
 
-    async def connect(self, websocket: WebSocket):
+    async def connect(self, websocket: WebSocket) -> None:
         await websocket.accept()
         self.active_connections.append(websocket)
 
-    def disconnect(self, websocket: WebSocket):
+    def disconnect(self, websocket: WebSocket) -> None:
         self.active_connections.remove(websocket)
 
-    async def broadcast(self, message: str):
+    async def broadcast(self, message: str) -> None:
         for connection in self.active_connections:
             try:
                 await connection.send_text(message)
             except Exception as e:
-                logger.error("Error broadcasting message: %s", e)
+                logger.exception("Error broadcasting message: %s", e)
 
 
 manager = ConnectionManager()
@@ -54,12 +54,12 @@ manager = ConnectionManager()
 
 @app.get("/", response_class=HTMLResponse)
 async def dashboard():
-    """Serve the static dashboard HTML"""
+    """Serve the static dashboard HTML."""
     return FileResponse(os.path.join(TEMPLATE_DIR, "index.html"))
 
 
 @app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
+async def websocket_endpoint(websocket: WebSocket) -> None:
     await manager.connect(websocket)
     try:
         while True:
@@ -83,7 +83,7 @@ async def websocket_endpoint(websocket: WebSocket):
                             loop = asyncio.get_running_loop()
 
                             # Define callback to pipe logs to WebSocket
-                            def sync_status_callback(msg: str):
+                            def sync_status_callback(msg: str) -> None:
                                 asyncio.run_coroutine_threadsafe(
                                     manager.broadcast(
                                         json.dumps({"type": "status", "message": msg})
@@ -103,12 +103,12 @@ async def websocket_endpoint(websocket: WebSocket):
                                 json.dumps({"type": "result", "data": stats})
                             )
                         except Exception as e:
-                            logger.error("Reload failed: %s", e)
+                            logger.exception("Reload failed: %s", e)
                             await manager.broadcast(
                                 json.dumps(
                                     {
                                         "type": "error",
-                                        "message": f"Reload failed: {str(e)}",
+                                        "message": f"Reload failed: {e!s}",
                                     }
                                 )
                             )
@@ -130,7 +130,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
 @app.get("/heartbeat")
 async def heartbeat():
-    """Health check endpoint"""
+    """Health check endpoint."""
     return {
         "status": "ok",
         "timestamp": time.time(),
@@ -142,16 +142,15 @@ async def heartbeat():
 # Keep HTTP endpoint for backward compatibility/scripts
 @app.get("/reload")
 async def reload_config_http():
-    """Trigger configuration reload (HTTP)"""
+    """Trigger configuration reload (HTTP)."""
     if config_manager is None:
         raise HTTPException(status_code=503, detail="Config Manager not initialized")
 
-    stats = config_manager.reload_all_configs(planes_list)
-    return stats
+    return config_manager.reload_all_configs(planes_list)
 
 
-def run_server(host: str = "127.0.0.1", port: int = 8778):
-    """Run Uvicorn server"""
+def run_server(host: str = "127.0.0.1", port: int = 8778) -> None:
+    """Run Uvicorn server."""
     # install_signal_handlers=False is CRITICAL to allow the main thread
     # to handle shutdown (Ctrl+C) correctly.
     # Restore startup info (log_level="info") but keep request spam off (access_log=False)
@@ -166,7 +165,7 @@ def run_server(host: str = "127.0.0.1", port: int = 8778):
 
 
 def start_web_server(cm, planes, host: str = "127.0.0.1", port: int = 8778):
-    """Start the web server in a background thread"""
+    """Start the web server in a background thread."""
     global config_manager, planes_list
     config_manager = cm
     planes_list = planes

@@ -9,6 +9,7 @@ import sys
 import tempfile
 import time
 from datetime import UTC, datetime
+from typing import Never
 
 from colorama import Back, Style, init
 
@@ -63,9 +64,10 @@ db.init_db(main_config)
 logger.warning("Started")
 
 
-def service_exit(signum, frame):
+def service_exit(signum, frame) -> Never:
     logger.warning("Service Stop")
-    raise SystemExit("Service Stop")
+    msg = "Service Stop"
+    raise SystemExit(msg)
 
 
 signal.signal(signal.SIGTERM, service_exit)
@@ -210,5 +212,5 @@ except Exception as e:
     if plane:
         error_message += f"\nFailed on ({plane.config_path}) - {plane.icao}"
 
-    logger.error(error_message)
-    raise e
+    logger.exception(error_message)
+    raise

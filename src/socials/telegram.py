@@ -7,8 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 def post(message, bot_token, chat_id, photo=None):
-    sent = asyncio.run(_send_telegram_async(message, bot_token, chat_id, photo))
-    return sent
+    return asyncio.run(_send_telegram_async(message, bot_token, chat_id, photo))
 
 
 async def _send_telegram_async(message, bot_token, chat_id, photo=None):
@@ -29,13 +28,13 @@ async def _send_telegram_async(message, bot_token, chat_id, photo=None):
             retry_c += 1
             logger.warning("Telegram timeout count: %s", retry_c)
         except telegram.error.TelegramError as e:
-            logger.error("Telegram error: %s", e)
+            logger.exception("Telegram error: %s", e)
             break
         except FileNotFoundError:
-            logger.error("Telegram module couldn't find an image to send.")
+            logger.exception("Telegram module couldn't find an image to send.")
             break
         except Exception as err:
-            logger.error("Unexpected Telegram error: %s", err)
+            logger.exception("Unexpected Telegram error: %s", err)
             break
         else:
             logger.info("Telegram message successfully sent.")

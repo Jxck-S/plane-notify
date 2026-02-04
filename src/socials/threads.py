@@ -8,11 +8,11 @@ logger = logging.getLogger(__name__)
 class Threads:
     base_url = "https://graph.threads.net/v1.0/"
 
-    def __init__(self, access_token: str):
+    def __init__(self, access_token: str) -> None:
         self.access_token = access_token
         self.debug = False
 
-    def toggle_debug(self, debug: bool):
+    def toggle_debug(self, debug: bool) -> None:
         self.debug = debug
 
     def create_image_container(
@@ -122,8 +122,9 @@ class Threads:
         :return: The response from the API call.
         """
         if len(children) < 2 or len(children) > 20:
+            msg = "Carousel must have at least 2 and up to 20 total images or videos."
             raise ValueError(
-                "Carousel must have at least 2 and up to 20 total images or videos."
+                msg
             )
 
         params = {
@@ -162,6 +163,5 @@ class Threads:
             "access_token": self.access_token,
         }
 
-        reply_response = requests.post(f"{Threads.base_url}me/threads", params=params)
+        return requests.post(f"{Threads.base_url}me/threads", params=params)
 
-        return reply_response

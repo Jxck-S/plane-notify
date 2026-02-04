@@ -8,21 +8,21 @@ logger = logging.getLogger(__name__)
 API_VERSION = "v20.0"
 
 
-def raise_details(resp):
+def raise_details(resp) -> None:
     try:
         resp.raise_for_status()
     except Exception as e:
         if resp.status_code == 500:
             # Facebook 500 is usually bad auth but they don't say. Zuck makes me angry
+            msg = f"{e}, Likely bad Meta auth or permissions."
             raise requests.exceptions.HTTPError(
-                f"{e}, Likely bad Meta auth or permissions."
+                msg
             ) from e
-        else:
-            raise (e)
+        raise
 
 
 def post_fb(page_id, file_path, message, access_token):
-    """Posts to Facebook with Image"""
+    """Posts to Facebook with Image."""
     import os
 
     file_name = os.path.basename(file_path)
@@ -35,7 +35,7 @@ def post_fb(page_id, file_path, message, access_token):
 
 
 def post_fb_text(page_id, message, access_token):
-    """Posts text-only to Facebook"""
+    """Posts text-only to Facebook."""
     url = f"https://graph.facebook.com/{API_VERSION}/{page_id}/feed?message={message}&access_token={access_token}"
     resp = requests.post(url)
     raise_details(resp)
@@ -44,7 +44,7 @@ def post_fb_text(page_id, message, access_token):
 
 
 def post_fb_comment(access_token, post_id, comment):
-    """Comment on Facebook post"""
+    """Comment on Facebook post."""
     comment_url = f"https://graph.facebook.com/{API_VERSION}/{post_id}/comments?message={comment}&access_token={access_token}"
     comment_resp = requests.post(comment_url)
     comment_resp.raise_for_status()
@@ -53,7 +53,7 @@ def post_fb_comment(access_token, post_id, comment):
 
 
 def get_fb_post_image_link(post_id, access_token):
-    """Returns Highest Resolution image link of a Facebook Post by FBID"""
+    """Returns Highest Resolution image link of a Facebook Post by FBID."""
     url = f"https://graph.facebook.com/{API_VERSION}/{post_id}?fields=images&access_token={access_token}"
     resp = requests.get(url)
     raise_details(resp)
@@ -64,7 +64,7 @@ def get_fb_post_image_link(post_id, access_token):
 
 
 def post_to_instagram(ig_user_id, access_token, image_url, caption):
-    """Posts to Instagram"""
+    """Posts to Instagram."""
     post_url = f"https://graph.facebook.com/{API_VERSION}/{ig_user_id}/media"
     payload = {"caption": caption, "access_token": access_token, "image_url": image_url}
     resp = requests.post(post_url, data=payload)
@@ -89,7 +89,7 @@ def post_to_instagram(ig_user_id, access_token, image_url, caption):
 
 
 def post_both(fb_page_id, ig_user_id, file_path, message, access_token):
-    """Posts to Facebook and Instagram"""
+    """Posts to Facebook and Instagram."""
     if file_path:
         fb_post_info = post_fb(fb_page_id, file_path, message, access_token)
         fb_image_link = get_fb_post_image_link(fb_post_info["id"], access_token)
@@ -97,15 +97,14 @@ def post_both(fb_page_id, ig_user_id, file_path, message, access_token):
             ig_user_id, access_token, fb_image_link, message
         )
         return fb_post_info, ig_post_info
-    else:
-        fb_post_info = post_fb_text(fb_page_id, message, access_token)
-        return fb_post_info, None
+    fb_post_info = post_fb_text(fb_page_id, message, access_token)
+    return fb_post_info, None
 
 
 def post_to_meta_both_v(
     fb_page_id, ig_user_id, file_path, access_token, facebook_caption, insta_caption
 ):
-    """Posts to Facebook and Instagram with different captions"""
+    """Posts to Facebook and Instagram with different captions."""
     fb_post_info = post_fb(fb_page_id, file_path, facebook_caption, access_token)
     fb_image_link = get_fb_post_image_link(fb_post_info["id"], access_token)
     ig_post_info = post_to_instagram(

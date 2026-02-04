@@ -6,7 +6,7 @@ from discord_webhook import DiscordWebhook
 logger = logging.getLogger(__name__)
 
 
-def post(message, webhook_url, role_id=None, *file_names, username=None):
+def post(message, webhook_url, role_id=None, *file_names, username=None) -> None:
     if role_id:
         message += f" <@&{role_id}>"
     webhook = DiscordWebhook(
@@ -19,13 +19,13 @@ def post(message, webhook_url, role_id=None, *file_names, username=None):
                 with open(file_name, "rb") as f:
                     webhook.add_file(file=f.read(), filename=file_name)
             except Exception as e:
-                logger.error(
+                logger.exception(
                     f"Failed to read file {file_name} for Discord message: {e}"
                 )
 
     try:
         webhook.execute()
     except requests.exceptions.RequestException as e:
-        logger.error("Failed to send Discord message: %s", e)
+        logger.exception("Failed to send Discord message: %s", e)
     except Exception as e:
-        logger.error("Unexpected error sending Discord message: %s", e)
+        logger.exception("Unexpected error sending Discord message: %s", e)

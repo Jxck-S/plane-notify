@@ -35,6 +35,5 @@ def get_circle_perimeter_coords(lat, lon, radius_km):
     lon_lat_coords = list(project_to_wgs84(buffer_circle).exterior.coords)
 
     # Swap coordinates to return them as (latitude, longitude)
-    lat_lon_coords = [[lat, lon] for lon, lat in lon_lat_coords]
+    return [[lat, lon] for lon, lat in lon_lat_coords]
 
-    return lat_lon_coords

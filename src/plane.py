@@ -55,7 +55,7 @@ main_config.read("./configs/mainconf.ini")
 
 
 class Plane:
-    def __init__(self, icao, config):
+    def __init__(self, icao, config) -> None:
         """Initializes a plane object from its config file and given icao."""
         self.icao = icao.lower()
         self.active_icao = self.icao
@@ -131,7 +131,7 @@ class Plane:
         else:
             self.data_loss_mins = main_config.getint("DATA", "DATA_LOSS_MINS")
 
-    def run_readsb(self, ac_dict, pia):
+    def run_readsb(self, ac_dict, pia) -> None:
         # Parse READSB Vector
         self.print_header()
         self.pia_active = pia
@@ -241,18 +241,14 @@ class Plane:
 
         return " | ".join(output_parts)
 
-    def print_header(self):
+    def print_header(self) -> None:
         logger.info("Processing %s ICAO: %s", self.config.filepath, self.active_icao)
 
-    def print_footer(self):
+    def print_footer(self) -> None:
         logger.info("Processing Complete %s", self.config.filepath)
 
     def get_time_since(self, datetime_obj):
-        if datetime_obj is not None:
-            time_since = datetime.now() - datetime_obj
-        else:
-            time_since = None
-        return time_since
+        return datetime.now() - datetime_obj if datetime_obj is not None else None
 
     def route_info(self):
         def route_format(extra_route_info, msg_type: str):
@@ -266,7 +262,7 @@ class Plane:
                 airport_text = f"""{code}, {to_airport["name"]}"""
             else:
                 airport_text = f"{self.known_to_airport}"
-            if "time_to" in extra_route_info.keys() and msg_type != "divert":
+            if "time_to" in extra_route_info and msg_type != "divert":
                 arrival_rel = f"""in ~{extra_route_info["time_to"]}"""
             else:
                 arrival_rel = None
@@ -309,12 +305,12 @@ class Plane:
             pass
         elif extra_route_info is not None:
             # Diversion
-            if "divert_icao" in extra_route_info.keys():
+            if "divert_icao" in extra_route_info:
                 if self.known_to_airport != extra_route_info["divert_icao"]:
                     self.known_to_airport = extra_route_info["divert_icao"]
                     route_to = route_format(extra_route_info, "divert")
             # Destination
-            elif "dest_icao" in extra_route_info.keys():
+            elif "dest_icao" in extra_route_info:
                 # Inital Destination Found
                 if self.known_to_airport is None:
                     self.known_to_airport = extra_route_info["dest_icao"]
@@ -326,12 +322,12 @@ class Plane:
 
         return route_to
 
-    def run_empty(self):
+    def run_empty(self) -> None:
         self.print_header()
         self.feeding = False
         self.run_check()
 
-    def add_trace(self):
+    def add_trace(self) -> None:
         if self.latitude and self.longitude and self.alt_ft is not None:
             last_trace = self.traces[-1] if len(self.traces) >= 1 else None
             # Only add trace if none exist or if new telemetry coordinates are not the same as last coordinates
@@ -349,7 +345,7 @@ class Plane:
                 )
                 self.traces.append(trace)
 
-    def expire_traces(self):
+    def expire_traces(self) -> None:
         if self.traces:
             for trace in self.traces:
                 trace_timestramp = trace[0]
@@ -359,14 +355,13 @@ class Plane:
                     logger.info("Main Trace Expire, removed")
                     self.traces.remove(trace)
 
-    def get_flags(self):
+    def get_flags(self) -> None:
         flags = []
         if self.pia_active:
             flags.append(Flags.PIA)
 
-    def run_check(self):
+    def run_check(self) -> None:
         """Runs a check of a plane module to see if its landed or takenoff using plane data, and takes action if so."""
-
         self.add_trace()
         logger.info(self)
         if self.last_pos_datetime is not None:
@@ -513,7 +508,7 @@ class Plane:
             if self.tookoff:
                 self.takeoff_time = datetime.now(UTC)
                 confirmed_takeoff = (
-                    True if trigger_type == "no longer on ground" else False
+                    trigger_type == "no longer on ground"
                 )
                 self.db_flight_id = add_flight(
                     self.reg,
@@ -546,7 +541,7 @@ class Plane:
                     )
                 else:
                     landed_time_msg = f"Apx. flt. time {int(minutes)} {min_syntax}."
-                confirmed_landing = True if trigger_type == "now on ground" else False
+                confirmed_landing = trigger_type == "now on ground"
                 update_flight(
                     self.db_flight_id,
                     nearest_airport_dict["icao_code"],
@@ -626,7 +621,8 @@ class Plane:
                         blur_identity=self.config.getboolean("DATA", "BLUR_ID"),
                     )
                 else:
-                    raise ValueError("Map option not set correctly in this planes conf")
+                    msg = "Map option not set correctly in this planes conf"
+                    raise ValueError(msg)
                 # alt_text = f"Reg: {self.reg} On Ground: {str(self.on_ground)} Alt: {str(self.alt_ft)} Last Contact: {str(time_since_contact)} Trigger: {trigger_type}"
             else:
                 map_img_filename = None
@@ -683,7 +679,7 @@ class Plane:
                         self.circle_history["traces"].remove(trace)
             # Expire touchngo
             if (
-                "touchngo" in self.circle_history.keys()
+                "touchngo" in self.circle_history
                 and (
                     datetime.now()
                     - datetime.fromtimestamp(self.circle_history["touchngo"])
@@ -743,7 +739,7 @@ class Plane:
                     os.remove(map_img_filename + ".png")
             # Realizes first time seeing emergency, stores time and type
             elif (
-                self.squawk in emergency_squawks.keys()
+                self.squawk in emergency_squawks
                 and not self.emergency_already_triggered
                 and not self.on_ground
             ):
@@ -752,7 +748,7 @@ class Plane:
                 )
                 self.last_emergency = (self.last_pos_datetime, self.squawk)
             elif (
-                self.squawk not in emergency_squawks.keys()
+                self.squawk not in emergency_squawks
                 and self.emergency_already_triggered
             ):
                 self.emergency_already_triggered = None
@@ -890,15 +886,15 @@ class Plane:
                                 RequestsConnectionError,
                                 json.decoder.JSONDecodeError,
                             ) as err:
-                                logger.error("Error with TFRS: %s", err)
+                                logger.exception("Error with TFRS: %s", err)
                                 tfrs = None
                             else:
                                 for tfr in tfrs:
                                     if in_tfr is not None:
                                         break
-                                    elif (
+                                    if (
                                         tfr["details"] is not None
-                                        and "shapes" in tfr["details"].keys()
+                                        and "shapes" in tfr["details"]
                                     ):
                                         for index, shape in enumerate(
                                             tfr["details"]["shapes"]
@@ -927,8 +923,9 @@ class Plane:
                                             )
                                             if polygon is None:
                                                 if len(points) < 4:
+                                                    msg = "Less than 4 points occured on NOTAM ->"
                                                     raise ValueError(
-                                                        "Less than 4 points occured on NOTAM ->",
+                                                        msg,
                                                         tfr["NOTAM"],
                                                     )
                                                 polygon = Polygon(points)
@@ -940,38 +937,29 @@ class Plane:
                                                     ],
                                                 }
                                                 break
-                                            else:
-                                                point_dists = []
-                                                for point in points:
-                                                    point = tuple(point)
-                                                    point_dists.append(
-                                                        float(
-                                                            geodesic(
-                                                                (
-                                                                    self.latitude,
-                                                                    self.longitude,
-                                                                ),
-                                                                point,
-                                                            ).mi
-                                                        )
+                                            point_dists = []
+                                            for point in points:
+                                                point = tuple(point)
+                                                point_dists.append(
+                                                    float(
+                                                        geodesic(
+                                                            (
+                                                                self.latitude,
+                                                                self.longitude,
+                                                            ),
+                                                            point,
+                                                        ).mi
                                                     )
-                                                distance = min(point_dists)
-                                                if closest_tfr is None:
-                                                    closest_tfr = {
-                                                        "info": tfr,
-                                                        "closest_shape_name": shape[
-                                                            "txtName"
-                                                        ],
-                                                        "distance": round(distance),
-                                                    }
-                                                elif distance < closest_tfr["distance"]:
-                                                    closest_tfr = {
-                                                        "info": tfr,
-                                                        "closest_shape_name": shape[
-                                                            "txtName"
-                                                        ],
-                                                        "distance": round(distance),
-                                                    }
+                                                )
+                                            distance = min(point_dists)
+                                            if closest_tfr is None or distance < closest_tfr["distance"]:
+                                                closest_tfr = {
+                                                    "info": tfr,
+                                                    "closest_shape_name": shape[
+                                                        "txtName"
+                                                    ],
+                                                    "distance": round(distance),
+                                                }
                                 if in_tfr is not None:
                                     for shape in in_tfr["info"]["details"]["shapes"]:
                                         if (
@@ -1077,7 +1065,7 @@ class Plane:
                             )
 
                         if nearest_airport_dict["distance_mi"] < 3:
-                            if "touchngo" in self.circle_history.keys():
+                            if "touchngo" in self.circle_history:
                                 message = f"""Doing touch and goes at {nearest_airport_dict["icao_code"]}"""
                             else:
                                 message = f"""Circling over {nearest_airport_dict["icao_code"]} at {self.alt_ft}ft."""
@@ -1110,7 +1098,7 @@ class Plane:
                         if in_tfr:
                             wording_context = (
                                 "Inside"
-                                if "context" not in in_tfr.keys()
+                                if "context" not in in_tfr
                                 else "Above"
                                 if in_tfr["context"] == "above"
                                 else "Below"
@@ -1124,7 +1112,7 @@ class Plane:
                         elif (
                             in_tfr is None
                             and closest_tfr is not None
-                            and "distance" in closest_tfr.keys()
+                            and "distance" in closest_tfr
                             and closest_tfr["distance"] <= 20
                         ):
                             message += f""" {closest_tfr["distance"]} miles from TFR {closest_tfr["info"]["NOTAM"]}, a TFR for {closest_tfr["info"]["Type"]}"""
@@ -1134,7 +1122,7 @@ class Plane:
                         elif (
                             in_tfr is None
                             and closest_tfr is not None
-                            and "distance" not in closest_tfr.keys()
+                            and "distance" not in closest_tfr
                         ):
                             message += f""" near TFR {closest_tfr["info"]["NOTAM"]}, a TFR for {closest_tfr["info"]["Type"]}"""
                             raise Exception(message)
@@ -1180,11 +1168,11 @@ class Plane:
             )
         self.print_footer()
 
-    def check_new_ras(self, ras):
+    def check_new_ras(self, ras) -> None:
         for ra in ras:
             if (
                 self.recent_ra_types == {}
-                or ra["acas_ra"]["advisory"] not in self.recent_ra_types.keys()
+                or ra["acas_ra"]["advisory"] not in self.recent_ra_types
             ):
                 self.recent_ra_types[ra["acas_ra"]["advisory"]] = ra["acas_ra"][
                     "unix_timestamp"
@@ -1197,7 +1185,7 @@ class Plane:
                 if bool(int(ra["acas_ra"]["MTE"])):
                     ra_message += ", Multi threat"
 
-                if "threat_id_hex" in ra["acas_ra"].keys():
+                if "threat_id_hex" in ra["acas_ra"]:
                     threat_reg = get_aircraft_reg_by_icao(
                         ra["acas_ra"]["threat_id_hex"]
                     )
@@ -1225,7 +1213,7 @@ class Plane:
                 )
                 # cleanup_images(map_img_filename)
 
-    def expire_ra_types(self):
+    def expire_ra_types(self) -> None:
         if self.recent_ra_types != {}:
             for ra_type, postime in self.recent_ra_types.copy().items():
                 timestamp = datetime.fromtimestamp(postime)

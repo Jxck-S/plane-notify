@@ -1,5 +1,5 @@
 """
-serve_images.py: Simple HTTP Server for Images
+serve_images.py: Simple HTTP Server for Images.
 
 This script runs a simple HTTP server to serve generated images from the temporary directory.
 It is required because services like Instagram and Threads require a public web accessible URL to fetch images for posting.
@@ -20,10 +20,10 @@ Handler = SimpleHTTPRequestHandler
 
 
 class CusHandler(SimpleHTTPRequestHandler):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, directory=DIRECTORY, **kwargs)
 
-    def end_headers(self):
+    def end_headers(self) -> None:
         # expires_time = datetime.datetime.utcnow() + datetime.timedelta(seconds=60)
         # expires_string = expires_time.strftime("%a, %d %b %Y %H:%M:%S GMT")
         self.send_header("Cache-Control", "no-cache, no-store, max-age=0")
@@ -31,7 +31,7 @@ class CusHandler(SimpleHTTPRequestHandler):
         super().end_headers()
 
     # Turn off Dir list
-    def list_directory(self, path):
+    def list_directory(self, path) -> None:
         self.send_error(404, "Directory listing has been disabled")
 
 

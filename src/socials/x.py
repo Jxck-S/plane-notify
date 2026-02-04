@@ -2,7 +2,7 @@ import tweepy
 
 
 class XED:
-    def __init__(self, api_key, api_key_secret, access_token, access_token_secret):
+    def __init__(self, api_key, api_key_secret, access_token, access_token_secret) -> None:
         self._api_key = api_key
         self._api_key_seret = api_key_secret
         self._access_token = access_token
@@ -38,5 +38,4 @@ class XED:
         tweet_rsp = v2_tweet_api.create_tweet(
             text=message, media_ids=media_ids, in_reply_to_tweet_id=in_reply_to_id
         )
-        tweet_id = tweet_rsp.data["id"]
-        return tweet_id
+        return tweet_rsp.data["id"]

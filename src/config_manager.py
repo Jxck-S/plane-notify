@@ -168,7 +168,6 @@ class ConfigManager:
 
     def reload_all_configs(self, planes_list, status_callback=None):
         """Reload all config files and update planes list"""
-        import hashlib
 
         # Helper for dual logging (console + callback)
         def log(msg, color=Fore.CYAN):

@@ -49,7 +49,7 @@ function connect() {
             // Actually, let's just use a clear success message here.
 
             if (stats.modified === 0 && stats.added === 0 && stats.removed === 0) {
-                statusLine.textContent = `Done. No changes found.`;
+                statusLine.textContent = 'Done. No changes found.';
                 statusLine.style.color = 'green';
             } else {
                 statusLine.textContent = `Reload Complete. ${stats.total} planes active.`;
@@ -72,7 +72,7 @@ function connect() {
         }
     });
 
-    ws.addEventListener('close', function (e) {
+    ws.addEventListener('close', function () {
         // Reconnect will be attempted
         setTimeout(function () {
             connect();
@@ -169,6 +169,12 @@ function checkStaleness() {
 
 window.addEventListener('load', function () {
     connect();
+
+    const reloadBtn = document.getElementById('reload-btn');
+    if (reloadBtn) {
+        reloadBtn.addEventListener('click', requestReload);
+    }
+
     setInterval(pollHeartbeat, 2000);
     setInterval(checkStaleness, 1000);
     pollHeartbeat();

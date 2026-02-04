@@ -28,7 +28,6 @@ async def _send_telegram_async(message, bot_token, chat_id, photo=None):
         except telegram.error.TimedOut:
             retry_c += 1
             logger.warning("Telegram timeout count: %s", retry_c)
-            pass
         except telegram.error.TelegramError as e:
             logger.error("Telegram error: %s", e)
             break

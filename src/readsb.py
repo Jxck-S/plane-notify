@@ -105,7 +105,7 @@ def pull_readsb(planes):
                 data_ctime = float(data["ctime"]) / 1000.0
                 logger.debug(f"Data ctime: {datetime.utcfromtimestamp(data_ctime)}")
             if "now" in data.keys():
-                data_now = float(data["now"]) / 1000.0
+                data_now = float(data["now"])
                 logger.debug(f"Data now time: {datetime.utcfromtimestamp(data_now)}")
         logger.debug(f"Current UTC: {datetime.now(UTC)}")
     else:

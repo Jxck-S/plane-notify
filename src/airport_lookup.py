@@ -3,8 +3,11 @@
 import db
 
 
-def get_closest_airport(latitude, longitude, allowed_types):
-    """Find the closest airport to a given coordinate within allowed types.
+def get_closest_airport(
+    latitude: float, longitude: float, allowed_types: str
+) -> dict | None:
+    """
+    Find the closest airport to a given coordinate within allowed types.
 
     Uses PostGIS ST_Distance to calculate the nearest airport of the specified
     types (e.g., 'large_airport', 'medium_airport') and returns its details.
@@ -36,8 +39,9 @@ def get_closest_airport(latitude, longitude, allowed_types):
     return dict(db.tracking_cursor.fetchone())
 
 
-def get_airport_by_icao(icao):
-    """Retrieve airport information based on its ICAO code.
+def get_airport_by_icao(icao: str | None) -> dict | None:
+    """
+    Retrieve airport information based on its ICAO code.
 
     Queries the database for an airport matching the provided ICAO/GPS code
     and returns a dictionary of its attributes.

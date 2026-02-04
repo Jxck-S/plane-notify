@@ -2,8 +2,8 @@
 
 import json
 import logging
-import os
 from io import BytesIO
+from pathlib import Path
 
 import requests
 
@@ -14,8 +14,9 @@ TIMEOUT_SECS = 10
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
 
 
-def get_planespotters_net_aircraft_photo(reg):
-    """Fetch aircraft photo information from Planespotters.net API.
+def get_planespotters_net_aircraft_photo(reg: str) -> dict | None:
+    """
+    Fetch aircraft photo information from Planespotters.net API.
 
     :param reg: Aircraft registration to look up.
     :return: Dictionary with image_url and credit, or None if not found.
@@ -70,8 +71,9 @@ def get_planespotters_net_aircraft_photo(reg):
         return None
 
 
-def get_github_aircraft_photo(reg):
-    """Fetch aircraft photo information from a curated GitHub repository.
+def get_github_aircraft_photo(reg: str) -> dict | None:
+    """
+    Fetch aircraft photo information from a curated GitHub repository.
 
     :param reg: Aircraft registration to look up.
     :return: Dictionary with image_url and credit, or None if not found.
@@ -118,23 +120,25 @@ def get_github_aircraft_photo(reg):
         return None
 
 
-def get_aircraft_sil(type_code):
-    """Get the file path to an aircraft silhouette image.
+def get_aircraft_sil(type_code: str) -> str | None:
+    """
+    Get the file path to an aircraft silhouette image.
 
     :param type_code: ICAO aircraft type code.
     :return: Path to the silhouette PNG file or None.
     """
-    sil_path = os.path.join(AIRCRAFT_SILS_DIR, f"{type_code.upper()}.png")
+    sil_path = str(Path(AIRCRAFT_SILS_DIR) / f"{type_code.upper()}.png")
     logger.debug(sil_path)
-    if type_code and os.path.exists(sil_path):
+    if type_code and Path(sil_path).exists():
         logger.debug(sil_path)
 
         return sil_path
     return None
 
 
-def get_aircraft_image_url(reg):
-    """Attempt to find an aircraft image from multiple sources.
+def get_aircraft_image_url(reg: str) -> str | None:
+    """
+    Attempt to find an aircraft image from multiple sources.
 
     :param reg: Aircraft registration.
     :return: Photo information dictionary or None.
@@ -148,8 +152,9 @@ def get_aircraft_image_url(reg):
     return photo
 
 
-def get_image_from_url(photo):
-    """Download an aircraft image from a provided URL.
+def get_image_from_url(photo: str) -> str | None:
+    """
+    Download an aircraft image from a provided URL.
 
     :param photo: Dictionary containing 'image_url'.
     :return: BytesIO object containing image data or None.

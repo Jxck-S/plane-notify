@@ -1,16 +1,24 @@
 """web/server.py: FastAPI server for the control dashboard and WebSocket communication."""
 
+from __future__ import annotations
+
 import asyncio
 import json
 import logging
 import os
 import threading
 import time
+from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from config_manager import ConfigManager
+    from plane import Plane
 
 # Initialize logging
 logger = logging.getLogger("web_server")
@@ -19,9 +27,9 @@ logger = logging.getLogger("web_server")
 app = FastAPI(title="Plane Notify Control", version="2.2.0")
 
 # Determine paths
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-STATIC_DIR = os.path.join(BASE_DIR, "static")
-TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
+BASE_DIR = Path(__file__).resolve().parent
+STATIC_DIR = BASE_DIR / "static"
+TEMPLATE_DIR = BASE_DIR / "templates"
 
 # Mount static files
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
@@ -49,7 +57,8 @@ class ConnectionManager:
         self.active_connections.remove(websocket)
 
     async def broadcast(self, message: str) -> None:
-        """Send a message to all active WebSocket connections.
+        """
+        Send a message to all active WebSocket connections.
 
         :param message: The string message to broadcast.
         """
@@ -64,14 +73,15 @@ manager = ConnectionManager()
 
 
 @app.get("/", response_class=HTMLResponse)
-async def dashboard():
+async def dashboard() -> FileResponse:
     """Serve the static dashboard HTML."""
-    return FileResponse(os.path.join(TEMPLATE_DIR, "index.html"))
+    return FileResponse(TEMPLATE_DIR / "index.html")
 
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket) -> None:
-    """Handle WebSocket communication for the dashboard.
+    """
+    Handle WebSocket communication for the dashboard.
 
     Processes reload requests and broadcasts status updates.
     """
@@ -144,7 +154,7 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
 
 
 @app.get("/heartbeat")
-async def heartbeat():
+async def heartbeat() -> dict[str, str | float | int]:
     """Provide a health check endpoint for the server."""
     return {
         "status": "ok",
@@ -156,7 +166,7 @@ async def heartbeat():
 
 # Keep HTTP endpoint for backward compatibility/scripts
 @app.get("/reload")
-async def reload_config_http():
+async def reload_config_http() -> dict[str, int]:
     """Trigger a configuration reload via standard HTTP request."""
     if config_manager is None:
         raise HTTPException(status_code=503, detail="Config Manager not initialized")
@@ -179,7 +189,12 @@ def run_server(host: str = "127.0.0.1", port: int = 8778) -> None:
     server.run()
 
 
-def start_web_server(cm, planes, host: str = "127.0.0.1", port: int = 8778):
+def start_web_server(
+    cm: ConfigManager,
+    planes: list[Plane],
+    host: str = "127.0.0.1",
+    port: int = 8778,
+) -> threading.Thread:
     """Start the web server in a background daemon thread."""
     global config_manager, planes_list
     config_manager = cm

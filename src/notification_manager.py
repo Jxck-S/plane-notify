@@ -1,7 +1,10 @@
 """notification_manager.py: Orchestrates cross-platform notifications."""
 
+from __future__ import annotations
+
 import logging
-import os
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 import praw
 from atproto import Client, models
@@ -12,11 +15,24 @@ from socials import discord, mastodon, meta, nostr, telegram
 from socials.threads import Threads
 from socials.x import XED
 
+if TYPE_CHECKING:
+    from praw.models import Submission
+    from pynostr.event import Event
+
+    from cnf_parser_ext import ConfigParserExt
+
 logger = logging.getLogger(__name__)
 
 
 class ReplyRefs:
     """Store reference IDs for replies across different social platforms."""
+
+    mastodon: str | int | None
+    x: str | int | None
+    facebook: str | None
+    bluesky: dict[str, models.ComAtprotoRepoStrongRef.Main] | None
+    nostr: Event | None
+    reddit: praw.models.Submission | None
 
     def __init__(self) -> None:
         """Initialize all platform reply references to None."""
@@ -31,11 +47,17 @@ class ReplyRefs:
 class NotificationManager:
     """Manage and coordinate notifications across multiple social media platforms."""
 
-    reddit_client = None
+    reddit_client: praw.Reddit | None = None
+    config: ConfigParserExt
+    main_config: ConfigParserExt
+    x_client: XED | None
+    reply_refs: ReplyRefs
+    exclusive_platforms: list[str] | None
 
     @classmethod
-    def init_sources(cls, main_config) -> None:
-        """Initialize global social media clients (like Reddit).
+    def init_sources(cls, main_config: ConfigParserExt) -> None:
+        """
+        Initialize global social media clients (like Reddit).
 
         :param main_config: The global application configuration.
         """
@@ -56,8 +78,9 @@ class NotificationManager:
             except Exception as e:
                 logger.exception("Failed to initialize Reddit client: %s", e)
 
-    def __init__(self, config, main_config) -> None:
-        """Initialize the notification manager for a specific plane/group.
+    def __init__(self, config: ConfigParserExt, main_config: ConfigParserExt) -> None:
+        """
+        Initialize the notification manager for a specific plane/group.
 
         :param config: The specific configuration for this plane or group.
         :param main_config: The global application configuration.
@@ -81,7 +104,7 @@ class NotificationManager:
             except Exception as e:
                 logger.exception("Failed to initialize X client: %s", e)
 
-    def set_one_time_exclusive(self, platforms) -> None:
+    def set_one_time_exclusive(self, platforms: list[str]) -> None:
         """Set a list of platforms for a single exclusive broadcast."""
         self.exclusive_platforms = platforms
 
@@ -90,8 +113,11 @@ class NotificationManager:
         self.reply_refs = ReplyRefs()
         self.exclusive_platforms = None
 
-    def post_to_all(self, message, title, image_path, is_reply=False) -> None:
-        """Post notification to all enabled platforms.
+    def post_to_all(
+        self, message: str, title: str, image_path: str | None, is_reply: bool = False
+    ) -> None:
+        """
+        Post notification to all enabled platforms.
 
         If is_reply is True, attempts to reply to the thread started by the previous post.
         """
@@ -101,7 +127,7 @@ class NotificationManager:
         message_w_title = apply_prefix(title, message)
 
         # Helper to check if we should post to a platform
-        def should_post(platform_name):
+        def should_post(platform_name: str) -> bool:
             if self.exclusive_platforms is not None:
                 return platform_name.lower() in self.exclusive_platforms
             return True
@@ -179,7 +205,9 @@ class NotificationManager:
                 message_w_title, image_path, is_reply
             )
 
-    def _post_telegram(self, message_w_title, image_path):
+    def _post_telegram(
+        self, message_w_title: str, image_path: str | None
+    ) -> bool | None:
         try:
             bot_token = self.config.get("TELEGRAM", "BOT_TOKEN")
             chat_id = self.config.get("TELEGRAM", "ROOM_ID")
@@ -188,7 +216,9 @@ class NotificationManager:
             logger.exception("Failed to post to Telegram : %s", e)
             return None
 
-    def _post_mastodon(self, message_w_title, image_path, is_reply):
+    def _post_mastodon(
+        self, message_w_title: str, image_path: str | None, is_reply: bool
+    ) -> str | int | None:
         try:
             access_token = self.config.get("MASTODON", "ACCESS_TOKEN")
             app_url = self.config.get("MASTODON", "APP_URL")
@@ -206,7 +236,7 @@ class NotificationManager:
             logger.exception("Failed to post to Mastodon : %s", e)
             return None
 
-    def _post_discord(self, message, title, image_path):
+    def _post_discord(self, message: str, title: str, image_path: str | None) -> Any:  # noqa: ANN401
         # Role ID needed?
         role_id = (
             self.config.get("DISCORD", "ROLE_ID")
@@ -223,7 +253,13 @@ class NotificationManager:
             username=title,
         )
 
-    def _post_x(self, message_w_title, image_path, is_reply, title=None):
+    def _post_x(
+        self,
+        message_w_title: str,
+        image_path: str | None,
+        is_reply: bool,
+        title: str | None = None,
+    ) -> str | int | None:
         try:
             media_list = [(image_path, "Map Image")] if image_path else []
 
@@ -238,7 +274,9 @@ class NotificationManager:
             logger.exception("Failed to post to X : %s", e)
             return None
 
-    def _post_meta(self, message_w_title, image_path, is_reply):
+    def _post_meta(
+        self, message_w_title: str, image_path: str | None, is_reply: bool
+    ) -> str | None:
         # Facebook
         fb_id = None
         try:
@@ -275,7 +313,7 @@ class NotificationManager:
                 files_url = self.main_config.get("HTTP_SERVE", "IMAGE_URL")
                 full_filename = image_path.replace(".png", ".jpg")
 
-                image_url = f"{files_url}/{os.path.basename(full_filename)}"
+                image_url = f"{files_url}/{Path(full_filename).name}"
                 meta.post_to_instagram(
                     self.config.get("META", "IG_USER_ID"),
                     self.config.get("META", "ACCESS_TOKEN"),
@@ -288,7 +326,9 @@ class NotificationManager:
 
         return fb_id
 
-    def _post_bluesky(self, message_w_title, image_path, is_reply):
+    def _post_bluesky(
+        self, message_w_title: str, image_path: str | None, is_reply: bool
+    ) -> dict[str, models.ComAtprotoRepoStrongRef.Main] | None:
         try:
             at_client = Client()
             at_client.login(
@@ -307,7 +347,7 @@ class NotificationManager:
                 self.reply_refs.bluesky["parent"] = post_ref
                 return self.reply_refs.bluesky
             if image_path:
-                with open(image_path.replace(".png", ".jpg"), "rb") as f:
+                with Path(image_path.replace(".png", ".jpg")).open("rb") as f:
                     img_data = f.read()
                     first_post_ref = models.create_strong_ref(
                         at_client.send_image(
@@ -327,7 +367,9 @@ class NotificationManager:
             logger.exception("Failed to post to BlueSky : %s %s", e, type(e))
             return None
 
-    def _post_nostr(self, message_w_title, image_path, is_reply):
+    def _post_nostr(
+        self, message_w_title: str, image_path: str | None, is_reply: bool
+    ) -> Event | None:
         try:
             if is_reply and self.reply_refs.nostr:
                 return nostr.post(
@@ -342,14 +384,14 @@ class NotificationManager:
             logger.exception("Failed to post to NOSTR : %s", e)
             return None
 
-    def _post_threads(self, message_w_title, image_path) -> None:
+    def _post_threads(self, message_w_title: str, image_path: str | None) -> None:
         try:
             access_token = self.config.get("THREADS", "ACCESS_TOKEN")
             threads_client = Threads(access_token)
             files_url = self.main_config.get("HTTP_SERVE", "IMAGE_URL")
             if image_path:
                 full_filename = image_path
-                image_url = f"{files_url}/{os.path.basename(full_filename)}"
+                image_url = f"{files_url}/{Path(full_filename).name}"
                 container_id = threads_client.create_image_container(
                     image_url, text=message_w_title
                 )
@@ -362,7 +404,9 @@ class NotificationManager:
             logger.exception("Failed to post to Threads : %s, %s", type(e), e)
             return
 
-    def _post_reddit(self, message_w_title, image_path, is_reply):
+    def _post_reddit(
+        self, message_w_title: str, image_path: str | None, is_reply: bool
+    ) -> praw.models.Submission | None:
         if self.reddit_client:
             try:
                 new_submission = None

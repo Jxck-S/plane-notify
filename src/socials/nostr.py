@@ -1,8 +1,11 @@
 """socials/nostr.py: Interface for posting updates and media to Nostr using relays and Blossom."""
 
+from __future__ import annotations
+
 import csv
 import logging
 import os
+from pathlib import Path
 
 from pynostr.event import Event
 from pynostr.key import PrivateKey
@@ -10,14 +13,14 @@ from pynostr.relay_manager import RelayManager
 from python_blossom import BlossomClient
 
 
-def get_blossom_servers():
+def get_blossom_servers() -> list[str]:
     """Load blossom servers from CSV file."""
     # Get the directory of this script and look for CSV there
-    script_dir = os.path.dirname(__file__)
-    csv_file_path = os.path.join(script_dir, "blossom_servers.csv")
+    script_dir = Path(__file__).parent
+    csv_file_path = script_dir / "blossom_servers.csv"
     servers = []
     try:
-        with open(csv_file_path) as file:
+        with csv_file_path.open() as file:
             reader = csv.DictReader(file)
             for row in reader:
                 servers.append(row["url"])
@@ -26,17 +29,17 @@ def get_blossom_servers():
     return servers
 
 
-def get_nostr_relays():
+def get_nostr_relays() -> list[str]:
     """Load nostr relays from CSV file."""
-    script_dir = os.path.dirname(__file__)
-    csv_file_path = os.path.join(script_dir, "nostr_relays.csv")
+    script_dir = Path(__file__).parent
+    csv_file_path = script_dir / "nostr_relays.csv"
     relays_list = []
 
-    if not os.path.exists(csv_file_path):
+    if not csv_file_path.exists():
         msg = f"Nostr relays CSV file not found at {csv_file_path}"
         raise FileNotFoundError(msg)
 
-    with open(csv_file_path) as file:
+    with csv_file_path.open() as file:
         reader = csv.reader(file)
         next(reader)  # Skip header row
         for row in reader:
@@ -51,7 +54,7 @@ def get_nostr_relays():
     return relays_list
 
 
-def upload_to_blossom(file_path, private_key):
+def upload_to_blossom(file_path: str, private_key: str) -> str:
     """Upload file to blossom server and return URL."""
     servers = get_blossom_servers()
 
@@ -59,7 +62,7 @@ def upload_to_blossom(file_path, private_key):
         client = BlossomClient(private_key, default_servers=servers)
 
         # Upload the file
-        with open(file_path, "rb") as f:
+        with Path(file_path).open("rb") as f:
             file_data = f.read()
 
         # Upload to all blossom servers
@@ -85,8 +88,14 @@ def upload_to_blossom(file_path, private_key):
         raise Exception(msg) from e
 
 
-def post(message, private_key, image_url=None, reply_to=None):
-    """Post a note to Nostr relays.
+def post(
+    message: str,
+    private_key: str,
+    image_url: str | None = None,
+    reply_to: Event | None = None,
+) -> Event:
+    """
+    Post a note to Nostr relays.
 
     :param message: The text content of the note.
     :param private_key: User's private key (nsec format).
@@ -118,7 +127,7 @@ def post(message, private_key, image_url=None, reply_to=None):
     return event
 
 
-def post_with_media(message, file_name, private_key):
+def post_with_media(message: str, file_name: str | None, private_key: str) -> Event:
     """Upload file using blossom and post to nostr."""
     try:
         if file_name:

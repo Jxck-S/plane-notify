@@ -7,8 +7,11 @@ from shapely.geometry import Point
 from shapely.ops import transform
 
 
-def get_circle_perimeter_coords(lat, lon, radius_km):
-    """Generate the perimeter coordinates of a circle (buffer) around the given lat, lon.
+def get_circle_perimeter_coords(
+    lat: float, lon: float, radius_km: float
+) -> list[list[float]]:
+    """
+    Generate the perimeter coordinates of a circle (buffer) around the given lat, lon.
 
     :param lat: Latitude of the center of the circle
     :param lon: Longitude of the center of the circle

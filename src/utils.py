@@ -1,18 +1,20 @@
-"""utils.py: Utility functions for image cleanup, string formatting, and data parsing."""
+"""utils.py: General utility functions."""
+
+from __future__ import annotations
 
 import contextlib
-import os
+from pathlib import Path
 
 
-def cleanup_images(path) -> None:
+def cleanup_images(path: str | None) -> None:
     """Delete temporary image files with given path prefix and common extensions."""
     if path:
         for ext in [".png", ".jpg"]:
             with contextlib.suppress(FileNotFoundError):
-                os.remove(path + ext)
+                Path(path + ext).unlink()
 
 
-def set_dyn_title(title, *aircraft_info):
+def set_dyn_title(title: str | None, *aircraft_info: str | None) -> str | None:
     """Determine dynamic title based on title value and aircraft info."""
     if not title:
         return ""
@@ -24,7 +26,7 @@ def set_dyn_title(title, *aircraft_info):
     return title
 
 
-def clean_stack_trace(stack_trace):
+def clean_stack_trace(stack_trace: str) -> str:
     """Clean stack trace by removing unknown entries."""
     cleaned_trace = []
     lines = stack_trace.splitlines()
@@ -43,7 +45,7 @@ def clean_stack_trace(stack_trace):
     return cleaned_stack_trace
 
 
-def apply_prefix(prefix, message):
+def apply_prefix(prefix: str | None, message: str) -> str:
     """Prepend prefix to message if prefix exists."""
     if prefix:
         return f"{prefix} {message}"
@@ -51,7 +53,8 @@ def apply_prefix(prefix, message):
 
 
 def extract_operator_icao(callsign: str) -> str | None:
-    """Extract the ICAO operator code from a callsign.
+    """
+    Extract the ICAO operator code from a callsign.
 
     :param callsign: The callsign from which to extract the ICAO operator code.
     :return: The extracted ICAO operator code if valid, otherwise None.

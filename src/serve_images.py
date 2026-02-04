@@ -1,14 +1,18 @@
-"""serve_images.py: Simple HTTP Server for Images.
+"""
+serve_images.py: Simple HTTP Server for Images.
 
 This script runs a simple HTTP server to serve generated images from the temporary directory.
 It is required because services like Instagram and Threads require a public web accessible URL to fetch images for posting.
 This server exposes the local images so they can be accessed via a reverse proxy or directly if configured.
 """
 
+from __future__ import annotations
+
 import logging
 import socketserver
 import tempfile
 from http.server import SimpleHTTPRequestHandler
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +25,7 @@ Handler = SimpleHTTPRequestHandler
 class CusHandler(SimpleHTTPRequestHandler):
     """Custom HTTP request handler that serves files from the images directory and disables directory listing."""
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401
         """Initialize the handler with the predefined images directory."""
         super().__init__(*args, directory=DIRECTORY, **kwargs)
 
@@ -34,8 +38,9 @@ class CusHandler(SimpleHTTPRequestHandler):
         super().end_headers()
 
     # Turn off Dir list
-    def list_directory(self, path) -> None:
-        """Override to disable directory listing.
+    def list_directory(self, path: str) -> None:
+        """
+        Override to disable directory listing.
 
         :param path: The directory path requested.
         :return: Send a 404 error instead of a listing.

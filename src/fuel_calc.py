@@ -7,8 +7,9 @@ import db
 logger = logging.getLogger(__name__)
 
 
-def get_avg_fuel_price():
-    """Retrieve the average fuel price per gallon from the database.
+def get_avg_fuel_price() -> float | None:
+    """
+    Retrieve the average fuel price per gallon from the database.
 
     :return: The cost as a float, or None if not available.
     """
@@ -23,7 +24,7 @@ def get_avg_fuel_price():
     return None
 
 
-def fuel_calculation(aircraft_icao_type, minutes):
+def fuel_calculation(aircraft_icao_type: str, minutes: float) -> dict | None:
     """Calculate fuel usage, price, c02 output of a flight depending on aircraft type and flight length."""
     if not db.tracking_cursor:
         return None
@@ -53,8 +54,9 @@ def fuel_calculation(aircraft_icao_type, minutes):
     return None
 
 
-def fuel_message(fuel_info):
-    """Generate a human-readable message summarizing fuel and CO2 data.
+def fuel_message(fuel_info: dict) -> str:
+    """
+    Generate a human-readable message summarizing fuel and CO2 data.
 
     :param fuel_info: Dictionary containing fuel calculation results.
     :return: Formatted message string.

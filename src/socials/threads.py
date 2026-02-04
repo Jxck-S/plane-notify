@@ -1,5 +1,7 @@
 """socials/threads.py: Interface for posting messages, media, and carousels to Threads."""
 
+from __future__ import annotations
+
 import logging
 
 import requests
@@ -22,9 +24,14 @@ class Threads:
         self.debug = debug
 
     def create_image_container(
-        self, image_url, user_id="me", text=None, is_carousel_item=False
-    ):
-        """Create a media container with an image to be posted on Threads.
+        self,
+        image_url: str,
+        user_id: str = "me",
+        text: str | None = None,
+        is_carousel_item: bool = False,
+    ) -> str:
+        """
+        Create a media container with an image to be posted on Threads.
 
         :param image_url: The URL of the image to be posted.
         :param text: Optional text content to be posted.
@@ -44,14 +51,21 @@ class Threads:
         create_container_response.raise_for_status()
         if self.debug:
             logger.debug(
-                f"create_container_response {create_container_response.status_code} {create_container_response.text}"
+                "create_container_response %s %s",
+                create_container_response.status_code,
+                create_container_response.text,
             )
         return create_container_response.json()["id"]
 
     def create_video_container(
-        self, video_url, user_id="me", text=None, is_carousel_item=False
-    ):
-        """Create a media container with a video to be posted on Threads.
+        self,
+        video_url: str,
+        user_id: str = "me",
+        text: str | None = None,
+        is_carousel_item: bool = False,
+    ) -> str:
+        """
+        Create a media container with a video to be posted on Threads.
 
         :param video_url: The URL of the video to be posted.
         :param text: Optional text content to be posted.
@@ -69,12 +83,17 @@ class Threads:
         create_container_response.raise_for_status()
         if self.debug:
             logger.debug(
-                f"create_container_response {create_container_response.status_code} {create_container_response.text}"
+                "create_container_response %s %s",
+                create_container_response.status_code,
+                create_container_response.text,
             )
         return create_container_response.json()["id"]
 
-    def create_text_container(self, text, user_id="me", is_carousel_item=False):
-        """Create a media container with text content to be posted on Threads.
+    def create_text_container(
+        self, text: str, user_id: str = "me", is_carousel_item: bool = False
+    ) -> str:
+        """
+        Create a media container with text content to be posted on Threads.
 
         :param text: The text content to be posted.
         :return: The response from the API call.
@@ -91,12 +110,17 @@ class Threads:
         create_container_response.raise_for_status()
         if self.debug:
             logger.debug(
-                f"create_container_response {create_container_response.status_code} {create_container_response.text}"
+                "create_container_response %s %s",
+                create_container_response.status_code,
+                create_container_response.text,
             )
         return create_container_response.json()["id"]
 
-    def publish_container(self, threads_media_container_id, user_id="me"):
-        """Publish a container (post) that was created using the `create_container` method.
+    def publish_container(
+        self, threads_media_container_id: str, user_id: str = "me"
+    ) -> requests.Response:
+        """
+        Publish a container (post) that was created using the `create_container` method.
 
         :param threads_media_container_id: The container ID obtained from the create_container method.
         :return: The response from the API call.
@@ -111,12 +135,17 @@ class Threads:
         )
         if self.debug:
             logger.debug(
-                f"publish_container_response {publish_container_response.status_code} {publish_container_response.json()}"
+                "publish_container_response %s %s",
+                publish_container_response.status_code,
+                publish_container_response.json(),
             )
         return publish_container_response
 
-    def create_carousel_container(self, children, user_id="me", text=None):
-        """Create a carousel container with images or videos.
+    def create_carousel_container(
+        self, children: list[str], user_id: str = "me", text: str | None = None
+    ) -> str:
+        """
+        Create a carousel container with images or videos.
 
         :param children: A list of container IDs (up to 20) for images/videos to be included in the carousel.
         :param text: Optional text associated with the carousel post.
@@ -143,12 +172,15 @@ class Threads:
         )
         if self.debug:
             logger.debug(
-                f"create_carousel_response {create_carousel_response.status_code} {create_carousel_response.json()}"
+                "create_carousel_response %s %s",
+                create_carousel_response.status_code,
+                create_carousel_response.json(),
             )
         return create_carousel_response.json()["id"]
 
-    def reply_to_post(self, text, reply_to_id):
-        """Reply to a specific reply under the root post.
+    def reply_to_post(self, text: str, reply_to_id: str) -> requests.Response:
+        """
+        Reply to a specific reply under the root post.
 
         :param text: The reply text content.
         :param reply_to_id: The ID of the specific post/reply being replied to.

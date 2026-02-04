@@ -1,10 +1,14 @@
 """src/config_manager.py: Management and reloading of aircraft configuration files."""
 
+from __future__ import annotations
+
 import hashlib
 import logging
 import os
 import sys
+from pathlib import Path
 from threading import Lock
+from typing import Callable, Any
 
 from colorama import Fore, Style
 
@@ -17,12 +21,13 @@ logger = logging.getLogger(__name__)
 class ConfigManager:
     """Manage plane configurations with conflict detection and hot-reloading."""
 
-    def __init__(self, config_dir="./configs") -> None:
-        """Initialize the config manager.
+    def __init__(self, config_dir: str = "./configs") -> None:
+        """
+        Initialize the config manager.
 
         :param config_dir: Path to the directory containing plane configuration files.
         """
-        self.config_dir = os.path.abspath(config_dir)
+        self.config_dir = str(Path(config_dir).resolve())
         # Maps: file_path -> (icao, pia_icao_or_None)
         self.file_to_icaos = {}
         # Maps: icao/pia_icao -> file_path (for conflict detection)
@@ -33,7 +38,7 @@ class ConfigManager:
         # Setup config change logger
         self.change_logger = self._setup_change_logger()
 
-    def _setup_change_logger(self):
+    def _setup_change_logger(self) -> logging.Logger:
         """Set up dedicated logger for config changes."""
         logger = logging.getLogger("config_changes")
         logger.setLevel(logging.INFO)
@@ -42,7 +47,7 @@ class ConfigManager:
         logger.handlers = []
 
         # Create logs directory if it doesn't exist
-        os.makedirs("./logs", exist_ok=True)
+        Path("./logs").mkdir(exist_ok=True)
 
         # File handler with detailed formatting
         file_handler = logging.FileHandler("./logs/config_changes.log")
@@ -59,11 +64,13 @@ class ConfigManager:
 
         return logger
 
-    def get_relative_path(self, abs_path):
+    def get_relative_path(self, abs_path: str) -> str:
         """Convert absolute path to relative path from config directory."""
-        return os.path.relpath(abs_path, self.config_dir)
+        return str(Path(abs_path).relative_to(self.config_dir))
 
-    def validate_no_conflict(self, icao, pia_icao, file_path) -> None:
+    def validate_no_conflict(
+        self, icao: str, pia_icao: str | None, file_path: str
+    ) -> None:
         """Check if ICAO or PIA_ICAO conflicts with existing configs."""
         rel_path = self.get_relative_path(file_path)
 
@@ -85,7 +92,9 @@ class ConfigManager:
                 msg = f"PIA_ICAO conflict: {pia_icao} in {rel_path} conflicts with {existing_rel}"
                 raise ValueError(msg)
 
-    def load_config_file(self, file_path):
+    def load_config_file(
+        self, file_path: str
+    ) -> tuple[ConfigParserExt, str, str | None]:
         """Load and parse a single config file, return (config, icao, pia_icao_or_None)."""
         plane_config = ConfigParserExt()
         plane_config.read(file_path)
@@ -97,7 +106,7 @@ class ConfigManager:
 
         return plane_config, icao, pia_icao
 
-    def register_config(self, file_path, icao, pia_icao) -> None:
+    def register_config(self, file_path: str, icao: str, pia_icao: str | None) -> None:
         """Register config file and its ICAOs in tracking dicts."""
         with self.lock:
             self.file_to_icaos[file_path] = (icao, pia_icao)
@@ -105,7 +114,7 @@ class ConfigManager:
             if pia_icao:
                 self.icao_to_file[pia_icao] = file_path
 
-    def unregister_config(self, file_path):
+    def unregister_config(self, file_path: str) -> tuple[str | None, str | None]:
         """Remove config file and its ICAOs from tracking dicts."""
         with self.lock:
             if file_path in self.file_to_icaos:
@@ -128,7 +137,7 @@ class ConfigManager:
                 return icao, pia_icao
         return None, None
 
-    def load_all_configs(self, planes_list):
+    def load_all_configs(self, planes_list: list[Plane]) -> int:
         """Load all config files on startup and populate planes list."""
         logger.info("Found the following configs")
         for dirpath, _dirname, filenames in os.walk(self.config_dir):
@@ -136,7 +145,7 @@ class ConfigManager:
                 f for f in filenames if f.endswith(".ini") and f != "mainconf.ini"
             ]:
                 if "disabled" not in dirpath:
-                    file_path = os.path.join(dirpath, filename)
+                    file_path = str(Path(dirpath) / filename)
                     logger.info(file_path)
 
                     try:
@@ -149,7 +158,7 @@ class ConfigManager:
                         plane = Plane(icao, plane_config)
 
                         # Calculate and store initial file hash for change detection
-                        with open(file_path, "rb") as f:
+                        with Path(file_path).open("rb") as f:
                             plane._config_hash = hashlib.md5(f.read()).hexdigest()
 
                         # Add to planes list (only one entry per unique plane)
@@ -171,11 +180,15 @@ class ConfigManager:
         logger.info("%s planes configured.", len(planes_list))
         return len(planes_list)
 
-    def reload_all_configs(self, planes_list, status_callback=None):
+    def reload_all_configs(
+        self,
+        planes_list: list[Plane],
+        status_callback: Callable[[str], None] | None = None,
+    ) -> dict[str, int]:
         """Reload all config files and update planes list."""
 
         # Helper for dual logging (console + callback)
-        def log(msg, color=Fore.CYAN) -> None:
+        def log(msg: str, color: str = Fore.CYAN) -> None:
             logger.info("%s%s%s", color, msg, Style.RESET_ALL)
             if status_callback:
                 status_callback(msg)
@@ -196,14 +209,14 @@ class ConfigManager:
                 f for f in filenames if f.endswith(".ini") and f != "mainconf.ini"
             ]:
                 if "disabled" not in dirpath:
-                    file_path = os.path.join(dirpath, filename)
+                    file_path = str(Path(dirpath) / filename)
                     current_files.add(file_path)
 
                     try:
                         plane_config, icao, pia_icao = self.load_config_file(file_path)
 
                         # Calculate file hash to detect actual changes
-                        with open(file_path, "rb") as f:
+                        with Path(file_path).open("rb") as f:
                             file_hash = hashlib.md5(f.read()).hexdigest()
 
                         # Check if this is a modification or addition
@@ -330,7 +343,7 @@ class ConfigManager:
         }
 
 
-def verify_configs_only(config_dir="./configs") -> bool:
+def verify_configs_only(config_dir: str = "./configs") -> bool:
     """Verify all configs without creating plane objects - for standalone validation."""
     logger.info("%s=== Config Verification Mode ===%s\n", Fore.CYAN, Style.RESET_ALL)
 
@@ -351,7 +364,7 @@ def verify_configs_only(config_dir="./configs") -> bool:
             f for f in filenames if f.endswith(".ini") and f != "mainconf.ini"
         ]:
             if "disabled" not in dirpath:
-                file_path = os.path.join(dirpath, filename)
+                file_path = str(Path(dirpath) / filename)
                 rel_path = config_manager.get_relative_path(file_path)
                 total_files += 1
 

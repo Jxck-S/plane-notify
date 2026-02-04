@@ -1,5 +1,7 @@
 """socials/x.py: Interface for posting messages and media to X (formerly Twitter)."""
 
+from __future__ import annotations
+
 import tweepy
 
 
@@ -7,16 +9,26 @@ class XED:
     """X (Twitter) client for posting status updates and media."""
 
     def __init__(
-        self, api_key, api_key_secret, access_token, access_token_secret
+        self,
+        api_key: str,
+        api_key_secret: str,
+        access_token: str,
+        access_token_secret: str,
     ) -> None:
         """Initialize X client with API credentials."""
         self._api_key = api_key
-        self._api_key_seret = api_key_secret
+        self._api_key_secret = api_key_secret
         self._access_token = access_token
         self._access_token_secret = access_token_secret
 
-    def post(self, message, media_list=None, in_reply_to_id=None):
-        """Post a message to X with optional media and reply tagging.
+    def post(
+        self,
+        message: str,
+        media_list: list[tuple[bytes, str]] | None = None,
+        in_reply_to_id: str | None = None,
+    ) -> str:
+        """
+        Post a message to X with optional media and reply tagging.
 
         :param message: The text content of the post.
         :param media_list: List of (image_data, alt_text) tuples for media uploads.
@@ -26,7 +38,7 @@ class XED:
         # V1 API For the Media Upload
         media_ids = []
         if media_list:
-            twitter_app_auth = tweepy.OAuthHandler(self._api_key, self._api_key_seret)
+            twitter_app_auth = tweepy.OAuthHandler(self._api_key, self._api_key_secret)
             twitter_app_auth.set_access_token(
                 self._access_token, self._access_token_secret
             )
@@ -42,7 +54,7 @@ class XED:
         # 2 API for the Post
         v2_tweet_api = tweepy.Client(
             consumer_key=self._api_key,
-            consumer_secret=self._api_key_seret,
+            consumer_secret=self._api_key_secret,
             access_token=self._access_token,
             access_token_secret=self._access_token_secret,
         )

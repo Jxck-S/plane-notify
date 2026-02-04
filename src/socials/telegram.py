@@ -1,15 +1,24 @@
 """socials/telegram.py: Interface for sending notifications to Telegram."""
 
+from __future__ import annotations
+
 import asyncio
 import logging
 
 import telegram
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
-def post(message, bot_token, chat_id, photo=None):
-    """Send a message and optional photo to Telegram.
+def post(
+    message: str,
+    bot_token: str,
+    chat_id: str | int,
+    photo: Any = None,  # noqa: ANN401
+) -> bool:
+    """
+    Send a message and optional photo to Telegram.
 
     :param message: The text content or caption.
     :param bot_token: Telegram bot token.
@@ -20,7 +29,12 @@ def post(message, bot_token, chat_id, photo=None):
     return asyncio.run(_send_telegram_async(message, bot_token, chat_id, photo))
 
 
-async def _send_telegram_async(message, bot_token, chat_id, photo=None):
+async def _send_telegram_async(
+    message: str,
+    bot_token: str,
+    chat_id: str | int,
+    photo: Any = None,  # noqa: ANN401
+) -> bool:
     sent = False
     retry_c = 0
     while not sent:

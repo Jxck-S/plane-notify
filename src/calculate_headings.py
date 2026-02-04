@@ -5,8 +5,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def calculate_from_bearing(frm, to):
-    """Calculate initial bearing from one coordinate to next.
+def calculate_from_bearing(frm: tuple[float, float], to: tuple[float, float]) -> float:
+    """
+    Calculate initial bearing from one coordinate to next.
 
     :param frm: Tuple of (lat, lng) in degrees.
     :param to: Tuple of (lat, lng) in degrees.
@@ -25,7 +26,7 @@ def calculate_from_bearing(frm, to):
     return from_bearing
 
 
-def calculate_cardinal(d):
+def calculate_cardinal(d: float) -> str:
     """Find cardinal direction from bearing degree."""
     dirs = [
         "N",
@@ -49,7 +50,7 @@ def calculate_cardinal(d):
     return dirs[ix % len(dirs)]
 
 
-def calculate_deg_change(new_heading, original_heading):
+def calculate_deg_change(new_heading: float | None, original_heading: float) -> float:
     """Calculate change between two headings, returns negative degree if change is left, positive if right."""
     if new_heading is None:
         logger.debug("Track heading missing. No change")

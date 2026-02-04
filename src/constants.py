@@ -43,8 +43,9 @@ class NavModes(Enum):
 NAV_MODE_LOOKUP = {nav.value[0]: nav for nav in NavModes}
 
 
-def normalize_nav_modes(modes: list) -> list:
-    """Convert a list of raw navigation mode strings into NavModes enum members.
+def normalize_nav_modes(modes: list[str]) -> list[NavModes]:
+    """
+    Convert a list of raw navigation mode strings into NavModes enum members.
 
     :param modes: List of mode strings from the data source.
     :return: List of NavModes enum members.

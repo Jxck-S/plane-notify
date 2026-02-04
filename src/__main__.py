@@ -1,4 +1,7 @@
-"""src/__main__.py: Main entry point for the Plane Notify service."""
+"""__main__.py: Entry point for the Plane Notify application."""
+
+from __future__ import annotations
+
 
 import argparse
 import ast
@@ -11,6 +14,8 @@ import sys
 import tempfile
 import time
 from datetime import UTC, datetime
+from pathlib import Path
+from types import FrameType
 from typing import Never
 
 from colorama import Back, Style, init
@@ -28,24 +33,24 @@ if platform.system() == "Windows":
     init(convert=True)
 
 tmp_dir = tempfile.gettempdir()
-notify_dir = os.path.join(tmp_dir, "plane-notify")
+notify_dir = Path(tmp_dir) / "plane-notify"
 
-if os.path.exists(notify_dir):
+if notify_dir.exists():
     shutil.rmtree(notify_dir)
 
-os.makedirs(notify_dir)
-os.makedirs(os.path.join(notify_dir, "imgs"))
+notify_dir.mkdir(parents=True, exist_ok=True)
+(notify_dir / "imgs").mkdir(parents=True, exist_ok=True)
 
-abspath = os.path.abspath(__file__)
-dname = os.path.dirname(abspath)
-project_root = os.path.dirname(dname)
+abspath = Path(__file__).resolve()
+dname = abspath.parent
+project_root = dname.parent
 os.chdir(project_root)
 
-sys.path.extend([project_root, dname])
+sys.path.extend([str(project_root), str(dname)])
 
 # Dependency Handling
-if not os.path.isdir("./dependencies/"):
-    os.mkdir("./dependencies/")
+if not Path("./dependencies/").is_dir():
+    Path("./dependencies/").mkdir()
 
 
 # Arguments
@@ -58,7 +63,7 @@ main_config.read("./configs/mainconf.ini")
 # Setup Logging
 setup_logging(main_config, debug=args.debug)
 logger = logging.getLogger(__name__)
-logger.info(os.getcwd())
+logger.info(Path.cwd())
 
 db.init_db(main_config)
 
@@ -66,7 +71,7 @@ db.init_db(main_config)
 logger.warning("Started")
 
 
-def service_exit(signum, frame) -> Never:
+def service_exit(signum: int, frame: FrameType | None) -> Never:
     """Exit the service gracefully on receipt of a termination signal."""
     logger.warning("Service Stop")
     msg = "Service Stop"
@@ -74,7 +79,7 @@ def service_exit(signum, frame) -> Never:
 
 
 signal.signal(signal.SIGTERM, service_exit)
-if os.path.isfile("lookup_route.py"):
+if Path("lookup_route.py").is_file():
     logger.info("Route lookup is enabled")
 else:
     logger.info("Route lookup is disabled")
@@ -120,7 +125,7 @@ try:
             ra_count = len(ras)
             if last_ra_count is not None and ra_count != last_ra_count:
                 logger.info(
-                    f"{abs(ra_count - last_ra_count)} new Resolution Advisories"
+                    "%s new Resolution Advisories", abs(ra_count - last_ra_count)
                 )
                 for ra in ras[last_ra_count:]:
                     ra = ast.literal_eval(ra)
@@ -146,7 +151,7 @@ try:
                     sorted_ras != {} and plane.pia_icao and plane.pia_icao in sorted_ras
                 ):
                     logger.info(
-                        f"{plane.pia_icao} has {len(sorted_ras[plane.pia_icao])} RAs"
+                        "%s has %s RAs", plane.pia_icao, len(sorted_ras[plane.pia_icao])
                     )
                     plane.check_new_ras(sorted_ras[plane.pia_icao])
                 plane.expire_ra_types()

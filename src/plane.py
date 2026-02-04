@@ -2,9 +2,9 @@
 
 import json
 import logging
-import os
 import tempfile
 import time
+from pathlib import Path
 from datetime import UTC, datetime, timedelta
 
 import requests
@@ -59,7 +59,7 @@ main_config.read("./configs/mainconf.ini")
 class Plane:
     """Representation of an aircraft being tracked with methods for state management and notification."""
 
-    def __init__(self, icao, config) -> None:
+    def __init__(self, icao: str, config: ConfigParserExt) -> None:
         """Initialize a plane object from its config file and given icao."""
         self.icao = icao.lower()
         self.active_icao = self.icao
@@ -135,8 +135,9 @@ class Plane:
         else:
             self.data_loss_mins = main_config.getint("DATA", "DATA_LOSS_MINS")
 
-    def run_readsb(self, ac_dict, pia) -> None:
-        """Parse and process a vector update from READSB.
+    def run_readsb(self, ac_dict: dict, pia: bool) -> None:
+        """
+        Parse and process a vector update from READSB.
 
         :param ac_dict: Dictionary containing aircraft telemetry from READSB.
         :param pia: Boolean indicating if PIA (Privacy ICAO Address) is active.
@@ -199,7 +200,7 @@ class Plane:
             logger.warning("Got data but some data is invalid!")
             logger.warning(e)
             logger.warning(
-                f"{Fore.YELLOW}READSB Sourced Data: {ac_dict}{Style.RESET_ALL}"
+                "%sREADSB Sourced Data: %s%s", Fore.YELLOW, ac_dict, Style.RESET_ALL
             )
             self.print_footer()
         else:
@@ -259,21 +260,23 @@ class Plane:
         """Log the completion of aircraft processing."""
         logger.info("Processing Complete %s", self.config.filepath)
 
-    def get_time_since(self, datetime_obj):
-        """Calculate the time duration since a given datetime object.
+    def get_time_since(self, datetime_obj: datetime) -> timedelta | None:
+        """
+        Calculate the time duration since a given datetime object.
 
         :param datetime_obj: The datetime object to compare against.
         :return: Time delta since the given datetime.
         """
         return datetime.now() - datetime_obj if datetime_obj is not None else None
 
-    def route_info(self):
-        """Retrieve and format route information for the aircraft.
+    def route_info(self) -> str | None:
+        """
+        Retrieve and format route information for the aircraft.
 
         :return: Formatted route description string or None.
         """
 
-        def route_format(extra_route_info, msg_type: str):
+        def route_format(extra_route_info: dict, msg_type: str) -> str:
             to_airport = get_airport_by_icao(self.known_to_airport)
             if to_airport:
                 code = (
@@ -515,14 +518,12 @@ class Plane:
                 last_loc = loc
 
             logger.info(
-                Fore.GREEN
-                + "Country: "
-                + country
-                + " State: "
-                + state
-                + " City: "
-                + city
-                + Style.RESET_ALL
+                "%sCountry: %s State: %s City: %s%s",
+                Fore.GREEN,
+                country,
+                state,
+                city,
+                Style.RESET_ALL,
             )
         # Title
         title = self.config.get_title("DATA")
@@ -626,11 +627,11 @@ class Plane:
                 image_type = ImageTypes.LANDED if self.landed else ImageTypes.TAKEOFF
                 timestamp = datetime.now(UTC).strftime("%Y-%m-%d_%H-%M")
                 db_id = f"{self.db_flight_id}_" if self.db_flight_id else ""
-                map_img_filename = os.path.join(
-                    tempfile.gettempdir(),
-                    "plane-notify",
-                    "imgs",
-                    f"{db_id}{self.active_icao.upper()}_{image_type}_{timestamp}_map",
+                map_img_filename = str(
+                    Path(tempfile.gettempdir())
+                    / "plane-notify"
+                    / "imgs"
+                    / f"{db_id}{self.active_icao.upper()}_{image_type}_{timestamp}_map"
                 )
                 logger.debug(map_img_filename)
                 if main_config.get("MAP", "OPTION") == "fsm":
@@ -736,11 +737,11 @@ class Plane:
                     # Map generation
                     image_type = ImageTypes.EMERGENCY
                     timestamp = datetime.now(UTC).strftime("%Y-%m-%d_%H-%M")
-                    map_img_filename = os.path.join(
-                        tempfile.gettempdir(),
-                        "plane-notify",
-                        "imgs",
-                        f"{self.active_icao.upper()}_{image_type}_{timestamp}_map",
+                    map_img_filename = str(
+                        Path(tempfile.gettempdir())
+                        / "plane-notify"
+                        / "imgs"
+                        / f"{self.active_icao.upper()}_{image_type}_{timestamp}_map"
                     )
                     if main_config.get("MAP", "OPTION") == "fsm":
                         info = pn_adapter(self)
@@ -760,7 +761,7 @@ class Plane:
                         title=self.title,
                         image_path=map_img_filename + ".png",
                     )
-                    os.remove(map_img_filename + ".png")
+                    Path(map_img_filename + ".png").unlink()
             # Realizes first time seeing emergency, stores time and type
             elif (
                 self.squawk in emergency_squawks
@@ -768,7 +769,8 @@ class Plane:
                 and not self.on_ground
             ):
                 logger.info(
-                    f"Emergency {self.squawk} detected storing code and time and waiting to trigger"
+                    "Emergency %s detected storing code and time and waiting to trigger",
+                    self.squawk,
                 )
                 self.last_emergency = (self.last_pos_datetime, self.squawk)
             elif (
@@ -786,11 +788,11 @@ class Plane:
                         if mode == NavModes.APPROACH:
                             image_type = ImageTypes.APPROACH
                             timestamp = datetime.now(UTC).strftime("%Y-%m-%d_%H-%M")
-                            map_img_filename = os.path.join(
-                                tempfile.gettempdir(),
-                                "plane-notify",
-                                "imgs",
-                                f"{self.active_icao.upper()}_{image_type}_{timestamp}_map",
+                            map_img_filename = str(
+                                Path(tempfile.gettempdir())
+                                / "plane-notify"
+                                / "imgs"
+                                / f"{self.active_icao.upper()}_{image_type}_{timestamp}_map"
                             )
                             info = pn_adapter(self)
                             info["nearest_airport"] = None
@@ -876,7 +878,8 @@ class Plane:
                         geodesic(aircraft_coords, cent.coords).mi, 2
                     )
                     logger.info(
-                        f"Distance to centroid of circling coordinates {distance_to_centroid} miles"
+                        "Distance to centroid of circling coordinates %s miles",
+                        distance_to_centroid,
                     )
                     if distance_to_centroid <= 15:
                         logger.info("Within 15 miles of centroid, CIRCLING")
@@ -998,7 +1001,8 @@ class Plane:
                                                 int(shape["valDistVerLower"]),
                                             )
                                             logger.info(
-                                                f"In TFR based off location checking alt next {in_tfr}"
+                                                "In TFR based off location checking alt next %s",
+                                                in_tfr,
                                             )
                                             break
                                     if not (
@@ -1010,7 +1014,8 @@ class Plane:
                                         elif self.alt_ft < val_dist_ver_lower:
                                             in_tfr["context"] = "below"
                                         logger.info(
-                                            f"But not in alt of TFR {in_tfr['context']}"
+                                            "But not in alt of TFR %s",
+                                            in_tfr["context"],
                                         )
 
                                 if in_tfr is None:
@@ -1024,7 +1029,9 @@ class Plane:
                                 else:
                                     shapes = closest_tfr["info"]["details"]["shapes"]
 
-                                def draw_poly(context, pairs):
+                                def draw_poly(
+                                    context: staticmaps.Context, pairs: list
+                                ) -> None:
                                     pairs.append(pairs[0])
                                     context.add_object(
                                         staticmaps.Area(
@@ -1074,11 +1081,11 @@ class Plane:
                                         )
                         image_type = ImageTypes.CIRCLING
                         timestamp = datetime.now(UTC).strftime("%Y-%m-%d_%H-%M")
-                        map_img_filename = os.path.join(
-                            tempfile.gettempdir(),
-                            "plane-notify",
-                            "imgs",
-                            f"{self.active_icao.upper()}_{image_type}_{timestamp}_map",
+                        map_img_filename = str(
+                            Path(tempfile.gettempdir())
+                            / "plane-notify"
+                            / "imgs"
+                            / f"{self.active_icao.upper()}_{image_type}_{timestamp}_map"
                         )
                         if main_config.get("MAP", "OPTION") == "fsm":
                             info = pn_adapter(self)
@@ -1100,7 +1107,10 @@ class Plane:
                             message = f"""Circling {round(nearest_airport_dict["distance_mi"], 2)}mi {cardinal} of {nearest_airport_dict["icao_code"]}, {nearest_airport_dict["name"]} at {self.alt_ft}ft. """
                         tfr_map_filename = None
 
-                        def tfr_image(context, aircraft_coords):
+                        def tfr_image(
+                            context: staticmaps.Context,
+                            aircraft_coords: tuple[float, float],
+                        ) -> str:
                             heading = self.track
                             heading *= -1
                             im = Image.open("./dependencies/ac.png")
@@ -1115,7 +1125,7 @@ class Plane:
                             )
                             context.add_object(marker)
                             image = context.render_cairo(1000, 1000)
-                            os.remove(rotated_file)
+                            Path(rotated_file).unlink()
                             tfr_map_filename = (
                                 f"{tempfile.gettempdir()}/{self.active_icao}_TFR_.png"
                             )
@@ -1163,7 +1173,7 @@ class Plane:
                         )
                         cleanup_images(map_img_filename)
                         if tfr_map_filename:
-                            os.remove(tfr_map_filename)
+                            Path(tfr_map_filename).unlink()
                         self.circle_history["triggered"] = True
                 elif abs(total_change) <= 360 and self.circle_history["triggered"]:
                     logger.info("No Longer Circling, trigger cleared")
@@ -1191,12 +1201,16 @@ class Plane:
             hours, remainder = divmod(elapsed_time.total_seconds(), 3600)
             minutes, seconds = divmod(remainder, 60)
             logger.info(
-                f"Time Since Take off  {int(hours)} Hours : {int(minutes)} Mins : {int(seconds)} Secs"
+                "Time Since Take off  %s Hours : %s Mins : %s Secs",
+                int(hours),
+                int(minutes),
+                int(seconds),
             )
         self.print_footer()
 
-    def check_new_ras(self, ras) -> None:
-        """Check for new Resolution Advisories (RAs) and send notifications.
+    def check_new_ras(self, ras: list[dict]) -> None:
+        """
+        Check for new Resolution Advisories (RAs) and send notifications.
 
         :param ras: List of RA data objects to check.
         """

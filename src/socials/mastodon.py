@@ -1,6 +1,9 @@
 """socials/mastodon.py: Interface for posting status updates and media to Mastodon."""
 
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from mastodon import (
     Mastodon,
@@ -12,8 +15,15 @@ from mastodon import (
 logger = logging.getLogger(__name__)
 
 
-def post(message, access_token, api_base_url, photo=None, reply_to=None):
-    """Post a status update and optional media to Mastodon.
+def post(
+    message: str,
+    access_token: str,
+    api_base_url: str,
+    photo: Any = None,  # noqa: ANN401
+    reply_to: str | int | None = None,
+) -> Any:  # noqa: ANN401
+    """
+    Post a status update and optional media to Mastodon.
 
     :param message: The text content of the status.
     :param access_token: Mastodon API access token.

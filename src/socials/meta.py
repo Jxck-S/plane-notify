@@ -1,17 +1,22 @@
 """socials/meta.py: Interface for posting to Meta platforms (Facebook and Instagram)."""
 
+from __future__ import annotations
+
 import json
 import logging
 
 import requests
+from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 API_VERSION = "v20.0"
 
 
-def raise_details(resp) -> None:
-    """Handle HTTP response errors with descriptive messages.
+def raise_details(resp: requests.Response) -> None:
+    """
+    Handle HTTP response errors with descriptive messages.
 
     :param resp: The requests response object to check.
     """
@@ -25,8 +30,9 @@ def raise_details(resp) -> None:
         raise
 
 
-def post_fb(page_id, file_path, message, access_token):
-    """Post an image and message to a Facebook page.
+def post_fb(page_id: str, file_path: str, message: str, access_token: str) -> Any:  # noqa: ANN401
+    """
+    Post an image and message to a Facebook page.
 
     :param page_id: The Facebook Page ID to post to.
     :param file_path: Path to the image file to upload.
@@ -34,10 +40,8 @@ def post_fb(page_id, file_path, message, access_token):
     :param access_token: Meta Page Access Token.
     :return: The JSON response from the Facebook API.
     """
-    import os
-
-    file_name = os.path.basename(file_path)
-    files = {"image": (file_name, open(file_path, "rb"), "multipart/form-data")}
+    file_name = Path(file_path).name
+    files = {"image": (file_name, Path(file_path).open("rb"), "multipart/form-data")}
     url = f"https://graph.facebook.com/{API_VERSION}/{page_id}/photos?message={message}&access_token={access_token}"
     resp = requests.post(url, files=files)
     raise_details(resp)
@@ -45,8 +49,9 @@ def post_fb(page_id, file_path, message, access_token):
     return resp.json()
 
 
-def post_fb_text(page_id, message, access_token):
-    """Post a text-only status update to a Facebook page.
+def post_fb_text(page_id: str, message: str, access_token: str) -> Any:  # noqa: ANN401
+    """
+    Post a text-only status update to a Facebook page.
 
     :param page_id: The Facebook Page ID to post to.
     :param message: The text content of the post.
@@ -60,8 +65,9 @@ def post_fb_text(page_id, message, access_token):
     return resp.json()
 
 
-def post_fb_comment(access_token, post_id, comment):
-    """Post a comment on an existing Facebook post.
+def post_fb_comment(access_token: str, post_id: str, comment: str) -> requests.Response:
+    """
+    Post a comment on an existing Facebook post.
 
     :param access_token: Meta Access Token.
     :param post_id: The ID of the post to comment on.
@@ -75,8 +81,9 @@ def post_fb_comment(access_token, post_id, comment):
     return comment_resp
 
 
-def get_fb_post_image_link(post_id, access_token):
-    """Retrieve the highest resolution image link of a Facebook post by its ID.
+def get_fb_post_image_link(post_id: str, access_token: str) -> str:
+    """
+    Retrieve the highest resolution image link of a Facebook post by its ID.
 
     :param post_id: The Facebook post ID.
     :param access_token: Meta Access Token.
@@ -90,8 +97,11 @@ def get_fb_post_image_link(post_id, access_token):
     return image_url
 
 
-def post_to_instagram(ig_user_id, access_token, image_url, caption):
-    """Post an image to Instagram.
+def post_to_instagram(
+    ig_user_id: str, access_token: str, image_url: str, caption: str
+) -> Any:  # noqa: ANN401
+    """
+    Post an image to Instagram.
 
     :param ig_user_id: The Instagram User ID.
     :param access_token: Meta Access Token.
@@ -119,8 +129,15 @@ def post_to_instagram(ig_user_id, access_token, image_url, caption):
     return result
 
 
-def post_both(fb_page_id, ig_user_id, file_path, message, access_token):
-    """Post a message (and optional image) to both Facebook and Instagram.
+def post_both(
+    fb_page_id: str,
+    ig_user_id: str,
+    file_path: str | None,
+    message: str,
+    access_token: str,
+) -> tuple[Any, Any]:
+    """
+    Post a message (and optional image) to both Facebook and Instagram.
 
     :param fb_page_id: Facebook Page ID.
     :param ig_user_id: Instagram User ID.
@@ -141,9 +158,15 @@ def post_both(fb_page_id, ig_user_id, file_path, message, access_token):
 
 
 def post_to_meta_both_v(
-    fb_page_id, ig_user_id, file_path, access_token, facebook_caption, insta_caption
-):
-    """Post an image to Facebook and Instagram with different captions for each.
+    fb_page_id: str,
+    ig_user_id: str,
+    file_path: str,
+    access_token: str,
+    facebook_caption: str,
+    insta_caption: str,
+) -> tuple[Any, Any]:
+    """
+    Post an image to Facebook and Instagram with different captions for each.
 
     :param fb_page_id: Facebook Page ID.
     :param ig_user_id: Instagram User ID.

@@ -1,3 +1,0 @@
-[FORMAT]
-# Use double quotes for strings in Pylint to match Ruff/Black
-string-quote=double

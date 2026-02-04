@@ -28,18 +28,18 @@ def post(message, access_token, api_base_url, photo=None, reply_to=None):
                 post_result = bot.status_post(message, in_reply_to_id=reply_to)
         except (MastodonNetworkError, MastodonGatewayTimeoutError):
             retry_c += 1
-            logger.warning(f"Mastodon timeout count: {retry_c}")
+            logger.warning("Mastodon timeout count: %s", retry_c)
             if retry_c > 4:
                 logger.error("Mastodon attempts exceeded. Message not sent.")
                 break
         except MastodonError as e:
-            logger.error(f"Mastodon error: {e}")
+            logger.error("Mastodon error: %s", e)
             break
         except FileNotFoundError:
             logger.error("Mastodon module couldn't find an image to send.")
             break
         except Exception as err:
-            logger.error(f"Unexpected Mastodon error: {err}")
+            logger.error("Unexpected Mastodon error: %s", err)
             break
         else:
             sent = True

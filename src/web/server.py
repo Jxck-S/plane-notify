@@ -46,7 +46,7 @@ class ConnectionManager:
             try:
                 await connection.send_text(message)
             except Exception as e:
-                logger.error(f"Error broadcasting message: {e}")
+                logger.error("Error broadcasting message: %s", e)
 
 
 manager = ConnectionManager()
@@ -103,7 +103,7 @@ async def websocket_endpoint(websocket: WebSocket):
                                 json.dumps({"type": "result", "data": stats})
                             )
                         except Exception as e:
-                            logger.error(f"Reload failed: {e}")
+                            logger.error("Reload failed: %s", e)
                             await manager.broadcast(
                                 json.dumps(
                                     {
@@ -178,5 +178,5 @@ def start_web_server(cm, planes, host: str = "127.0.0.1", port: int = 8778):
         daemon=True,
     )
     server_thread.start()
-    logger.info(f"Web server thread started on {host}:{port}")
+    logger.info("Web server thread started on %s:%s", host, port)
     return server_thread

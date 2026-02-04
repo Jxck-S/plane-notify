@@ -20,7 +20,7 @@ def get_blossom_servers():
             for row in reader:
                 servers.append(row["url"])
     except FileNotFoundError:
-        logging.warning(f"Blossom servers CSV not found at {csv_file_path}")
+        logging.warning("Blossom servers CSV not found at %s", csv_file_path)
     return servers
 
 
@@ -67,7 +67,7 @@ def upload_to_blossom(file_path, private_key):
         for server, result in upload_results.items():
             if "url" in result and "error" not in result:
                 primary_url = result["url"]
-                logging.info(f"✓ Uploaded to {server}: {primary_url}")
+                logging.info("✓ Uploaded to %s: %s", server, primary_url)
                 break
 
         if primary_url:
@@ -76,7 +76,7 @@ def upload_to_blossom(file_path, private_key):
             raise Exception("Failed to upload to any blossom server")
 
     except Exception as e:
-        logging.error(f"Failed to upload to blossom servers: {str(e)}")
+        logging.error("Failed to upload to blossom servers: %s", str(e))
         raise Exception("Failed to upload to any blossom server") from e
 
 
@@ -115,7 +115,7 @@ def post_with_media(message, file_name, private_key):
             event = post(message, private_key)
         return event
     except Exception as e:
-        logging.error(f"Failed to upload and post: {str(e)}")
+        logging.error("Failed to upload and post: %s", str(e))
         # Fallback to posting without image
         event = post(message, private_key)
         return event

@@ -49,7 +49,7 @@ def add_flight(reg, icao, callsign, origin, takeoff_confirmed, takeoff_time):
     )
     db_flight_id = tracking_cursor.fetchone()["id"]
     tracking_db.commit()
-    logger.info(f"Added flight to db with id: {db_flight_id}")
+    logger.info("Added flight to db with id: %s", db_flight_id)
     return db_flight_id
 
 
@@ -65,7 +65,7 @@ def update_flight(db_flight_id, destination, landing_confirmed, landing_time):
             landing_confirmed = %s,
             landing_time = %s
         WHERE id = %s"""
-    logger.info(f"Updated flight with id: {db_flight_id}")
+    logger.info("Updated flight with id: %s", db_flight_id)
     tracking_cursor.execute(
         sql, (destination, landing_confirmed, landing_time, db_flight_id)
     )

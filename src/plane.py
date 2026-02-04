@@ -242,10 +242,10 @@ class Plane:
         return " | ".join(output_parts)
 
     def print_header(self):
-        logger.info(f"Processing {self.config.filepath} ICAO: {self.active_icao}")
+        logger.info("Processing %s ICAO: %s", self.config.filepath, self.active_icao)
 
     def print_footer(self):
-        logger.info(f"Processing Complete {self.config.filepath}")
+        logger.info("Processing Complete %s", self.config.filepath)
 
     def get_time_since(self, datetime_obj):
         if datetime_obj is not None:
@@ -397,7 +397,7 @@ class Plane:
                     alt_above_airport = self.alt_ft - int(
                         nearest_airport_dict["elevation_ft"]
                     )
-                    logger.info(f"AGL nearest airport: {alt_above_airport}")
+                    logger.info("AGL nearest airport: %s", alt_above_airport)
                 else:
                     alt_above_airport = None
                 if (
@@ -445,7 +445,7 @@ class Plane:
                 alt_above_airport = self.alt_ft - int(
                     nearest_airport_dict["elevation_ft"]
                 )
-                logger.info(f"AGL nearest airport: {alt_above_airport}")
+                logger.info("AGL nearest airport: %s", alt_above_airport)
             else:
                 alt_above_airport = None
             if (
@@ -464,9 +464,9 @@ class Plane:
             self.landed = False
 
         if self.landed:
-            logger.info(f"Landed by {trigger_type}")
+            logger.info("Landed by %s", trigger_type)
         if self.tookoff:
-            logger.info(f"Tookoff by {trigger_type}")
+            logger.info("Tookoff by %s", trigger_type)
         # Find nearest airport, and location
         if self.landed or self.tookoff:
             if "nearest_airport_dict" in globals():
@@ -763,7 +763,7 @@ class Plane:
             if self.nav_modes is not None and self.last_nav_modes is not None:
                 for mode in self.nav_modes:
                     if mode not in self.last_nav_modes:
-                        logger.info(f"{mode} enabled")
+                        logger.info("%s enabled", mode)
                         message = f"{mode} mode enabled."
                         if mode == NavModes.APPROACH:
                             image_type = ImageTypes.APPROACH
@@ -809,7 +809,7 @@ class Plane:
                 and self.last_sel_alt is not None
                 and self.last_sel_alt != self.sel_nav_alt
             ):
-                logger.info(f"Nav altitude is now {self.sel_nav_alt}")
+                logger.info("Nav altitude is now %s", self.sel_nav_alt)
                 message = " Sel.  alt. " + str(f"{self.sel_nav_alt:,} ft")
                 self.notification_manager.set_one_time_exclusive([Providers.DISCORD])
                 self.notification_manager.post_to_all(
@@ -839,7 +839,7 @@ class Plane:
                     total_change += float(trace[3])
                     coords.append((float(trace[1]), float(trace[2])))
 
-                logger.info(f"Total Bearing Change {round(total_change, 3)}")
+                logger.info("Total Bearing Change %s", round(total_change, 3))
                 # Check Centroid when Bearing change meets req
                 if (
                     abs(total_change) >= 720
@@ -892,7 +892,7 @@ class Plane:
                                 RequestsConnectionError,
                                 json.decoder.JSONDecodeError,
                             ) as err:
-                                logger.error(f"Error with TFRS: {err}")
+                                logger.error("Error with TFRS: %s", err)
                                 tfrs = None
                             else:
                                 for tfr in tfrs:
@@ -1001,7 +1001,7 @@ class Plane:
                                         )
 
                                 if in_tfr is None:
-                                    logger.info(f"Closest TFR {closest_tfr}")
+                                    logger.info("Closest TFR %s", closest_tfr)
                             # Generate Map
                             context = staticmaps.Context()
                             context.set_tile_provider(staticmaps.tile_provider_OSM)
@@ -1234,5 +1234,5 @@ class Plane:
                 time_since_ra = datetime.now() - timestamp
                 logger.debug(time_since_ra)
                 if time_since_ra.seconds >= 600:
-                    logger.info(f"Expiring RA: {ra_type}")
+                    logger.info("Expiring RA: %s", ra_type)
                     self.recent_ra_types.pop(ra_type)

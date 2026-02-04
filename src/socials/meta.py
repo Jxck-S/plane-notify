@@ -30,7 +30,7 @@ def post_fb(page_id, file_path, message, access_token):
     url = f"https://graph.facebook.com/{API_VERSION}/{page_id}/photos?message={message}&access_token={access_token}"
     resp = requests.post(url, files=files)
     raise_details(resp)
-    logger.debug(f"Facebook Post Response: {resp.json()}")
+    logger.debug("Facebook Post Response: %s", resp.json())
     return resp.json()
 
 
@@ -39,7 +39,7 @@ def post_fb_text(page_id, message, access_token):
     url = f"https://graph.facebook.com/{API_VERSION}/{page_id}/feed?message={message}&access_token={access_token}"
     resp = requests.post(url)
     raise_details(resp)
-    logger.debug(f"Facebook Text Post Response: {resp.json()}")
+    logger.debug("Facebook Text Post Response: %s", resp.json())
     return resp.json()
 
 
@@ -59,7 +59,7 @@ def get_fb_post_image_link(post_id, access_token):
     raise_details(resp)
     image_url = resp.json()["images"][0]["source"]
     image_url = resp.json()["images"][0]["source"]
-    logger.debug(f"Highest Resoulution Image URL for FBID {post_id} is {image_url}")
+    logger.debug("Highest Resoulution Image URL for FBID %s is %s", post_id, image_url)
     return image_url
 
 
@@ -71,7 +71,7 @@ def post_to_instagram(ig_user_id, access_token, image_url, caption):
     raise_details(resp)
     resp = requests.post(post_url, data=payload)
     raise_details(resp)
-    logger.debug(f"IG Media Response: {resp.json()}")
+    logger.debug("IG Media Response: %s", resp.json())
     result = json.loads(resp.text)
     if "id" in result:
         creation_id = result["id"]
@@ -82,9 +82,9 @@ def post_to_instagram(ig_user_id, access_token, image_url, caption):
         resp = requests.post(second_url, data=second_payload)
         raise_details(resp)
         raise_details(resp)
-        logger.info(f"Posted to Instagram {caption} IG response: {resp.json()}")
+        logger.info("Posted to Instagram %s IG response: %s", caption, resp.json())
     else:
-        logger.error(f"Could not post to Instagram: {resp.json()}")
+        logger.error("Could not post to Instagram: %s", resp.json())
     return result
 
 

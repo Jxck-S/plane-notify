@@ -29,7 +29,7 @@ def get_planespotters_net_aircraft_photo(reg):
             return None
 
         if not rsp.text.strip():
-            logger.debug(f"Planespotters API returned empty response for {reg}")
+            logger.debug("Planespotters API returned empty response for %s", reg)
             return None
 
         ps_reg_photo_info = json.loads(rsp.text)
@@ -49,7 +49,7 @@ def get_planespotters_net_aircraft_photo(reg):
         logger.error(
             f"Failed to parse JSON response from Planespotters API for {reg}: {e}"
         )
-        logger.debug(f"Response content: {rsp.text[:200]}...")  # Show first 200 chars
+        logger.debug("Response content: %s...", rsp.text[:200])  # Show first 200 chars
         return None
     except requests.exceptions.RequestException as e:
         logger.error(
@@ -79,7 +79,7 @@ def get_github_aircraft_photo(reg):
             return None
 
         if not rsp.text.strip():
-            logger.debug(f"GitHub photo list returned empty response for {reg}")
+            logger.debug("GitHub photo list returned empty response for %s", reg)
             return None
 
         photo_list = json.loads(rsp.text)
@@ -96,10 +96,10 @@ def get_github_aircraft_photo(reg):
         )
         return None
     except requests.exceptions.RequestException as e:
-        logger.error(f"Request error when fetching GitHub photo list for {reg}: {e}")
+        logger.error("Request error when fetching GitHub photo list for %s: %s", reg, e)
         return None
     except Exception as e:
-        logger.error(f"Unexpected error in get_github_aircraft_photo for {reg}: {e}")
+        logger.error("Unexpected error in get_github_aircraft_photo for %s: %s", reg, e)
         return None
 
 
@@ -136,11 +136,11 @@ def get_image_from_url(photo):
             image_data = BytesIO(response.content)
             return image_data
         else:
-            logger.error(f"Failed to fetch image. Status code: {response.status_code}")
+            logger.error("Failed to fetch image. Status code: %s", response.status_code)
             return None
     except requests.exceptions.RequestException as e:
-        logger.error(f"Request error when fetching image from {url}: {e}")
+        logger.error("Request error when fetching image from %s: %s", url, e)
         return None
     except Exception as e:
-        logger.error(f"Unexpected error in get_image_from_url for {url}: {e}")
+        logger.error("Unexpected error in get_image_from_url for %s: %s", url, e)
         return None

@@ -47,7 +47,7 @@ class NotificationManager:
                     username=main_config.get("REDDIT", "USERNAME"),
                 )
             except Exception as e:
-                logger.error(f"Failed to initialize Reddit client: {e}")
+                logger.error("Failed to initialize Reddit client: %s", e)
 
     def __init__(self, config, main_config):
         self.config = config
@@ -67,7 +67,7 @@ class NotificationManager:
                     x_info["access_token_secret"],
                 )
             except Exception as e:
-                logger.error(f"Failed to initialize X client: {e}")
+                logger.error("Failed to initialize X client: %s", e)
 
     def set_one_time_exclusive(self, platforms):
         self.exclusive_platforms = platforms
@@ -171,7 +171,7 @@ class NotificationManager:
             chat_id = self.config.get("TELEGRAM", "ROOM_ID")
             return telegram.post(message_w_title, bot_token, chat_id, image_path)
         except RequestException as e:
-            logger.error(f"Failed to post to Telegram : {e}")
+            logger.error("Failed to post to Telegram : %s", e)
             return None
 
     def _post_mastodon(self, message_w_title, image_path, is_reply):
@@ -189,7 +189,7 @@ class NotificationManager:
             )
             return post_resp["id"] if post_resp else None
         except RequestException as e:
-            logger.error(f"Failed to post to Mastodon : {e}")
+            logger.error("Failed to post to Mastodon : %s", e)
             return None
 
     def _post_discord(self, message, title, image_path):
@@ -221,7 +221,7 @@ class NotificationManager:
                 message_w_title, media_list, in_reply_to_id=in_reply_to_id
             )
         except Exception as e:
-            logger.error(f"Failed to post to X : {e}")
+            logger.error("Failed to post to X : %s", e)
             return None
 
     def _post_meta(self, message_w_title, image_path, is_reply):
@@ -253,7 +253,7 @@ class NotificationManager:
                     )
                 fb_id = fb_post_info["id"]
         except RequestException as e:
-            logger.error(f"Failed to post to FaceBook : {e}")
+            logger.error("Failed to post to FaceBook : %s", e)
 
         if not is_reply:
             try:
@@ -270,7 +270,7 @@ class NotificationManager:
                 )
                 # IG ID logic?
             except Exception as e:
-                logger.error(f"Failed to post to Instagram : {e}")
+                logger.error("Failed to post to Instagram : %s", e)
 
         return fb_id
 
@@ -311,7 +311,7 @@ class NotificationManager:
                     return {"root": first_post_ref, "parent": first_post_ref}
 
         except Exception as e:
-            logger.error(f"Failed to post to BlueSky : {e} {type(e)}")
+            logger.error("Failed to post to BlueSky : %s %s", e, type(e))
             return None
 
     def _post_nostr(self, message_w_title, image_path, is_reply):
@@ -329,7 +329,7 @@ class NotificationManager:
                 )
                 return first_event
         except Exception as e:
-            logger.error(f"Failed to post to NOSTR : {e}")
+            logger.error("Failed to post to NOSTR : %s", e)
             return None
 
     def _post_threads(self, message_w_title, image_path):
@@ -349,7 +349,7 @@ class NotificationManager:
                 threads_client.publish_container(container_id)
             return None
         except Exception as e:
-            logger.error(f"Failed to post to Threads : {type(e)}, {e}")
+            logger.error("Failed to post to Threads : %s, %s", type(e), e)
             return None
 
     def _post_reddit(self, message_w_title, image_path, is_reply):
@@ -374,6 +374,6 @@ class NotificationManager:
 
                 return new_submission
             except Exception as e:
-                logger.error(f"Failed to post to Reddit : {type(e)}, {e}")
+                logger.error("Failed to post to Reddit : %s, %s", type(e), e)
                 return self.reply_refs.reddit
         return None

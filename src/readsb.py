@@ -36,7 +36,7 @@ def pull(url, headers):
     """
     try:
         response = requests.get(url, headers=headers, timeout=30)
-        logger.debug(f"HTTP Status Code: {response.status_code}")
+        logger.debug("HTTP Status Code: %s", response.status_code)
         response.raise_for_status()
     except (
         requests.HTTPError,
@@ -96,18 +96,18 @@ def pull_readsb(planes):
             logger.error(error_message)
             data = None
         except TypeError as error_message:
-            logger.error(f"Type Error {error_message}")
+            logger.error("Type Error %s", error_message)
             data = None
         else:
             if "msg" in data.keys() and data["msg"] != "No error":
                 raise ValueError("Error from API: msg = ", data["msg"])
             if "ctime" in data.keys():
                 data_ctime = float(data["ctime"]) / 1000.0
-                logger.debug(f"Data ctime: {datetime.utcfromtimestamp(data_ctime)}")
+                logger.debug("Data ctime: %s", datetime.utcfromtimestamp(data_ctime))
             if "now" in data.keys():
                 data_now = float(data["now"])
-                logger.debug(f"Data now time: {datetime.utcfromtimestamp(data_now)}")
-        logger.debug(f"Current UTC: {datetime.now(UTC)}")
+                logger.debug("Data now time: %s", datetime.utcfromtimestamp(data_now))
+        logger.debug("Current UTC: %s", datetime.now(UTC))
     else:
         data = None
     return data

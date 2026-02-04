@@ -59,5 +59,5 @@ def calculate_deg_change(new_heading, original_heading):
     if direction == "left":
         track_change *= -1
     track_change = round(track_change, 2)
-    logger.debug(f"Track change of {track_change}° which is {direction}")
+    logger.debug("Track change of %s° which is %s", track_change, direction)
     return track_change

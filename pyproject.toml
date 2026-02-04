@@ -61,3 +61,12 @@ skip-magic-trailing-comma = false
 
 # Like Black, automatically detect the appropriate line ending.
 line-ending = "auto"
+
+[tool.pylint.FORMAT]
+# Use double quotes for strings in Pylint to match Ruff/Black
+string-quote = "double"
+max-line-length = 88
+
+[tool.pylint."MESSAGES CONTROL"]
+# Disable duplicate code check if it becomes too annoying with similar files
+# disable = "duplicate-code"

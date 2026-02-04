@@ -12,7 +12,7 @@ def get_avg_fuel_price():
     db.tracking_cursor.execute(sql)
     if db.tracking_cursor.rowcount > 0:
         cost = db.tracking_cursor.fetchone()["cost"]
-        logger.debug(f"AVG fuel cost per gallong is ${cost}")
+        logger.debug("AVG fuel cost per gallong is $%s", cost)
         return cost
     else:
         return None
@@ -42,7 +42,7 @@ def fuel_calculation(aircraft_icao_type, minutes):
         fuel_flight_info["c02_tons"] = (
             round(c02_tons) if c02_tons > 1 else round(c02_tons, 4)
         )
-        logger.debug(f"Fuel info {fuel_flight_info}")
+        logger.debug("Fuel info %s", fuel_flight_info)
         return fuel_flight_info
     else:
         logger.warning("Can't calculate fuel info unknown aircraft ICAO type")

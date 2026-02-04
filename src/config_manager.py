@@ -155,11 +155,15 @@ class ConfigManager:
 
                     except Exception as e:
                         logger.error(
-                            f"{Fore.RED}Error loading {self.get_relative_path(file_path)}: {e}{Style.RESET_ALL}"
+                            "%sError loading %s: %s%s",
+                            Fore.RED,
+                            self.get_relative_path(file_path),
+                            e,
+                            Style.RESET_ALL,
                         )
                         raise
 
-        logger.info(f"{len(planes_list)} planes configured.")
+        logger.info("%s planes configured.", len(planes_list))
         return len(planes_list)
 
     def reload_all_configs(self, planes_list, status_callback=None):
@@ -168,7 +172,7 @@ class ConfigManager:
 
         # Helper for dual logging (console + callback)
         def log(msg, color=Fore.CYAN):
-            logger.info(f"{color}{msg}{Style.RESET_ALL}")
+            logger.info("%s%s%s", color, msg, Style.RESET_ALL)
             if status_callback:
                 status_callback(msg)
 
@@ -265,7 +269,7 @@ class ConfigManager:
             log("No changes found. Configuration is up to date.", Fore.GREEN)
             # Log the reload (internal only)
             self.change_logger.info(
-                f"RELOAD | No changes | Total planes: {len(planes_list)}"
+                "RELOAD | No changes | Total planes: %s", len(planes_list)
             )
             return {
                 "total": len(planes_list),
@@ -305,7 +309,12 @@ class ConfigManager:
 
         # Log the reload
         self.change_logger.info(
-            f"RELOAD | Total: {len(planes_list)} | Modified: {modified_count} | Added: {added_count} | Removed: {removed_count} | Unchanged: {unchanged_count}"
+            "RELOAD | Total: %s | Modified: %s | Added: %s | Removed: %s | Unchanged: %s",
+            len(planes_list),
+            modified_count,
+            added_count,
+            removed_count,
+            unchanged_count,
         )
 
         return {
@@ -319,7 +328,7 @@ class ConfigManager:
 
 def verify_configs_only(config_dir="./configs"):
     """Verify all configs without creating plane objects - for standalone validation"""
-    logger.info(f"{Fore.CYAN}=== Config Verification Mode ==={Style.RESET_ALL}\n")
+    logger.info("%s=== Config Verification Mode ===%s\n", Fore.CYAN, Style.RESET_ALL)
 
     config_manager = ConfigManager(config_dir)
 
@@ -362,41 +371,63 @@ def verify_configs_only(config_dir="./configs"):
                     # Success
                     if pia_icao:
                         logger.info(
-                            f"{Fore.GREEN}✓{Style.RESET_ALL} {rel_path:<50} {icao:<8} (PIA: {pia_icao})"
+                            "%s✓%s %-50s %-8s (PIA: %s)",
+                            Fore.GREEN,
+                            Style.RESET_ALL,
+                            rel_path,
+                            icao,
+                            pia_icao,
                         )
                     else:
                         logger.info(
-                            f"{Fore.GREEN}✓{Style.RESET_ALL} {rel_path:<50} {icao}"
+                            "%s✓%s %-50s %s",
+                            Fore.GREEN,
+                            Style.RESET_ALL,
+                            rel_path,
+                            icao,
                         )
 
                 except Exception as e:
                     errors.append((rel_path, str(e)))
                     logger.error(
-                        f"{Fore.RED}✗{Style.RESET_ALL} {rel_path:<50} {Fore.RED}ERROR: {e}{Style.RESET_ALL}"
+                        "%s✗%s %-50s %sERROR: %s%s",
+                        Fore.RED,
+                        Style.RESET_ALL,
+                        rel_path,
+                        Fore.RED,
+                        e,
+                        Style.RESET_ALL,
                     )
 
     # Summary
-    logger.info(f"\n{Fore.CYAN}=== Verification Summary ==={Style.RESET_ALL}")
-    logger.info(f"Total config files scanned: {total_files}")
-    logger.info(f"Valid planes configured: {Fore.GREEN}{total_planes}{Style.RESET_ALL}")
-    logger.info(f"Planes with PIA_ICAO: {planes_with_pia}")
-    logger.info(f"Total ICAO keys: {total_planes}")
-    logger.info(f"Total PIA_ICAO keys: {planes_with_pia}")
+    logger.info("\n%s=== Verification Summary ===%s", Fore.CYAN, Style.RESET_ALL)
+    logger.info("Total config files scanned: %s", total_files)
     logger.info(
-        f"Total dictionary keys: {Fore.CYAN}{total_planes + planes_with_pia}{Style.RESET_ALL}"
+        "Valid planes configured: %s%s%s", Fore.GREEN, total_planes, Style.RESET_ALL
+    )
+    logger.info("Planes with PIA_ICAO: %s", planes_with_pia)
+    logger.info("Total ICAO keys: %s", total_planes)
+    logger.info("Total PIA_ICAO keys: %s", planes_with_pia)
+    logger.info(
+        "Total dictionary keys: %s%s%s",
+        Fore.CYAN,
+        total_planes + planes_with_pia,
+        Style.RESET_ALL,
     )
 
     if errors:
         logger.info(
-            f"\n{Fore.RED}=== Errors Found ({len(errors)}) ==={Style.RESET_ALL}"
+            "\n%s=== Errors Found (%s) ===%s", Fore.RED, len(errors), Style.RESET_ALL
         )
         for rel_path, error in errors:
-            logger.info(f"  {Fore.RED}✗{Style.RESET_ALL} {rel_path}")
-            logger.info(f"    {error}")
+            logger.info("  %s✗%s %s", Fore.RED, Style.RESET_ALL, rel_path)
+            logger.info("    %s", error)
         return False
     else:
         logger.info(
-            f"\n{Fore.GREEN}✓ All configs valid - no conflicts detected{Style.RESET_ALL}"
+            "\n%s✓ All configs valid - no conflicts detected%s",
+            Fore.GREEN,
+            Style.RESET_ALL,
         )
         return True
 

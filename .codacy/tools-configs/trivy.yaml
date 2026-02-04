@@ -1,0 +1,5 @@
+severity:
+
+scan:
+  scanners:
+    - vuln

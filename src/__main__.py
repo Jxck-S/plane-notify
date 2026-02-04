@@ -133,7 +133,9 @@ try:
         with config_manager.lock:
             for plane in planes:
                 if sorted_ras != {} and plane.icao in sorted_ras:
-                    logger.info(f"{plane.icao} has {len(sorted_ras[plane.icao])} RAs")
+                    logger.info(
+                        "%s has %s RAs", plane.icao, len(sorted_ras[plane.icao])
+                    )
                     plane.check_new_ras(sorted_ras[plane.icao])
                 elif (
                     sorted_ras != {} and plane.pia_icao and plane.pia_icao in sorted_ras
@@ -181,7 +183,7 @@ try:
                         plane.run_empty()
 
         elapsed_calc_time = time.time() - start_time
-        logger.debug(f"End Main Loop - Elapsed Time: {round(elapsed_calc_time, 3)}")
+        logger.debug("End Main Loop - Elapsed Time: %s", round(elapsed_calc_time, 3))
 
         if main_config.has_section("SLEEP"):
             sleep_sec = int(main_config.get("SLEEP", "SLEEPSEC"))

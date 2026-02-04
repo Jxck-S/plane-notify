@@ -26,6 +26,6 @@ def post(message, webhook_url, role_id=None, *file_names, username=None):
     try:
         webhook.execute()
     except requests.exceptions.RequestException as e:
-        logger.error(f"Failed to send Discord message: {e}")
+        logger.error("Failed to send Discord message: %s", e)
     except Exception as e:
-        logger.error(f"Unexpected error sending Discord message: {e}")
+        logger.error("Unexpected error sending Discord message: %s", e)

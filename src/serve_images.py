@@ -36,5 +36,5 @@ class CusHandler(SimpleHTTPRequestHandler):
 
 
 with socketserver.TCPServer(("", PORT), CusHandler) as httpd:
-    logger.info(f"Serving {DIRECTORY} at port {PORT}")
+    logger.info("Serving %s at port %s", DIRECTORY, PORT)
     httpd.serve_forever()

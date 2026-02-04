@@ -27,16 +27,16 @@ async def _send_telegram_async(message, bot_token, chat_id, photo=None):
                 sent = await bot.send_message(chat_id=chat_id, text=message)
         except telegram.error.TimedOut:
             retry_c += 1
-            logger.warning(f"Telegram timeout count: {retry_c}")
+            logger.warning("Telegram timeout count: %s", retry_c)
             pass
         except telegram.error.TelegramError as e:
-            logger.error(f"Telegram error: {e}")
+            logger.error("Telegram error: %s", e)
             break
         except FileNotFoundError:
             logger.error("Telegram module couldn't find an image to send.")
             break
         except Exception as err:
-            logger.error(f"Unexpected Telegram error: {err}")
+            logger.error("Unexpected Telegram error: %s", err)
             break
         else:
             logger.info("Telegram message successfully sent.")

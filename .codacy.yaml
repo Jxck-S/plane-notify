@@ -1,0 +1,31 @@
+---
+engines:
+  enabled:
+    - ruff
+    - pylint
+    - eslint
+    - bandit
+    - lizard
+    - trivy
+    - duplication
+    - shellcheck
+    - markdownlint
+    - yamllint
+  ruff:
+    python_version: 3.13
+  trivy:
+    enabled: true
+  markdownlint:
+    enabled: true
+  shellcheck:
+    enabled: true
+  yamllint:
+    enabled: true
+
+exclude_paths:
+  - ".git/"
+  - ".github/"
+  - "configs/"
+  - "logs/"
+  - "__pycache__/"
+  - "Pipfile.lock"

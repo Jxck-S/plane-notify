@@ -7,13 +7,13 @@ It includes functions to fetch current aircraft states and historical ACAS/TCAS 
 
 import configparser
 import json
+import logging
 import socket
 from datetime import UTC, datetime
 from http.client import IncompleteRead
 
 import requests
 import urllib3
-import logging
 
 logger = logging.getLogger(__name__)
 

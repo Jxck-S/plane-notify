@@ -1,5 +1,6 @@
-import db
 import logging
+
+import db
 
 logger = logging.getLogger(__name__)
 

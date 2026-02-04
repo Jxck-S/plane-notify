@@ -7,7 +7,6 @@ from threading import Lock
 from colorama import Fore, Style
 
 from cnf_parser_ext import ConfigParserExt
-
 from plane import Plane
 
 logger = logging.getLogger(__name__)

@@ -1,3 +1,6 @@
+import tweepy
+
+
 class XED:
     def __init__(self, api_key, api_key_secret, access_token, access_token_secret):
         self._api_key = api_key
@@ -6,7 +9,6 @@ class XED:
         self._access_token_secret = access_token_secret
 
     def post(self, message, media_list=None, in_reply_to_id=None):
-        import tweepy
 
         # V1 API For the Media Upload
         media_ids = []

@@ -1,9 +1,9 @@
 import json
+import logging
 import os
 from io import BytesIO
 
 import requests
-import logging
 
 logger = logging.getLogger(__name__)
 

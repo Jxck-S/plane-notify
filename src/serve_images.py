@@ -6,20 +6,20 @@ It is required because services like Instagram and Threads require a public web 
 This server exposes the local images so they can be accessed via a reverse proxy or directly if configured.
 """
 
-import http.server
-import socketserver
 import logging
+import socketserver
+import tempfile
+from http.server import SimpleHTTPRequestHandler
 
 logger = logging.getLogger(__name__)
-import tempfile
 
 PORT = 8080
 DIRECTORY = f"{tempfile.gettempdir()}/plane-notify/imgs"
 
-Handler = http.server.SimpleHTTPRequestHandler
+Handler = SimpleHTTPRequestHandler
 
 
-class CusHandler(http.server.SimpleHTTPRequestHandler):
+class CusHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=DIRECTORY, **kwargs)
 

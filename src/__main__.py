@@ -1,5 +1,6 @@
 import argparse
 import ast
+import logging
 import os
 import platform
 import shutil
@@ -7,20 +8,18 @@ import signal
 import sys
 import tempfile
 import time
-import traceback
 from datetime import UTC, datetime
-import logging
 
-from colorama import Back, Fore, Style, init
+from colorama import Back, Style, init
 
 import db
 from cnf_parser_ext import ConfigParserExt
 from config_manager import ConfigManager
+from logger import setup_logging
 from readsb import pull_date_ras as pull_date_ras_readsb
 from readsb import pull_readsb
 from utils import clean_stack_trace
 from web.server import start_web_server
-from logger import setup_logging
 
 if platform.system() == "Windows":
     init(convert=True)

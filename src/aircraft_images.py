@@ -3,6 +3,9 @@ import os
 from io import BytesIO
 
 import requests
+import logging
+
+logger = logging.getLogger(__name__)
 
 AIRCRAFT_SILS_DIR = "aircraft_sils"
 TIMEOUT_SECS = 10
@@ -11,7 +14,7 @@ USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTM
 
 def get_planespotters_net_aircraft_photo(reg):
     try:
-        print("Getting planespotters pic")
+        logger.debug("Getting planespotters pic")
         headers = {"User-Agent": USER_AGENT}
         rsp = requests.get(
             f"https://api.planespotters.net/pub/photos/reg/{reg}",
@@ -20,15 +23,17 @@ def get_planespotters_net_aircraft_photo(reg):
         )
 
         if rsp.status_code != 200:
-            print(f"Planespotters API returned status code {rsp.status_code} for {reg}")
+            logger.debug(
+                f"Planespotters API returned status code {rsp.status_code} for {reg}"
+            )
             return None
 
         if not rsp.text.strip():
-            print(f"Planespotters API returned empty response for {reg}")
+            logger.debug(f"Planespotters API returned empty response for {reg}")
             return None
 
         ps_reg_photo_info = json.loads(rsp.text)
-        print(ps_reg_photo_info)
+        logger.debug(ps_reg_photo_info)
         if "photos" in ps_reg_photo_info and len(ps_reg_photo_info["photos"]) > 0:
             photo = ps_reg_photo_info["photos"][0]
             url = photo["thumbnail"]["src"]
@@ -41,14 +46,18 @@ def get_planespotters_net_aircraft_photo(reg):
         else:
             return None
     except json.JSONDecodeError as e:
-        print(f"Failed to parse JSON response from Planespotters API for {reg}: {e}")
-        print(f"Response content: {rsp.text[:200]}...")  # Show first 200 chars
+        logger.error(
+            f"Failed to parse JSON response from Planespotters API for {reg}: {e}"
+        )
+        logger.debug(f"Response content: {rsp.text[:200]}...")  # Show first 200 chars
         return None
     except requests.exceptions.RequestException as e:
-        print(f"Request error when fetching from Planespotters API for {reg}: {e}")
+        logger.error(
+            f"Request error when fetching from Planespotters API for {reg}: {e}"
+        )
         return None
     except Exception as e:
-        print(
+        logger.error(
             f"Unexpected error in get_planespotters_net_aircraft_photo for {reg}: {e}"
         )
         return None
@@ -56,7 +65,7 @@ def get_planespotters_net_aircraft_photo(reg):
 
 def get_github_aircraft_photo(reg):
     try:
-        print("Getting Github List")
+        logger.debug("Getting Github List")
         rsp = requests.get(
             "https://raw.githubusercontent.com/Jxck-S/aircraft-photos/main/photo-list.json",
             timeout=TIMEOUT_SECS,
@@ -64,11 +73,13 @@ def get_github_aircraft_photo(reg):
         )
 
         if rsp.status_code != 200:
-            print(f"GitHub photo list returned status code {rsp.status_code} for {reg}")
+            logger.debug(
+                f"GitHub photo list returned status code {rsp.status_code} for {reg}"
+            )
             return None
 
         if not rsp.text.strip():
-            print(f"GitHub photo list returned empty response for {reg}")
+            logger.debug(f"GitHub photo list returned empty response for {reg}")
             return None
 
         photo_list = json.loads(rsp.text)
@@ -80,21 +91,23 @@ def get_github_aircraft_photo(reg):
         else:
             return None
     except json.JSONDecodeError as e:
-        print(f"Failed to parse JSON response from GitHub photo list for {reg}: {e}")
+        logger.error(
+            f"Failed to parse JSON response from GitHub photo list for {reg}: {e}"
+        )
         return None
     except requests.exceptions.RequestException as e:
-        print(f"Request error when fetching GitHub photo list for {reg}: {e}")
+        logger.error(f"Request error when fetching GitHub photo list for {reg}: {e}")
         return None
     except Exception as e:
-        print(f"Unexpected error in get_github_aircraft_photo for {reg}: {e}")
+        logger.error(f"Unexpected error in get_github_aircraft_photo for {reg}: {e}")
         return None
 
 
 def get_aircraft_sil(type_code):
     sil_path = os.path.join(AIRCRAFT_SILS_DIR, f"{type_code.upper()}.png")
-    print(sil_path)
+    logger.debug(sil_path)
     if type_code and os.path.exists(sil_path):
-        print(sil_path)
+        logger.debug(sil_path)
 
         return sil_path
     else:
@@ -123,18 +136,11 @@ def get_image_from_url(photo):
             image_data = BytesIO(response.content)
             return image_data
         else:
-            print(f"Failed to fetch image. Status code: {response.status_code}")
+            logger.error(f"Failed to fetch image. Status code: {response.status_code}")
             return None
     except requests.exceptions.RequestException as e:
-        print(f"Request error when fetching image from {url}: {e}")
+        logger.error(f"Request error when fetching image from {url}: {e}")
         return None
     except Exception as e:
-        print(f"Unexpected error in get_image_from_url for {url}: {e}")
+        logger.error(f"Unexpected error in get_image_from_url for {url}: {e}")
         return None
-
-
-# print(get_aircraft_image_url("N628TS"))
-# print(get_aircraft_image_url("N2N"))
-
-# print(get_aircraft_image_url("N327JT"))
-# print(get_planespotters_net_aircraft_photo("N327JT"))

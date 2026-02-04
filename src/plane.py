@@ -189,7 +189,9 @@ class Plane:
         except (ValueError, KeyError) as e:
             logger.warning("Got data but some data is invalid!")
             logger.warning(e)
-            print(Fore.YELLOW + "READSB Sourced Data: ", ac_dict, Style.RESET_ALL)
+            logger.warning(
+                f"{Fore.YELLOW}READSB Sourced Data: {ac_dict}{Style.RESET_ALL}"
+            )
             self.print_footer()
         else:
             # Error Handling for bad data, sometimes it would seem to be ADSB Decode error
@@ -239,18 +241,11 @@ class Plane:
 
         return " | ".join(output_parts)
 
-    def _print_box_line(self, prefix, suffix=""):
-        line = prefix
-        remaning_len = 85 - len(line)
-        line += "-" * remaning_len
-        line += f"ICAO: {self.active_icao}---"
-        logger.info(Back.MAGENTA + line + suffix + Style.RESET_ALL)
-
     def print_header(self):
-        self._print_box_line(f"---BEGIN---------{self.config.filepath}")
+        logger.info(f"Processing {self.config.filepath} ICAO: {self.active_icao}")
 
     def print_footer(self):
-        self._print_box_line("---END", suffix=f"{Style.RESET_ALL}\n")
+        logger.info(f"Processing Complete {self.config.filepath}")
 
     def get_time_since(self, datetime_obj):
         if datetime_obj is not None:
@@ -363,7 +358,7 @@ class Plane:
                 if (
                     datetime.now() - datetime.fromtimestamp(trace_timestramp)
                 ).total_seconds() >= 30 * 60:
-                    print("Main Trace Expire, removed")
+                    logger.info("Main Trace Expire, removed")
                     self.traces.remove(trace)
 
     def get_flags(self):
@@ -375,7 +370,7 @@ class Plane:
         """Runs a check of a plane module to see if its landed or takenoff using plane data, and takes action if so."""
 
         self.add_trace()
-        print(self)
+        logger.info(self)
         if self.last_pos_datetime is not None:
             time_since_contact = self.get_time_since(self.last_pos_datetime)
         # Check if below desire ft
@@ -450,7 +445,7 @@ class Plane:
                 alt_above_airport = self.alt_ft - int(
                     nearest_airport_dict["elevation_ft"]
                 )
-                print(f"AGL nearest airport: {alt_above_airport}")
+                logger.info(f"AGL nearest airport: {alt_above_airport}")
             else:
                 alt_above_airport = None
             if (

@@ -1,4 +1,7 @@
 import requests
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class Threads:
@@ -34,10 +37,8 @@ class Threads:
         )
         create_container_response.raise_for_status()
         if self.debug:
-            print(
-                "create_container_response",
-                create_container_response.status_code,
-                create_container_response.text,
+            logger.debug(
+                f"create_container_response {create_container_response.status_code} {create_container_response.text}"
             )
         return create_container_response.json()["id"]
 
@@ -62,10 +63,8 @@ class Threads:
         )
         create_container_response.raise_for_status()
         if self.debug:
-            print(
-                "create_container_response",
-                create_container_response.status_code,
-                create_container_response.text,
+            logger.debug(
+                f"create_container_response {create_container_response.status_code} {create_container_response.text}"
             )
         return create_container_response.json()["id"]
 
@@ -87,10 +86,8 @@ class Threads:
         )
         create_container_response.raise_for_status()
         if self.debug:
-            print(
-                "create_container_response",
-                create_container_response.status_code,
-                create_container_response.text,
+            logger.debug(
+                f"create_container_response {create_container_response.status_code} {create_container_response.text}"
             )
         return create_container_response.json()["id"]
 
@@ -110,10 +107,8 @@ class Threads:
             f"{Threads.base_url}{user_id}/threads_publish", params=params
         )
         if self.debug:
-            print(
-                "publish_container_response",
-                publish_container_response.status_code,
-                publish_container_response.json(),
+            logger.debug(
+                f"publish_container_response {publish_container_response.status_code} {publish_container_response.json()}"
             )
         return publish_container_response
 
@@ -146,10 +141,8 @@ class Threads:
             f"{Threads.base_url}{user_id}/threads", params=params
         )
         if self.debug:
-            print(
-                "create_carousel_response",
-                create_carousel_response.status_code,
-                create_carousel_response.json(),
+            logger.debug(
+                f"create_carousel_response {create_carousel_response.status_code} {create_carousel_response.json()}"
             )
         return create_carousel_response.json()["id"]
 

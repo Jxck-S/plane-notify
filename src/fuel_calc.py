@@ -1,4 +1,7 @@
 import db
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def get_avg_fuel_price():
@@ -8,7 +11,7 @@ def get_avg_fuel_price():
     db.tracking_cursor.execute(sql)
     if db.tracking_cursor.rowcount > 0:
         cost = db.tracking_cursor.fetchone()["cost"]
-        print(f"AVG fuel cost per gallong is ${cost}")
+        logger.debug(f"AVG fuel cost per gallong is ${cost}")
         return cost
     else:
         return None
@@ -38,10 +41,10 @@ def fuel_calculation(aircraft_icao_type, minutes):
         fuel_flight_info["c02_tons"] = (
             round(c02_tons) if c02_tons > 1 else round(c02_tons, 4)
         )
-        print("Fuel info", fuel_flight_info)
+        logger.debug(f"Fuel info {fuel_flight_info}")
         return fuel_flight_info
     else:
-        print("Can't calculate fuel info unknown aircraft ICAO type")
+        logger.warning("Can't calculate fuel info unknown aircraft ICAO type")
         return None
 
 
@@ -55,5 +58,5 @@ def fuel_message(fuel_info):
     lbs = "{:,}".format(fuel_info["fuel_used_lbs"])
     kgs = "{:,}".format(fuel_info["fuel_used_kg"])
     fuel_message = f"""\n~ {gallons} gallons ({lters} liters). \n~ {lbs} lbs ({kgs} kg) of jet fuel used. \n{(f"~ ${cost} cost of fuel." if have_cost else "Cost of fuel unavailable")} \n~ {fuel_info["c02_tons"]} tons of CO2 emissions."""
-    print(fuel_message)
+    logger.info(fuel_message)
     return fuel_message

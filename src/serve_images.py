@@ -8,6 +8,9 @@ This server exposes the local images so they can be accessed via a reverse proxy
 
 import http.server
 import socketserver
+import logging
+
+logger = logging.getLogger(__name__)
 import tempfile
 
 PORT = 8080
@@ -33,5 +36,5 @@ class CusHandler(http.server.SimpleHTTPRequestHandler):
 
 
 with socketserver.TCPServer(("", PORT), CusHandler) as httpd:
-    print(f"Serving {DIRECTORY} at port", PORT)
+    logger.info(f"Serving {DIRECTORY} at port {PORT}")
     httpd.serve_forever()

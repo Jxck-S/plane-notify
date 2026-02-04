@@ -3,6 +3,11 @@ import asyncio
 import telegram
 
 
+import logging
+
+logger = logging.getLogger(__name__)
+
+
 def post(message, config, photo=None):
     return asyncio.run(telegram_send(message, config, photo))
 
@@ -24,34 +29,34 @@ async def telegram_send(message, config, photo=None):
                     chat_id=config.get("TELEGRAM", "ROOM_ID"), text=message
                 )
         except Exception as err:
-            print("err.args:")
-            print(err.args)
-            print(f"Unexpected {err=}, {type(err)=}")
-            print("\nString err:\n" + str(err))
+            logger.error("err.args:")
+            logger.error(err.args)
+            logger.error(f"Unexpected {err=}, {type(err)=}")
+            logger.error("\nString err:\n" + str(err))
             if retry_c > 4:
-                print("Telegram attempts exceeded. Message not sent.")
+                logger.error("Telegram attempts exceeded. Message not sent.")
                 break
             elif str(err) == "Unauthorized":
-                print("Invalid Telegram bot token, message not sent.")
+                logger.error("Invalid Telegram bot token, message not sent.")
                 break
             elif str(err) == "Timed out":
                 retry_c += 1
-                print("Telegram timeout count: " + str(retry_c))
+                logger.warning("Telegram timeout count: " + str(retry_c))
 
             elif str(err) == "Chat not found":
-                print("Invalid Telegram Chat ID, message not sent.")
+                logger.error("Invalid Telegram Chat ID, message not sent.")
                 break
             elif str(err)[:35] == "[Errno 2] No such file or directory":
-                print("Telegram module couldn't find an image to send.")
+                logger.error("Telegram module couldn't find an image to send.")
                 break
             elif str(err) == "Media_caption_too_long":
-                print(
+                logger.error(
                     "Telegram image caption length exceeds 1024 characters. Message not sent."
                 )
                 break
             else:
-                print("[X] Unknown Telegram error. Message not sent.")
+                logger.error("[X] Unknown Telegram error. Message not sent.")
                 break
         else:
-            print("Telegram message successfully sent.")
+            logger.info("Telegram message successfully sent.")
     return sent

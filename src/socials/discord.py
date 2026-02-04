@@ -1,11 +1,15 @@
-def post(message, config, role_id=None, *file_names, username=None):
-    import requests
-    from discord_webhook import DiscordWebhook
+import logging
+import requests
+from discord_webhook import DiscordWebhook
 
-    if role_id != None:
+logger = logging.getLogger(__name__)
+
+
+def post(message, webhook_url, role_id=None, *file_names, username=None):
+    if role_id is not None:
         message += f" <@&{role_id}>"
     webhook = DiscordWebhook(
-        url=config.get("DISCORD", "URL"), content=message[0:1999], username=username
+        url=webhook_url, content=message[0:1999], username=username
     )
 
     if file_names:

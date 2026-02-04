@@ -2,6 +2,11 @@ import json
 
 import requests
 
+
+import logging
+
+logger = logging.getLogger(__name__)
+
 API_VERSION = "v20.0"
 
 
@@ -27,7 +32,7 @@ def post_fb(page_id, file_path, message, access_token):
     url = f"https://graph.facebook.com/{API_VERSION}/{page_id}/photos?message={message}&access_token={access_token}"
     resp = requests.post(url, files=files)
     raise_details(resp)
-    print("Facebook Post Response: ", resp.json())
+    logger.debug(f"Facebook Post Response: {resp.json()}")
     return resp.json()
 
 
@@ -36,7 +41,7 @@ def post_fb_text(page_id, message, access_token):
     url = f"https://graph.facebook.com/{API_VERSION}/{page_id}/feed?message={message}&access_token={access_token}"
     resp = requests.post(url)
     raise_details(resp)
-    print("Facebook Text Post Response: ", resp.json())
+    logger.debug(f"Facebook Text Post Response: {resp.json()}")
     return resp.json()
 
 
@@ -55,7 +60,8 @@ def get_fb_post_image_link(post_id, access_token):
     resp = requests.get(url)
     raise_details(resp)
     image_url = resp.json()["images"][0]["source"]
-    print("Highest Resoulution Image URL for FBID", post_id, "is", image_url)
+    image_url = resp.json()["images"][0]["source"]
+    logger.debug(f"Highest Resoulution Image URL for FBID {post_id} is {image_url}")
     return image_url
 
 
@@ -65,7 +71,9 @@ def post_to_instagram(ig_user_id, access_token, image_url, caption):
     payload = {"caption": caption, "access_token": access_token, "image_url": image_url}
     resp = requests.post(post_url, data=payload)
     raise_details(resp)
-    print("IG Media Response:", resp.json())
+    resp = requests.post(post_url, data=payload)
+    raise_details(resp)
+    logger.debug(f"IG Media Response: {resp.json()}")
     result = json.loads(resp.text)
     if "id" in result:
         creation_id = result["id"]
@@ -75,9 +83,10 @@ def post_to_instagram(ig_user_id, access_token, image_url, caption):
         second_payload = {"creation_id": creation_id, "access_token": access_token}
         resp = requests.post(second_url, data=second_payload)
         raise_details(resp)
-        print("Posted to Instagram", caption, "IG response:", resp.json())
+        raise_details(resp)
+        logger.info(f"Posted to Instagram {caption} IG response: {resp.json()}")
     else:
-        print("Could not post to Instagram: ", resp.json())
+        logger.error(f"Could not post to Instagram: {resp.json()}")
     return result
 
 

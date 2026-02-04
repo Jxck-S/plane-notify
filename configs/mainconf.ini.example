@@ -52,8 +52,8 @@ IMAGE_URL =
 ENABLE = FALSE
 USERNAME = plane-notify
 URL =
-# Optional: URL for important system/warning messages
-WARNING_URL =
+# Optional: URL for status messages (Logger)
+STATUS_URL =
 # Optional: Role ID to mention in alerts
 ROLE_ID =
 

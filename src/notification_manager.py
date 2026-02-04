@@ -1,5 +1,8 @@
 import os
 
+import logging
+
+logger = logging.getLogger(__name__)
 import praw
 from atproto import Client, models
 from requests.exceptions import RequestException
@@ -44,7 +47,7 @@ class NotificationManager:
                     username=main_config.get("REDDIT", "USERNAME"),
                 )
             except Exception as e:
-                discord.post(f"Failed to initialize Reddit client: {e}", main_config)
+                logger.error(f"Failed to initialize Reddit client: {e}")
 
     def __init__(self, config, main_config):
         self.config = config
@@ -64,7 +67,7 @@ class NotificationManager:
                     x_info["access_token_secret"],
                 )
             except Exception as e:
-                discord.post(f"Failed to initialize X client: {e}", self.main_config)
+                logger.error(f"Failed to initialize X client: {e}")
 
     def set_one_time_exclusive(self, platforms):
         self.exclusive_platforms = platforms
@@ -170,7 +173,7 @@ class NotificationManager:
             else:
                 return telegram.post(message_w_title, self.config, None)
         except RequestException as e:
-            discord.post(f"Failed to post to Telegram : {e}", self.main_config)
+            logger.error(f"Failed to post to Telegram : {e}")
             return None
 
     def _post_mastodon(self, message_w_title, image_path, is_reply):
@@ -184,7 +187,7 @@ class NotificationManager:
             )
             return mastodon_post_info["id"] if mastodon_post_info else None
         except RequestException as e:
-            discord.post(f"Failed to post to Mastodon : {e}", self.main_config)
+            logger.error(f"Failed to post to Mastodon : {e}")
             return None
 
     def _post_discord(self, message, title, image_path):
@@ -196,7 +199,13 @@ class NotificationManager:
             else None
         )
 
-        return discord.post(message, self.config, role_id, image_path, username=title)
+        return discord.post(
+            message,
+            self.config.get("DISCORD", "URL"),
+            role_id,
+            image_path,
+            username=title,
+        )
 
     def _post_x(self, message_w_title, image_path, is_reply, title=None):
         try:
@@ -210,7 +219,7 @@ class NotificationManager:
                 message_w_title, media_list, in_reply_to_id=in_reply_to_id
             )
         except Exception as e:
-            discord.post(f"Failed to post to X : {e}", self.main_config)
+            logger.error(f"Failed to post to X : {e}")
             return None
 
     def _post_meta(self, message_w_title, image_path, is_reply):
@@ -242,7 +251,7 @@ class NotificationManager:
                     )
                 fb_id = fb_post_info["id"]
         except RequestException as e:
-            discord.post(f"Failed to post to FaceBook : {e}", self.main_config)
+            logger.error(f"Failed to post to FaceBook : {e}")
 
         if not is_reply:
             try:
@@ -259,7 +268,7 @@ class NotificationManager:
                 )
                 # IG ID logic?
             except Exception as e:
-                discord.post(f"Failed to post to Instagram : {e}", self.main_config)
+                logger.error(f"Failed to post to Instagram : {e}")
 
         return fb_id
 
@@ -300,7 +309,7 @@ class NotificationManager:
                     return {"root": first_post_ref, "parent": first_post_ref}
 
         except Exception as e:
-            discord.post(f"Failed to post to BlueSky : {e} {type(e)}", self.main_config)
+            logger.error(f"Failed to post to BlueSky : {e} {type(e)}")
             return None
 
     def _post_nostr(self, message_w_title, image_path, is_reply):
@@ -318,7 +327,7 @@ class NotificationManager:
                 )
                 return first_event
         except Exception as e:
-            discord.post(f"Failed to post to NOSTR : {e}", self.main_config)
+            logger.error(f"Failed to post to NOSTR : {e}")
             return None
 
     def _post_threads(self, message_w_title, image_path):
@@ -338,9 +347,7 @@ class NotificationManager:
                 threads_client.publish_container(container_id)
             return None
         except Exception as e:
-            discord.post(
-                f"Failed to post to Threads : {type(e)}, {e}", self.main_config
-            )
+            logger.error(f"Failed to post to Threads : {type(e)}, {e}")
             return None
 
     def _post_reddit(self, message_w_title, image_path, is_reply):
@@ -365,8 +372,6 @@ class NotificationManager:
 
                 return new_submission
             except Exception as e:
-                discord.post(
-                    f"Failed to post to Reddit : {type(e)}, {e}", self.main_config
-                )
+                logger.error(f"Failed to post to Reddit : {type(e)}, {e}")
                 return self.reply_refs.reddit
         return None

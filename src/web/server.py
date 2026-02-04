@@ -12,7 +12,7 @@ from fastapi.staticfiles import StaticFiles
 
 # Initialize logging
 logger = logging.getLogger("web_server")
-logging.basicConfig(level=logging.INFO)
+
 
 app = FastAPI(title="Plane Notify Control", version="2.2.0")
 

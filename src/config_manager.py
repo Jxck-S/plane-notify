@@ -7,7 +7,10 @@ from threading import Lock
 from colorama import Fore, Style
 
 from cnf_parser_ext import ConfigParserExt
+
 from plane import Plane
+
+logger = logging.getLogger(__name__)
 
 
 class ConfigManager:
@@ -123,14 +126,14 @@ class ConfigManager:
 
     def load_all_configs(self, planes_list):
         """Load all config files on startup and populate planes list"""
-        print("Found the following configs")
+        logger.info("Found the following configs")
         for dirpath, _dirname, filenames in os.walk(self.config_dir):
             for filename in [
                 f for f in filenames if f.endswith(".ini") and f != "mainconf.ini"
             ]:
                 if "disabled" not in dirpath:
                     file_path = os.path.join(dirpath, filename)
-                    print(file_path)
+                    logger.info(file_path)
 
                     try:
                         plane_config, icao, pia_icao = self.load_config_file(file_path)
@@ -152,12 +155,12 @@ class ConfigManager:
                         self.register_config(file_path, icao, pia_icao)
 
                     except Exception as e:
-                        print(
+                        logger.error(
                             f"{Fore.RED}Error loading {self.get_relative_path(file_path)}: {e}{Style.RESET_ALL}"
                         )
                         raise
 
-        print(f"{len(planes_list)} planes configured.")
+        logger.info(f"{len(planes_list)} planes configured.")
         return len(planes_list)
 
     def reload_all_configs(self, planes_list, status_callback=None):
@@ -166,7 +169,7 @@ class ConfigManager:
 
         # Helper for dual logging (console + callback)
         def log(msg, color=Fore.CYAN):
-            print(f"{color}{msg}{Style.RESET_ALL}")
+            logger.info(f"{color}{msg}{Style.RESET_ALL}")
             if status_callback:
                 status_callback(msg)
 
@@ -317,7 +320,7 @@ class ConfigManager:
 
 def verify_configs_only(config_dir="./configs"):
     """Verify all configs without creating plane objects - for standalone validation"""
-    print(f"{Fore.CYAN}=== Config Verification Mode ==={Style.RESET_ALL}\n")
+    logger.info(f"{Fore.CYAN}=== Config Verification Mode ==={Style.RESET_ALL}\n")
 
     config_manager = ConfigManager(config_dir)
 
@@ -329,7 +332,7 @@ def verify_configs_only(config_dir="./configs"):
     icao_list = []
     pia_list = []
 
-    print("Scanning config files...\n")
+    logger.info("Scanning config files...\n")
 
     for dirpath, _dirname, filenames in os.walk(config_manager.config_dir):
         for filename in [
@@ -357,39 +360,43 @@ def verify_configs_only(config_dir="./configs"):
                         planes_with_pia += 1
                         pia_list.append(pia_icao)
 
-                    # Print success
+                    # Success
                     if pia_icao:
-                        print(
+                        logger.info(
                             f"{Fore.GREEN}✓{Style.RESET_ALL} {rel_path:<50} {icao:<8} (PIA: {pia_icao})"
                         )
                     else:
-                        print(f"{Fore.GREEN}✓{Style.RESET_ALL} {rel_path:<50} {icao}")
+                        logger.info(
+                            f"{Fore.GREEN}✓{Style.RESET_ALL} {rel_path:<50} {icao}"
+                        )
 
                 except Exception as e:
                     errors.append((rel_path, str(e)))
-                    print(
+                    logger.error(
                         f"{Fore.RED}✗{Style.RESET_ALL} {rel_path:<50} {Fore.RED}ERROR: {e}{Style.RESET_ALL}"
                     )
 
-    # Print summary
-    print(f"\n{Fore.CYAN}=== Verification Summary ==={Style.RESET_ALL}")
-    print(f"Total config files scanned: {total_files}")
-    print(f"Valid planes configured: {Fore.GREEN}{total_planes}{Style.RESET_ALL}")
-    print(f"Planes with PIA_ICAO: {planes_with_pia}")
-    print(f"Total ICAO keys: {total_planes}")
-    print(f"Total PIA_ICAO keys: {planes_with_pia}")
-    print(
+    # Summary
+    logger.info(f"\n{Fore.CYAN}=== Verification Summary ==={Style.RESET_ALL}")
+    logger.info(f"Total config files scanned: {total_files}")
+    logger.info(f"Valid planes configured: {Fore.GREEN}{total_planes}{Style.RESET_ALL}")
+    logger.info(f"Planes with PIA_ICAO: {planes_with_pia}")
+    logger.info(f"Total ICAO keys: {total_planes}")
+    logger.info(f"Total PIA_ICAO keys: {planes_with_pia}")
+    logger.info(
         f"Total dictionary keys: {Fore.CYAN}{total_planes + planes_with_pia}{Style.RESET_ALL}"
     )
 
     if errors:
-        print(f"\n{Fore.RED}=== Errors Found ({len(errors)}) ==={Style.RESET_ALL}")
+        logger.info(
+            f"\n{Fore.RED}=== Errors Found ({len(errors)}) ==={Style.RESET_ALL}"
+        )
         for rel_path, error in errors:
-            print(f"  {Fore.RED}✗{Style.RESET_ALL} {rel_path}")
-            print(f"    {error}")
+            logger.info(f"  {Fore.RED}✗{Style.RESET_ALL} {rel_path}")
+            logger.info(f"    {error}")
         return False
     else:
-        print(
+        logger.info(
             f"\n{Fore.GREEN}✓ All configs valid - no conflicts detected{Style.RESET_ALL}"
         )
         return True

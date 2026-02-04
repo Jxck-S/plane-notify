@@ -13,6 +13,9 @@ from http.client import IncompleteRead
 
 import requests
 import urllib3
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Initialize configuration
 main_config = configparser.ConfigParser()
@@ -33,7 +36,7 @@ def pull(url, headers):
     """
     try:
         response = requests.get(url, headers=headers, timeout=30)
-        print("HTTP Status Code:", response.status_code)
+        logger.debug(f"HTTP Status Code: {response.status_code}")
         response.raise_for_status()
     except (
         requests.HTTPError,
@@ -41,8 +44,8 @@ def pull(url, headers):
         requests.Timeout,
         urllib3.exceptions.ConnectionError,
     ) as error_message:
-        print("Basic Connection Error")
-        print(error_message)
+        logger.error("Basic Connection Error")
+        logger.error(error_message)
         response = None
     except (
         TimeoutError,
@@ -51,12 +54,12 @@ def pull(url, headers):
         ValueError,
         socket.gaierror,
     ) as error_message:
-        print("Connection Error")
-        print(error_message)
+        logger.error("Connection Error")
+        logger.error(error_message)
         response = None
     except Exception as error_message:
-        print("Connection Error uncaught, basic exception for all")
-        print(error_message)
+        logger.error("Connection Error uncaught, basic exception for all")
+        logger.error(error_message)
         response = None
     return response
 
@@ -89,22 +92,22 @@ def pull_readsb(planes):
         try:
             data = json.loads(response.text)
         except (json.decoder.JSONDecodeError, ValueError) as error_message:
-            print("Error with JSON")
-            print(error_message)
+            logger.error("Error with JSON")
+            logger.error(error_message)
             data = None
         except TypeError as error_message:
-            print("Type Error", error_message)
+            logger.error(f"Type Error {error_message}")
             data = None
         else:
             if "msg" in data.keys() and data["msg"] != "No error":
                 raise ValueError("Error from API: msg = ", data["msg"])
             if "ctime" in data.keys():
                 data_ctime = float(data["ctime"]) / 1000.0
-                print("Data ctime:", datetime.utcfromtimestamp(data_ctime))
+                logger.debug(f"Data ctime: {datetime.utcfromtimestamp(data_ctime)}")
             if "now" in data.keys():
                 data_now = float(data["now"]) / 1000.0
-                print("Data now time:", datetime.utcfromtimestamp(data_now))
-        print("Current UTC:", datetime.now(UTC))
+                logger.debug(f"Data now time: {datetime.utcfromtimestamp(data_now)}")
+        logger.debug(f"Current UTC: {datetime.now(UTC)}")
     else:
         data = None
     return data

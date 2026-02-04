@@ -1,3 +1,8 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
+
 def calculate_from_bearing(frm, to):
     """Calculate inital bearing from one coordinate to next (two tuples of coordinates(lat/lng) in degrees in, returns single bearing)"""
     # https://gis.stackexchange.com/questions/228656/finding-compass-direction-between-two-distant-gps-points
@@ -41,7 +46,7 @@ def calculate_cardinal(d):
 def calculate_deg_change(new_heading, original_heading):
     """Calculates change between two headings, returns negative degree if change is left, positive if right"""
     if new_heading is None:
-        print("Track heading missing. No change")
+        logger.debug("Track heading missing. No change")
         return 0
     normal = abs(original_heading - new_heading)
     across_inital = 360 - abs(original_heading - new_heading)
@@ -54,5 +59,5 @@ def calculate_deg_change(new_heading, original_heading):
     if direction == "left":
         track_change *= -1
     track_change = round(track_change, 2)
-    print(f"Track change of {track_change}° which is {direction}")
+    logger.debug(f"Track change of {track_change}° which is {direction}")
     return track_change

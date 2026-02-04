@@ -11,6 +11,7 @@ exclude = [
     "stats/templates",
     "web/static",
     "web/templates",
+    "Pipfile.lock",
 ]
 
 [tool.ruff.lint]
@@ -35,7 +36,7 @@ skip-magic-trailing-comma = false
 line-ending = "auto"
 
 [tool.pylint.master]
-ignore = ["CVS"]
+ignore = ["Pipfile.lock"]
 persistent = "yes"
 load-plugins = []
 

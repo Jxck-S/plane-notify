@@ -42,7 +42,7 @@ from providers import Providers
 from utils import cleanup_images, set_dyn_title
 
 try:
-    import lookup_route  # noqa: F401
+    import lookup_route
 
     ENABLE_ROUTE_LOOKUP = True
 except ImportError:
@@ -201,7 +201,7 @@ class Plane:
                 self.feeding = True
                 self.run_check()
 
-    def __str__(self):
+    def __str__(self) -> str:
         if self.last_pos_datetime is not None:
             time_since_contact = self.get_time_since(self.last_pos_datetime)
 
@@ -255,9 +255,7 @@ class Plane:
         return time_since
 
     def route_info(self):
-        from lookup_route import clean_data, lookup_route
-
-        def route_format(extra_route_info, type):
+        def route_format(extra_route_info, msg_type: str):
             to_airport = get_airport_by_icao(self.known_to_airport)
             if to_airport:
                 code = (
@@ -268,16 +266,16 @@ class Plane:
                 airport_text = f"""{code}, {to_airport["name"]}"""
             else:
                 airport_text = f"{self.known_to_airport}"
-            if "time_to" in extra_route_info.keys() and type != "divert":
+            if "time_to" in extra_route_info.keys() and msg_type != "divert":
                 arrival_rel = f"""in ~{extra_route_info["time_to"]}"""
             else:
                 arrival_rel = None
             if self.known_to_airport != self.nearest_from_airport:
-                if type == "inital":
+                if msg_type == "inital":
                     header = "Going to"
-                elif type == "change":
+                elif msg_type == "change":
                     header = "Now going to"
-                elif type == "divert":
+                elif msg_type == "divert":
                     header = "Now diverting to"
                 if to_airport:
                     area = f"""{to_airport["municipality"]}, {to_airport["region"]}, {to_airport["iso_country"]}"""
@@ -287,11 +285,11 @@ class Plane:
                     f" arriving {arrival_rel}" if arrival_rel is not None else ""
                 )
             else:
-                if type == "inital":
+                if msg_type == "inital":
                     header = "Will be returning to"
-                elif type == "change":
+                elif msg_type == "change":
                     header = "Now returning to"
-                elif type == "divert":
+                elif msg_type == "divert":
                     header = "Now diverting back to"
                 route_to = f"{header} {airport_text}" + (
                     f" {arrival_rel}" if arrival_rel is not None else ""
@@ -299,8 +297,8 @@ class Plane:
             return route_to
 
         if hasattr(self, "type"):
-            extra_route_info = clean_data(
-                lookup_route(
+            extra_route_info = lookup_route.clean_data(
+                lookup_route.lookup_route(
                     self.reg, (self.latitude, self.longitude), self.type, self.alt_ft
                 )
             )

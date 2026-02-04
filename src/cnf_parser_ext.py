@@ -11,18 +11,22 @@ from configparser import RawConfigParser
 
 
 class ConfigParserExt(RawConfigParser):
-    def get(self, section, option, *, raw=False, vars=None, fallback=None):
+    def get(
+        self, section, option, *, raw=False, vars_=None, fallback=None
+    ) -> str | None:
         if not self.has_section(section):
             return fallback
-        value = super().get(section, option, raw=raw, vars=vars, fallback=fallback)
+        value = super().get(section, option, raw=raw, vars=vars_, fallback=fallback)
         return value.strip('"')
 
-    def getboolean(self, section, option, *, raw=False, vars=None, fallback=None):
+    def getboolean(
+        self, section, option, *, raw=False, vars_=None, fallback=None, **kwargs
+    ) -> bool | None:
         if not self.has_section(section) or not self.has_option(section, option):
             return fallback
 
         value = super().getboolean(
-            section, option, raw=raw, vars=vars, fallback=fallback
+            section, option, raw=raw, vars=vars_, fallback=fallback, **kwargs
         )
         return value
 

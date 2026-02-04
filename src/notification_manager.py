@@ -49,7 +49,7 @@ class NotificationManager:
             except Exception as e:
                 logger.error("Failed to initialize Reddit client: %s", e)
 
-    def __init__(self, config, main_config):
+    def __init__(self, config, main_config) -> None:
         self.config = config
         self.main_config = main_config
         self.x_client = None

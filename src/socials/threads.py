@@ -1,3 +1,5 @@
+"""socials/threads.py: Interface for posting messages, media, and carousels to Threads."""
+
 import logging
 
 import requests
@@ -6,20 +8,23 @@ logger = logging.getLogger(__name__)
 
 
 class Threads:
+    """Threads client for posting status updates, media, and carousels."""
+
     base_url = "https://graph.threads.net/v1.0/"
 
     def __init__(self, access_token: str) -> None:
+        """Initialize the Threads client with an access token."""
         self.access_token = access_token
         self.debug = False
 
     def toggle_debug(self, debug: bool) -> None:
+        """Toggle debug logging for API responses."""
         self.debug = debug
 
     def create_image_container(
         self, image_url, user_id="me", text=None, is_carousel_item=False
     ):
-        """
-        Creates a media container with an image to be posted on Threads.
+        """Create a media container with an image to be posted on Threads.
 
         :param image_url: The URL of the image to be posted.
         :param text: Optional text content to be posted.
@@ -46,8 +51,7 @@ class Threads:
     def create_video_container(
         self, video_url, user_id="me", text=None, is_carousel_item=False
     ):
-        """
-        Creates a media container with a video to be posted on Threads.
+        """Create a media container with a video to be posted on Threads.
 
         :param video_url: The URL of the video to be posted.
         :param text: Optional text content to be posted.
@@ -70,8 +74,7 @@ class Threads:
         return create_container_response.json()["id"]
 
     def create_text_container(self, text, user_id="me", is_carousel_item=False):
-        """
-        Creates a media container with text content to be posted on Threads.
+        """Create a media container with text content to be posted on Threads.
 
         :param text: The text content to be posted.
         :return: The response from the API call.
@@ -93,8 +96,7 @@ class Threads:
         return create_container_response.json()["id"]
 
     def publish_container(self, threads_media_container_id, user_id="me"):
-        """
-        Publishes a container (post) that was created using the `create_container` method.
+        """Publish a container (post) that was created using the `create_container` method.
 
         :param threads_media_container_id: The container ID obtained from the create_container method.
         :return: The response from the API call.
@@ -114,8 +116,7 @@ class Threads:
         return publish_container_response
 
     def create_carousel_container(self, children, user_id="me", text=None):
-        """
-        Creates a carousel container with images or videos.
+        """Create a carousel container with images or videos.
 
         :param children: A list of container IDs (up to 20) for images/videos to be included in the carousel.
         :param text: Optional text associated with the carousel post.
@@ -123,9 +124,7 @@ class Threads:
         """
         if len(children) < 2 or len(children) > 20:
             msg = "Carousel must have at least 2 and up to 20 total images or videos."
-            raise ValueError(
-                msg
-            )
+            raise ValueError(msg)
 
         params = {
             "media_type": "CAROUSEL",
@@ -149,8 +148,7 @@ class Threads:
         return create_carousel_response.json()["id"]
 
     def reply_to_post(self, text, reply_to_id):
-        """
-        Replies to a specific reply under the root post.
+        """Reply to a specific reply under the root post.
 
         :param text: The reply text content.
         :param reply_to_id: The ID of the specific post/reply being replied to.
@@ -164,4 +162,3 @@ class Threads:
         }
 
         return requests.post(f"{Threads.base_url}me/threads", params=params)
-

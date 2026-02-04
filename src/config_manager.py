@@ -1,3 +1,5 @@
+"""src/config_manager.py: Management and reloading of aircraft configuration files."""
+
 import hashlib
 import logging
 import os
@@ -13,9 +15,13 @@ logger = logging.getLogger(__name__)
 
 
 class ConfigManager:
-    """Manages plane configurations with conflict detection and hot-reloading."""
+    """Manage plane configurations with conflict detection and hot-reloading."""
 
     def __init__(self, config_dir="./configs") -> None:
+        """Initialize the config manager.
+
+        :param config_dir: Path to the directory containing plane configuration files.
+        """
         self.config_dir = os.path.abspath(config_dir)
         # Maps: file_path -> (icao, pia_icao_or_None)
         self.file_to_icaos = {}
@@ -28,7 +34,7 @@ class ConfigManager:
         self.change_logger = self._setup_change_logger()
 
     def _setup_change_logger(self):
-        """Setup dedicated logger for config changes."""
+        """Set up dedicated logger for config changes."""
         logger = logging.getLogger("config_changes")
         logger.setLevel(logging.INFO)
 
@@ -66,10 +72,10 @@ class ConfigManager:
             existing_file = self.icao_to_file[icao]
             if existing_file != file_path:
                 existing_rel = self.get_relative_path(existing_file)
-                msg = f"ICAO conflict: {icao} in {rel_path} conflicts with {existing_rel}"
-                raise ValueError(
-                    msg
+                msg = (
+                    f"ICAO conflict: {icao} in {rel_path} conflicts with {existing_rel}"
                 )
+                raise ValueError(msg)
 
         # Check PIA_ICAO conflict
         if pia_icao and pia_icao in self.icao_to_file:
@@ -77,9 +83,7 @@ class ConfigManager:
             if existing_file != file_path:
                 existing_rel = self.get_relative_path(existing_file)
                 msg = f"PIA_ICAO conflict: {pia_icao} in {rel_path} conflicts with {existing_rel}"
-                raise ValueError(
-                    msg
-                )
+                raise ValueError(msg)
 
     def load_config_file(self, file_path):
         """Load and parse a single config file, return (config, icao, pia_icao_or_None)."""

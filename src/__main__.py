@@ -1,3 +1,5 @@
+"""src/__main__.py: Main entry point for the Plane Notify service."""
+
 import argparse
 import ast
 import logging
@@ -65,6 +67,7 @@ logger.warning("Started")
 
 
 def service_exit(signum, frame) -> Never:
+    """Exit the service gracefully on receipt of a termination signal."""
     logger.warning("Service Stop")
     msg = "Service Stop"
     raise SystemExit(msg)

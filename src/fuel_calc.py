@@ -1,3 +1,5 @@
+"""src/fuel_calc.py: Calculations for fuel consumption, costs, and CO2 emissions."""
+
 import logging
 
 import db
@@ -6,6 +8,10 @@ logger = logging.getLogger(__name__)
 
 
 def get_avg_fuel_price():
+    """Retrieve the average fuel price per gallon from the database.
+
+    :return: The cost as a float, or None if not available.
+    """
     if not db.tracking_cursor:
         return None
     sql = """SELECT cost::numeric::float FROM "plane-notify".fuel"""
@@ -18,7 +24,7 @@ def get_avg_fuel_price():
 
 
 def fuel_calculation(aircraft_icao_type, minutes):
-    """Calculates fuel usage, price, c02 output of a flight depending on aircraft type and flight length."""
+    """Calculate fuel usage, price, c02 output of a flight depending on aircraft type and flight length."""
     if not db.tracking_cursor:
         return None
     sql = """SELECT galph FROM "plane-notify".icao_type_info WHERE icao_code = %s """
@@ -48,6 +54,11 @@ def fuel_calculation(aircraft_icao_type, minutes):
 
 
 def fuel_message(fuel_info):
+    """Generate a human-readable message summarizing fuel and CO2 data.
+
+    :param fuel_info: Dictionary containing fuel calculation results.
+    :return: Formatted message string.
+    """
     have_cost = False
     if "fuel_price" in fuel_info:
         cost = "{:,}".format(fuel_info["fuel_price"])

@@ -1,3 +1,5 @@
+"""src/plane.py: Core logic for tracking aircraft, detecting landing/takeoff, and sending notifications."""
+
 import json
 import logging
 import os
@@ -55,8 +57,10 @@ main_config.read("./configs/mainconf.ini")
 
 
 class Plane:
+    """Representation of an aircraft being tracked with methods for state management and notification."""
+
     def __init__(self, icao, config) -> None:
-        """Initializes a plane object from its config file and given icao."""
+        """Initialize a plane object from its config file and given icao."""
         self.icao = icao.lower()
         self.active_icao = self.icao
         self.pia_icao = None
@@ -132,6 +136,11 @@ class Plane:
             self.data_loss_mins = main_config.getint("DATA", "DATA_LOSS_MINS")
 
     def run_readsb(self, ac_dict, pia) -> None:
+        """Parse and process a vector update from READSB.
+
+        :param ac_dict: Dictionary containing aircraft telemetry from READSB.
+        :param pia: Boolean indicating if PIA (Privacy ICAO Address) is active.
+        """
         # Parse READSB Vector
         self.print_header()
         self.pia_active = pia
@@ -202,6 +211,7 @@ class Plane:
                 self.run_check()
 
     def __str__(self) -> str:
+        """Return a formatted string representation of the aircraft's current state."""
         if self.last_pos_datetime is not None:
             time_since_contact = self.get_time_since(self.last_pos_datetime)
 
@@ -242,15 +252,27 @@ class Plane:
         return " | ".join(output_parts)
 
     def print_header(self) -> None:
+        """Log the start of aircraft processing."""
         logger.info("Processing %s ICAO: %s", self.config.filepath, self.active_icao)
 
     def print_footer(self) -> None:
+        """Log the completion of aircraft processing."""
         logger.info("Processing Complete %s", self.config.filepath)
 
     def get_time_since(self, datetime_obj):
+        """Calculate the time duration since a given datetime object.
+
+        :param datetime_obj: The datetime object to compare against.
+        :return: Time delta since the given datetime.
+        """
         return datetime.now() - datetime_obj if datetime_obj is not None else None
 
     def route_info(self):
+        """Retrieve and format route information for the aircraft.
+
+        :return: Formatted route description string or None.
+        """
+
         def route_format(extra_route_info, msg_type: str):
             to_airport = get_airport_by_icao(self.known_to_airport)
             if to_airport:
@@ -323,11 +345,13 @@ class Plane:
         return route_to
 
     def run_empty(self) -> None:
+        """Process an update where no data was received for the aircraft."""
         self.print_header()
         self.feeding = False
         self.run_check()
 
     def add_trace(self) -> None:
+        """Add a new telemetry point to the aircraft's trace history."""
         if self.latitude and self.longitude and self.alt_ft is not None:
             last_trace = self.traces[-1] if len(self.traces) >= 1 else None
             # Only add trace if none exist or if new telemetry coordinates are not the same as last coordinates
@@ -346,6 +370,7 @@ class Plane:
                 self.traces.append(trace)
 
     def expire_traces(self) -> None:
+        """Remove trace points that are older than the expiration threshold (30 mins)."""
         if self.traces:
             for trace in self.traces:
                 trace_timestramp = trace[0]
@@ -356,12 +381,13 @@ class Plane:
                     self.traces.remove(trace)
 
     def get_flags(self) -> None:
+        """Retrieve and process database flags for the aircraft."""
         flags = []
         if self.pia_active:
             flags.append(Flags.PIA)
 
     def run_check(self) -> None:
-        """Runs a check of a plane module to see if its landed or takenoff using plane data, and takes action if so."""
+        """Run a check of a plane module to see if its landed or takenoff using plane data, and takes action if so."""
         self.add_trace()
         logger.info(self)
         if self.last_pos_datetime is not None:
@@ -507,9 +533,7 @@ class Plane:
             second_message = None
             if self.tookoff:
                 self.takeoff_time = datetime.now(UTC)
-                confirmed_takeoff = (
-                    trigger_type == "no longer on ground"
-                )
+                confirmed_takeoff = trigger_type == "no longer on ground"
                 self.db_flight_id = add_flight(
                     self.reg,
                     self.icao,
@@ -952,7 +976,10 @@ class Plane:
                                                     )
                                                 )
                                             distance = min(point_dists)
-                                            if closest_tfr is None or distance < closest_tfr["distance"]:
+                                            if (
+                                                closest_tfr is None
+                                                or distance < closest_tfr["distance"]
+                                            ):
                                                 closest_tfr = {
                                                     "info": tfr,
                                                     "closest_shape_name": shape[
@@ -1169,6 +1196,10 @@ class Plane:
         self.print_footer()
 
     def check_new_ras(self, ras) -> None:
+        """Check for new Resolution Advisories (RAs) and send notifications.
+
+        :param ras: List of RA data objects to check.
+        """
         for ra in ras:
             if (
                 self.recent_ra_types == {}
@@ -1214,6 +1245,7 @@ class Plane:
                 # cleanup_images(map_img_filename)
 
     def expire_ra_types(self) -> None:
+        """Remove Resolution Advisory types that have expired."""
         if self.recent_ra_types != {}:
             for ra_type, postime in self.recent_ra_types.copy().items():
                 timestamp = datetime.fromtimestamp(postime)

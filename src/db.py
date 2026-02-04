@@ -1,3 +1,5 @@
+"""src/db.py: Database connection and flight logging utilities."""
+
 import logging
 
 import psycopg2
@@ -11,6 +13,10 @@ logger = logging.getLogger(__name__)
 
 
 def init_db(config) -> None:
+    """Initialize the database connection and cursor.
+
+    :param config: Configuration object with 'DB' section.
+    """
     global tracking_db, tracking_cursor, tracking_config
     tracking_config = config
     if config.has_section("DB"):
@@ -37,7 +43,7 @@ def init_db(config) -> None:
 
 # Flight Logging Functions
 def add_flight(reg, icao, callsign, origin, takeoff_confirmed, takeoff_time):
-    """Adds a flight record to the flight table, meant for use on takeoff."""
+    """Add a flight record to the flight table, meant for use on takeoff."""
     if not tracking_cursor:
         return None
     if tracking_config.getboolean("DB", "FLIGHT_LOGGING") is False:
@@ -53,7 +59,7 @@ def add_flight(reg, icao, callsign, origin, takeoff_confirmed, takeoff_time):
 
 
 def update_flight(db_flight_id, destination, landing_confirmed, landing_time) -> None:
-    """Updates a flight record in the flight table, meant for use on landing."""
+    """Update a flight record in the flight table, meant for use on landing."""
     if not tracking_cursor:
         return
     if tracking_config.getboolean("DB", "FLIGHT_LOGGING") is False:
@@ -72,7 +78,7 @@ def update_flight(db_flight_id, destination, landing_confirmed, landing_time) ->
 
 # Aircraft Info Functions
 def get_aircraft_reg_by_icao(icao):
-    """Retrive an aircrafts reg/tail number based on icao/hex."""
+    """Retrieve an aircraft's reg/tail number based on icao/hex."""
     if not tracking_cursor:
         return None
     sql = "SELECT reg from deps.aircraft_v WHERE icao = %s"
@@ -80,9 +86,8 @@ def get_aircraft_reg_by_icao(icao):
     return tracking_cursor.fetchone()["reg"] if tracking_cursor.rowcount > 0 else None
 
 
-
 def get_type_code_by_icao(icao):
-    """Retrive an aircrafts icao type code based on icao/hex."""
+    """Retrieve an aircraft's icao type code based on icao/hex."""
     if not tracking_cursor:
         return None
     sql = "SELECT icaotype from deps.aircraft_v WHERE icao = %s"

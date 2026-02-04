@@ -1,3 +1,5 @@
+"""socials/telegram.py: Interface for sending notifications to Telegram."""
+
 import asyncio
 import logging
 
@@ -7,6 +9,14 @@ logger = logging.getLogger(__name__)
 
 
 def post(message, bot_token, chat_id, photo=None):
+    """Send a message and optional photo to Telegram.
+
+    :param message: The text content or caption.
+    :param bot_token: Telegram bot token.
+    :param chat_id: Target chat or channel ID.
+    :param photo: File-like object or path to a photo.
+    :return: True if sent successfully, False otherwise.
+    """
     return asyncio.run(_send_telegram_async(message, bot_token, chat_id, photo))
 
 

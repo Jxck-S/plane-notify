@@ -1,3 +1,5 @@
+"""socials/nostr.py: Interface for posting updates and media to Nostr using relays and Blossom."""
+
 import csv
 import logging
 import os
@@ -84,6 +86,14 @@ def upload_to_blossom(file_path, private_key):
 
 
 def post(message, private_key, image_url=None, reply_to=None):
+    """Post a note to Nostr relays.
+
+    :param message: The text content of the note.
+    :param private_key: User's private key (nsec format).
+    :param image_url: URL of media to include (optional).
+    :param reply_to: Reference to an event to reply to (optional).
+    :return: The signed event object.
+    """
     relay_manager = RelayManager(timeout=6)
     # Load relay list from CSV
     relays_list = get_nostr_relays()

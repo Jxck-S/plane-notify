@@ -1,9 +1,10 @@
+"""src/airport_lookup.py: Database queries for airport identification and proximity."""
+
 import db
 
 
 def get_closest_airport(latitude, longitude, allowed_types):
-    """
-    Find the closest airport to a given coordinate within allowed types.
+    """Find the closest airport to a given coordinate within allowed types.
 
     Uses PostGIS ST_Distance to calculate the nearest airport of the specified
     types (e.g., 'large_airport', 'medium_airport') and returns its details.
@@ -36,8 +37,7 @@ def get_closest_airport(latitude, longitude, allowed_types):
 
 
 def get_airport_by_icao(icao):
-    """
-    Retrieve airport information based on its ICAO code.
+    """Retrieve airport information based on its ICAO code.
 
     Queries the database for an airport matching the provided ICAO/GPS code
     and returns a dictionary of its attributes.

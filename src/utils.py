@@ -1,8 +1,11 @@
+"""utils.py: Utility functions for image cleanup, string formatting, and data parsing."""
+
 import contextlib
 import os
 
 
 def cleanup_images(path) -> None:
+    """Delete temporary image files with given path prefix and common extensions."""
     if path:
         for ext in [".png", ".jpg"]:
             with contextlib.suppress(FileNotFoundError):
@@ -10,6 +13,7 @@ def cleanup_images(path) -> None:
 
 
 def set_dyn_title(title, *aircraft_info):
+    """Determine dynamic title based on title value and aircraft info."""
     if not title:
         return ""
     if title.upper() in ["DYNAMIC", "CALLSIGN"]:
@@ -21,6 +25,7 @@ def set_dyn_title(title, *aircraft_info):
 
 
 def clean_stack_trace(stack_trace):
+    """Clean stack trace by removing unknown entries."""
     cleaned_trace = []
     lines = stack_trace.splitlines()
     found_bad = False
@@ -39,23 +44,17 @@ def clean_stack_trace(stack_trace):
 
 
 def apply_prefix(prefix, message):
+    """Prepend prefix to message if prefix exists."""
     if prefix:
         return f"{prefix} {message}"
     return message
 
 
 def extract_operator_icao(callsign: str) -> str | None:
-    """
-    Extracts the ICAO operator code from a callsign.
+    """Extract the ICAO operator code from a callsign.
 
-    Parameters
-    ----------
-    callsign (str): The callsign from which to extract the ICAO operator code.
-
-    Returns
-    -------
-    str | None: The extracted ICAO operator code if the callsign is valid, otherwise None.
-
+    :param callsign: The callsign from which to extract the ICAO operator code.
+    :return: The extracted ICAO operator code if valid, otherwise None.
     """
     if (
         callsign

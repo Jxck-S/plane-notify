@@ -1,3 +1,5 @@
+"""notification_manager.py: Orchestrates cross-platform notifications."""
+
 import logging
 import os
 
@@ -14,7 +16,10 @@ logger = logging.getLogger(__name__)
 
 
 class ReplyRefs:
+    """Store reference IDs for replies across different social platforms."""
+
     def __init__(self) -> None:
+        """Initialize all platform reply references to None."""
         self.mastodon = None
         self.x = None
         self.facebook = None
@@ -24,10 +29,16 @@ class ReplyRefs:
 
 
 class NotificationManager:
+    """Manage and coordinate notifications across multiple social media platforms."""
+
     reddit_client = None
 
     @classmethod
     def init_sources(cls, main_config) -> None:
+        """Initialize global social media clients (like Reddit).
+
+        :param main_config: The global application configuration.
+        """
         # Initialize Reddit Client (Global)
         if (
             cls.reddit_client is None
@@ -46,6 +57,11 @@ class NotificationManager:
                 logger.exception("Failed to initialize Reddit client: %s", e)
 
     def __init__(self, config, main_config) -> None:
+        """Initialize the notification manager for a specific plane/group.
+
+        :param config: The specific configuration for this plane or group.
+        :param main_config: The global application configuration.
+        """
         self.config = config
         self.main_config = main_config
         self.x_client = None
@@ -66,15 +82,17 @@ class NotificationManager:
                 logger.exception("Failed to initialize X client: %s", e)
 
     def set_one_time_exclusive(self, platforms) -> None:
+        """Set a list of platforms for a single exclusive broadcast."""
         self.exclusive_platforms = platforms
 
     def reset_state(self) -> None:
+        """Reset reply references and exclusive platform filters."""
         self.reply_refs = ReplyRefs()
         self.exclusive_platforms = None
 
     def post_to_all(self, message, title, image_path, is_reply=False) -> None:
-        """
-        Post notification to all enabled platforms.
+        """Post notification to all enabled platforms.
+
         If is_reply is True, attempts to reply to the thread started by the previous post.
         """
         # I will import apply_prefix from utils

@@ -1,3 +1,5 @@
+"""socials/discord.py: Interface for sending messages and files to Discord via webhooks."""
+
 import logging
 
 import requests
@@ -7,6 +9,14 @@ logger = logging.getLogger(__name__)
 
 
 def post(message, webhook_url, role_id=None, *file_names, username=None) -> None:
+    """Send a message and optional files to a Discord channel via webhook.
+
+    :param message: The text content of the message.
+    :param webhook_url: Discord webhook URL.
+    :param role_id: Discord role ID to mention (optional).
+    :param file_names: Path(s) to file(s) to upload.
+    :param username: Override the webhook's default username.
+    """
     if role_id:
         message += f" <@&{role_id}>"
     webhook = DiscordWebhook(

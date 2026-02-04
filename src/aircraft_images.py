@@ -1,3 +1,5 @@
+"""src/aircraft_images.py: Utility functions for fetching aircraft photos and silhouettes."""
+
 import json
 import logging
 import os
@@ -13,6 +15,11 @@ USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTM
 
 
 def get_planespotters_net_aircraft_photo(reg):
+    """Fetch aircraft photo information from Planespotters.net API.
+
+    :param reg: Aircraft registration to look up.
+    :return: Dictionary with image_url and credit, or None if not found.
+    """
     try:
         logger.debug("Getting planespotters pic")
         headers = {"User-Agent": USER_AGENT}
@@ -24,7 +31,7 @@ def get_planespotters_net_aircraft_photo(reg):
 
         if rsp.status_code != 200:
             logger.debug(
-                f"Planespotters API returned status code {rsp.status_code} for {reg}"
+                "Planespotters API returned status code %s for %s", rsp.status_code, reg
             )
             return None
 
@@ -45,23 +52,30 @@ def get_planespotters_net_aircraft_photo(reg):
         return None
     except json.JSONDecodeError as e:
         logger.exception(
-            f"Failed to parse JSON response from Planespotters API for {reg}: {e}"
+            "Failed to parse JSON response from Planespotters API for %s: %s", reg, e
         )
         logger.debug("Response content: %s...", rsp.text[:200])  # Show first 200 chars
         return None
     except requests.exceptions.RequestException as e:
         logger.exception(
-            f"Request error when fetching from Planespotters API for {reg}: {e}"
+            "Request error when fetching from Planespotters API for %s: %s", reg, e
         )
         return None
     except Exception as e:
         logger.exception(
-            f"Unexpected error in get_planespotters_net_aircraft_photo for {reg}: {e}"
+            "Unexpected error in get_planespotters_net_aircraft_photo for %s: %s",
+            reg,
+            e,
         )
         return None
 
 
 def get_github_aircraft_photo(reg):
+    """Fetch aircraft photo information from a curated GitHub repository.
+
+    :param reg: Aircraft registration to look up.
+    :return: Dictionary with image_url and credit, or None if not found.
+    """
     try:
         logger.debug("Getting Github List")
         rsp = requests.get(
@@ -72,7 +86,7 @@ def get_github_aircraft_photo(reg):
 
         if rsp.status_code != 200:
             logger.debug(
-                f"GitHub photo list returned status code {rsp.status_code} for {reg}"
+                "GitHub photo list returned status code %s for %s", rsp.status_code, reg
             )
             return None
 
@@ -89,18 +103,27 @@ def get_github_aircraft_photo(reg):
         return None
     except json.JSONDecodeError as e:
         logger.exception(
-            f"Failed to parse JSON response from GitHub photo list for {reg}: {e}"
+            "Failed to parse JSON response from GitHub photo list for %s: %s", reg, e
         )
         return None
     except requests.exceptions.RequestException as e:
-        logger.exception("Request error when fetching GitHub photo list for %s: %s", reg, e)
+        logger.exception(
+            "Request error when fetching GitHub photo list for %s: %s", reg, e
+        )
         return None
     except Exception as e:
-        logger.exception("Unexpected error in get_github_aircraft_photo for %s: %s", reg, e)
+        logger.exception(
+            "Unexpected error in get_github_aircraft_photo for %s: %s", reg, e
+        )
         return None
 
 
 def get_aircraft_sil(type_code):
+    """Get the file path to an aircraft silhouette image.
+
+    :param type_code: ICAO aircraft type code.
+    :return: Path to the silhouette PNG file or None.
+    """
     sil_path = os.path.join(AIRCRAFT_SILS_DIR, f"{type_code.upper()}.png")
     logger.debug(sil_path)
     if type_code and os.path.exists(sil_path):
@@ -111,14 +134,26 @@ def get_aircraft_sil(type_code):
 
 
 def get_aircraft_image_url(reg):
+    """Attempt to find an aircraft image from multiple sources.
+
+    :param reg: Aircraft registration.
+    :return: Photo information dictionary or None.
+    """
     photo = None
-    if (photo := get_github_aircraft_photo(reg)) or (photo := get_planespotters_net_aircraft_photo(reg)):
+    if (photo := get_github_aircraft_photo(reg)) or (
+        photo := get_planespotters_net_aircraft_photo(reg)
+    ):
         pass
 
     return photo
 
 
 def get_image_from_url(photo):
+    """Download an aircraft image from a provided URL.
+
+    :param photo: Dictionary containing 'image_url'.
+    :return: BytesIO object containing image data or None.
+    """
     try:
         url = photo["image_url"]
         response = requests.get(

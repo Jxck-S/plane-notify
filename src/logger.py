@@ -1,3 +1,5 @@
+"""src/logger.py: Logging configuration and custom Discord handler."""
+
 import logging
 
 from socials import discord
@@ -7,11 +9,20 @@ class DiscordHandler(logging.Handler):
     """Custom logging handler that sends records to a Discord webhook."""
 
     def __init__(self, config, role_id=None) -> None:
+        """Initialize the Discord log handler.
+
+        :param config: Configuration object.
+        :param role_id: Discord role ID to mention (optional).
+        """
         super().__init__()
         self.config = config
         self.role_id = role_id
 
     def emit(self, record) -> None:
+        """Format and send a log record to Discord.
+
+        :param record: The logging record to emit.
+        """
         if not self.config.getboolean("DISCORD", "ENABLE"):
             return
 
@@ -33,7 +44,7 @@ class DiscordHandler(logging.Handler):
 
 
 def setup_logging(config, debug=False):
-    """Configures the root logger with console and Discord handlers."""
+    """Configure the root logger with console and Discord handlers."""
     logger = logging.getLogger()
     if logger.hasHandlers():
         logger.handlers.clear()

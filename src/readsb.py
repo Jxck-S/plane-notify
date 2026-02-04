@@ -1,5 +1,4 @@
-"""
-READSB Data Fetcher.
+"""READSB Data Fetcher.
 
 This module handles the retrieval of aircraft data from a READSB-compatible API.
 It includes functions to fetch current aircraft states and historical ACAS/TCAS resolution advisories.
@@ -23,8 +22,7 @@ main_config.read("./configs/mainconf.ini")
 
 
 def pull(url, headers):
-    """
-    Performs a GET request to the specified URL with the given headers.
+    """Perform a GET request to the specified URL with the given headers.
 
     Args:
         url (str): The URL to fetch data from.
@@ -66,8 +64,7 @@ def pull(url, headers):
 
 
 def pull_readsb(planes):
-    """
-    Fetches the latest aircraft data from the READSB endpoint.
+    """Fetch the latest aircraft data from the READSB endpoint.
 
     Args:
         planes (list): A list of Plane objects (unused in current logic but kept for consistency/expansion).
@@ -118,8 +115,7 @@ def pull_readsb(planes):
 
 
 def pull_date_ras(date):
-    """
-    Fetches ACAS/TCAS Resolution Advisory (RA) data for a specific date.
+    """Fetch ACAS/TCAS Resolution Advisory (RA) data for a specific date.
 
     Args:
         date (str): The date string in "YYYY/MM/DD" format.

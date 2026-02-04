@@ -1,15 +1,28 @@
+"""socials/x.py: Interface for posting messages and media to X (formerly Twitter)."""
+
 import tweepy
 
 
 class XED:
-    def __init__(self, api_key, api_key_secret, access_token, access_token_secret) -> None:
+    """X (Twitter) client for posting status updates and media."""
+
+    def __init__(
+        self, api_key, api_key_secret, access_token, access_token_secret
+    ) -> None:
+        """Initialize X client with API credentials."""
         self._api_key = api_key
         self._api_key_seret = api_key_secret
         self._access_token = access_token
         self._access_token_secret = access_token_secret
 
     def post(self, message, media_list=None, in_reply_to_id=None):
+        """Post a message to X with optional media and reply tagging.
 
+        :param message: The text content of the post.
+        :param media_list: List of (image_data, alt_text) tuples for media uploads.
+        :param in_reply_to_id: Optional ID of a tweet to reply to.
+        :return: The ID of the created tweet.
+        """
         # V1 API For the Media Upload
         media_ids = []
         if media_list:

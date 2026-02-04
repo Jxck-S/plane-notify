@@ -1,3 +1,5 @@
+"""socials/mastodon.py: Interface for posting status updates and media to Mastodon."""
+
 import logging
 
 from mastodon import (
@@ -11,6 +13,15 @@ logger = logging.getLogger(__name__)
 
 
 def post(message, access_token, api_base_url, photo=None, reply_to=None):
+    """Post a status update and optional media to Mastodon.
+
+    :param message: The text content of the status.
+    :param access_token: Mastodon API access token.
+    :param api_base_url: Mastodon instance base URL.
+    :param photo: File-like object or path to an image to upload.
+    :param reply_to: ID of the status to reply to (optional).
+    :return: The API response data if successful, None otherwise.
+    """
     sent = False
     retry_c = 0
     while not sent:

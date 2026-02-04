@@ -1,3 +1,5 @@
+"""src/geo.py: Geographical utilities for coordinate transformations and circle perimeters."""
+
 from functools import partial
 
 import pyproj
@@ -6,8 +8,7 @@ from shapely.ops import transform
 
 
 def get_circle_perimeter_coords(lat, lon, radius_km):
-    """
-    Generate the perimeter coordinates of a circle (buffer) around the given lat, lon.
+    """Generate the perimeter coordinates of a circle (buffer) around the given lat, lon.
 
     :param lat: Latitude of the center of the circle
     :param lon: Longitude of the center of the circle
@@ -36,4 +37,3 @@ def get_circle_perimeter_coords(lat, lon, radius_km):
 
     # Swap coordinates to return them as (latitude, longitude)
     return [[lat, lon] for lon, lat in lon_lat_coords]
-

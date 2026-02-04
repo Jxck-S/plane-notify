@@ -1,10 +1,17 @@
+"""src/calculate_headings.py: Mathematical utilities for bearing, cardinal direction, and tracking changes."""
+
 import logging
 
 logger = logging.getLogger(__name__)
 
 
 def calculate_from_bearing(frm, to):
-    """Calculate inital bearing from one coordinate to next (two tuples of coordinates(lat/lng) in degrees in, returns single bearing)."""
+    """Calculate initial bearing from one coordinate to next.
+
+    :param frm: Tuple of (lat, lng) in degrees.
+    :param to: Tuple of (lat, lng) in degrees.
+    :return: Single bearing in degrees.
+    """
     # https://gis.stackexchange.com/questions/228656/finding-compass-direction-between-two-distant-gps-points
     from math import atan2, cos, degrees, radians, sin
 
@@ -19,7 +26,7 @@ def calculate_from_bearing(frm, to):
 
 
 def calculate_cardinal(d):
-    """Finds cardinal direction from bearing degree."""
+    """Find cardinal direction from bearing degree."""
     dirs = [
         "N",
         "NNE",
@@ -43,7 +50,7 @@ def calculate_cardinal(d):
 
 
 def calculate_deg_change(new_heading, original_heading):
-    """Calculates change between two headings, returns negative degree if change is left, positive if right."""
+    """Calculate change between two headings, returns negative degree if change is left, positive if right."""
     if new_heading is None:
         logger.debug("Track heading missing. No change")
         return 0

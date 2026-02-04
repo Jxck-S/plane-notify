@@ -1,3 +1,5 @@
+"""web/server.py: FastAPI server for the control dashboard and WebSocket communication."""
+
 import asyncio
 import json
 import logging
@@ -31,17 +33,26 @@ start_time = time.time()
 
 
 class ConnectionManager:
+    """Manage active WebSocket connections for real-time status updates."""
+
     def __init__(self) -> None:
+        """Initialize the connection manager with an empty list of connections."""
         self.active_connections: list[WebSocket] = []
 
     async def connect(self, websocket: WebSocket) -> None:
+        """Accept a new WebSocket connection and track it."""
         await websocket.accept()
         self.active_connections.append(websocket)
 
     def disconnect(self, websocket: WebSocket) -> None:
+        """Remove a WebSocket connection from the tracked list."""
         self.active_connections.remove(websocket)
 
     async def broadcast(self, message: str) -> None:
+        """Send a message to all active WebSocket connections.
+
+        :param message: The string message to broadcast.
+        """
         for connection in self.active_connections:
             try:
                 await connection.send_text(message)
@@ -60,6 +71,10 @@ async def dashboard():
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket) -> None:
+    """Handle WebSocket communication for the dashboard.
+
+    Processes reload requests and broadcasts status updates.
+    """
     await manager.connect(websocket)
     try:
         while True:
@@ -130,7 +145,7 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
 
 @app.get("/heartbeat")
 async def heartbeat():
-    """Health check endpoint."""
+    """Provide a health check endpoint for the server."""
     return {
         "status": "ok",
         "timestamp": time.time(),
@@ -142,7 +157,7 @@ async def heartbeat():
 # Keep HTTP endpoint for backward compatibility/scripts
 @app.get("/reload")
 async def reload_config_http():
-    """Trigger configuration reload (HTTP)."""
+    """Trigger a configuration reload via standard HTTP request."""
     if config_manager is None:
         raise HTTPException(status_code=503, detail="Config Manager not initialized")
 
@@ -150,7 +165,7 @@ async def reload_config_http():
 
 
 def run_server(host: str = "127.0.0.1", port: int = 8778) -> None:
-    """Run Uvicorn server."""
+    """Run the Uvicorn server."""
     # install_signal_handlers=False is CRITICAL to allow the main thread
     # to handle shutdown (Ctrl+C) correctly.
     # Restore startup info (log_level="info") but keep request spam off (access_log=False)
@@ -165,7 +180,7 @@ def run_server(host: str = "127.0.0.1", port: int = 8778) -> None:
 
 
 def start_web_server(cm, planes, host: str = "127.0.0.1", port: int = 8778):
-    """Start the web server in a background thread."""
+    """Start the web server in a background daemon thread."""
     global config_manager, planes_list
     config_manager = cm
     planes_list = planes

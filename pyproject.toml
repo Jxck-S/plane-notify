@@ -1,72 +1,49 @@
 [tool.ruff]
-# Exclude a variety of commonly ignored directories.
-exclude = [
-    ".bzr",
-    ".direnv",
-    ".eggs",
-    ".git",
-    ".git-rewrite",
-    ".hg",
-    ".ipynb_checkpoints",
-    ".mypy_cache",
-    ".nox",
-    ".pants.d",
-    ".pyenv",
-    ".pytest_cache",
-    ".pytype",
-    ".ruff_cache",
-    ".svn",
-    ".tox",
-    ".venv",
-    ".vscode",
-    "__pypackages__",
-    "_build",
-    "buck-out",
-    "build",
-    "dist",
-    "node_modules",
-    "site-packages",
-    "venv",
-]
+# Target Python version
+target-version = "py313"
 
-# Same as Black.
+# Formatting settings (match Black)
 line-length = 88
 indent-width = 4
 
-target-version = "py313"
+# Exclude only project-specific or non-standard directories
+exclude = [
+    "stats/templates",
+    "web/static",
+    "web/templates",
+]
 
 [tool.ruff.lint]
-# Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`)  codes by default.
-# Unlike Flake8, Ruff doesn't enable pycodestyle warnings (`W`) or
-# McCabe complexity (`C901`) by default.
-select = ["E4", "E7", "E9", "F", "I", "B", "UP", "N"]
-ignore = []
+# ULTIMATE STRICTNESS: Enable every available rule
+select = ["ALL"]
 
-# Allow fix for all enabled rules (when `--fix`) is provided.
+# Only ignore rules that directly conflict or are not recommended with the formatter
+ignore = [
+    "D203",   # Conflicts with D211 (one-blank-line-before-class)
+    "D212",   # Conflicts with D213 (multi-line-summary-first-line)
+    "COM812", # Recommended to disable when using ruff format
+    "ISC001", # Recommended to disable when using ruff format
+]
+
+# Allow fix for all enabled rules
 fixable = ["ALL"]
-unfixable = []
-
-# Allow unused variables when underscore-prefixed.
-dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 [tool.ruff.format]
-# Like Black, use double quotes for strings.
 quote-style = "double"
-
-# Like Black, indent with spaces, rather than tabs.
 indent-style = "space"
-
-# Like Black, respect magic trailing commas.
 skip-magic-trailing-comma = false
-
-# Like Black, automatically detect the appropriate line ending.
 line-ending = "auto"
 
-[tool.pylint.FORMAT]
+[tool.pylint.master]
+ignore = ["CVS"]
+persistent = "yes"
+load-plugins = []
+
+[tool.pylint.format]
 # Use double quotes for strings in Pylint to match Ruff/Black
 string-quote = "double"
 max-line-length = 88
 
-[tool.pylint."MESSAGES CONTROL"]
-# Disable duplicate code check if it becomes too annoying with similar files
-# disable = "duplicate-code"
+[tool.pylint.messages_control]
+# Maximum strictness: no disabled rules
+disable = []

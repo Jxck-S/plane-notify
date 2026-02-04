@@ -7,7 +7,7 @@ from datetime import UTC, datetime, timedelta
 
 import requests
 import staticmaps
-from colorama import Back, Fore, Style
+from colorama import Fore, Style
 from geopy.distance import geodesic
 from PIL import Image
 from requests.exceptions import (

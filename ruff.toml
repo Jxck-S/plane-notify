@@ -1,6 +1,3 @@
-# Target Python version
-target-version = "py313"
-
 # Formatting settings (match Black)
 line-length = 88
 indent-width = 4

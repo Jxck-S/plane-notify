@@ -2,7 +2,6 @@
 engines:
   enabled:
     - ruff
-    - pylint
     - eslint
     - bandit
     - lizard

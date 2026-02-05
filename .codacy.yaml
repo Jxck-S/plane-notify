@@ -10,8 +10,7 @@ engines:
     - shellcheck
     - markdownlint
     - yamllint
-  ruff:
-    python_version: 3.13
+
   trivy:
     enabled: true
   markdownlint:

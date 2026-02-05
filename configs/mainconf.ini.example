@@ -1,64 +1,77 @@
+[WEB]
+# IP address the web server listens on.
+# Default: 127.0.0.1 (localhost-only for security)
+# Set to 0.0.0.0 to allow access from other devices on the network.
+# HOST = 127.0.0.1
+# PORT = 8778
+
 [DATA]
-#Source to pull data from
-#SHOULD BE ADSBX which is ADS-B Exchange or OPENS which is OpenSky
-#By default configured with OpenSky which anyone can use without a login
-#ADS-B Exchange has better data but is not available unless you feed their network or pay.
-SOURCE = RpdADSBX
-#Default amount of time after data loss to trigger a landing when under 10k ft
+# Default amount of time (mins) after data loss to trigger a landing when under 10k ft
 DATA_LOSS_MINS = 5
-#Failover from one source to the other, only enable if you have both sources setup.
-FAILOVER = FALSE
-#Timezone if you want your own time to show in the console, if invalid will be set to UTC.
-#List of TZs names https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
-TZ = UTC
 
-#ADS-B Exchange https://www.adsbexchange.com/data/
-[ADSBX]
-API_KEY = apikey
-API_VERSION = 1
+[READSB]
+# READSB
+# API KEY if required
+API_KEY =
+# Full path to readsb all.json endpoint
+ENDPOINT = http://127.0.0.1:8080/data/aircraft.json
+# URL to pull Resolution Advisory (ACAS) history from readsb
+RA_HOST = https://globe.theairtraffic.com
 
-#ADSBX API Proxy, https://gitlab.com/jjwiseman/adsbx-api-proxy, v2 input, v1 or v2 output from proxy
-ENABLE_PROXY = FALSE
-#Full URL http://host:port
-PROXY_HOST =
 
-#OpenSky https://opensky-network.org/apidoc/index.html
-#When using without your own login user and pass should be None
-[OPENSKY]
-USERNAME = None
-PASSWORD = None
 
-#ADS-B Exchange on RapidAPI https://rapidapi.com/adsbx/api/adsbexchange-com1/
-[RpdADSBX]
-API_KEY = none
-API_VERSION = 2
-
-#Define the delay interval in seconds between each data request. This is useful if you have limited requests in the API.
 [SLEEP]
+# Define the delay interval in seconds between each data request.
 SLEEPSEC = 60
 
-[GOOGLE]
-#API KEY for Google Static Maps only if you using this on any of the planes.
-API_KEY = googleapikey
-
-#Used for failover messages and program exits notification
-[DISCORD]
-ENABLE = FALSE
-USERNAME = usernamehere
-URL = webhookurl
-ROLE_ID = 
-
-[TFRS]
-URL = http://127.0.0.1:5000/detailed_all
-ENABLE = False
-
-[TWITTER]
-#GLOBAL TWITTER CONSUMER KEY AND CONSUMERS SECRET ONLY NEED TO BE HERE NOW
-ENABLE = False
-CONSUMER_KEY = ck
-CONSUMER_SECRET = cs
+[AIRPORT]
+# Global default airport types to filter for (can be overridden per-plane)
+TYPES = small_airport,medium_airport,large_airport
 
 [MAP]
-#Map to create from Google Static Maps or screenshot global tar1090 from globe.theairtraffic.com
-#Enter GOOGLESTATICMAP or ADSBX
-OPTION = ADSBX
+# Map generation options: fsm (Flight Static Maps)
+OPTION = fsm
+
+
+
+
+
+[TFRS]
+# Temporary Flight Restrictions (TFR) Service
+URL = http://127.0.0.1:5000/detailed_all
+ENABLE = FALSE
+
+[HTTP_SERVE]
+# Base URL where serve_images.py or your reverse proxy is reachable.
+# Required for services that need public image URLs (Instagram, Threads)
+IMAGE_URL =
+
+
+[DISCORD]
+# Global Discord settings for System/Error notifications
+ENABLE = FALSE
+USERNAME = plane-notify
+URL =
+# Optional: URL for status messages (Logger)
+STATUS_URL =
+# Optional: Role ID to mention in alerts
+ROLE_ID =
+
+[REDDIT]
+# Global Reddit Application Keys
+ENABLE = FALSE
+CLIENT_ID =
+CLIENT_SECRET =
+USER_AGENT = plane-notify
+USERNAME =
+PASSWORD =
+# Note: SUBREDDIT is configured per-plane in the plane config file.
+
+[DB]
+# PostgreSQL database for flight tracking history, and dependencies
+FLIGHT_LOGGING = TRUE
+HOST = localhost
+PORT = 5432
+USERNAME =
+PASSWORD =
+DATABASE = tracking

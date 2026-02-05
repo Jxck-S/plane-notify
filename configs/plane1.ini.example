@@ -1,58 +1,76 @@
 [DATA]
 #Plane to track, based off ICAO or ICAO24 which is the unique transponder address of a plane.
 ICAO = icaohere
-
+# Optional: PIA ICAO if the plane is part of the Privacy ICAO Address program
+; PIA_ICAO =
 
 #Optional Per Plane Overrides
-; OVERRIDE_REG= 
-; OVERRIDE_ICAO_TYPE= 
-; OVERRIDE_TYPELONG = 
-; OVERRIDE_OWNER = 
+; OVERRIDE_REG=
+; OVERRIDE_ICAO_TYPE=
+; OVERRIDE_TYPELONG =
+; OVERRIDE_OWNER =
 ; DATA_LOSS_MINS = 20
-; CONCEAL_AC_ID = True
+; CONCEAL_AC_ID = False
 ; CONCEAL_PIA = False
 
-[MAP]
-#Optional, map selection moved to mainconf, this is for map overlays per plane
-#Tar1090 overlays option, should be seperated by comma no space, remove option all together to disable any
-OVERLAYS = nexrad
 
 [AIRPORT]
-#Requires a list of airport types, this plane could land/takeoff at
-#Choices: small_airport, medium_airport, large_airport, heliport, seaplane_base
+# Required: List of airport types this plane could land/takeoff at
+# Choices: small_airport, medium_airport, large_airport, heliport, seaplane_base
 TYPES = [small_airport, medium_airport, large_airport]
 
-#TITLE for Twitter, PB and Discord are Just text added to the front of each message/tweet sent
-[TWITTER]
+[X]
+# X (formerly Twitter) Configuration
 ENABLE = FALSE
-TITLE =
-ACCESS_TOKEN = athere
-ACCESS_TOKEN_SECRET = atshere
+CONSUMER_KEY =
+CONSUMER_SECRET =
+ACCESS_TOKEN =
+ACCESS_TOKEN_SECRET =
 
 [DISCORD]
+# Discord Webhook Configuration
 ENABLE = FALSE
-#WEBHOOK URL https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks
-URL = webhookurl
-#Role to tag optional, the role ID
+URL = https://discord.com/api/webhooks/...
+# Optional: Role ID to mention
 ROLE_ID =
-Title =
 USERNAME = plane-notify
 
 [META]
-ENABLE = False
+# Meta (Facebook/Instagram) Configuration
+ENABLE = FALSE
 FB_PAGE_ID =
 IG_USER_ID =
 ACCESS_TOKEN =
 
-
 [TELEGRAM]
+# Telegram Bot Configuration
 ENABLE = FALSE
-TITLE = Title Of Telegram message
-ROOM_ID = -100xxxxxxxxxx
-BOT_TOKEN = xxxxxxxxxx:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ROOM_ID =
+BOT_TOKEN =
 
 [MASTODON]
+# Mastodon Configuration
 ENABLE = FALSE
-ACCESS_TOKEN = mastodonaccesstoken
-APP_URL = mastodonappurl
+ACCESS_TOKEN =
+APP_URL = https://mastodon.social/
 
+[BLUESKY]
+# Bluesky Configuration
+ENABLE = FALSE
+USERNAME =
+PASSWORD =
+
+[NOSTR]
+# Nostr Configuration
+ENABLE = FALSE
+PK = nsec...
+
+[THREADS]
+# Threads Configuration
+ENABLE = FALSE
+ACCESS_TOKEN =
+
+[REDDIT]
+# Reddit Configuration (Global keys in mainconf.ini)
+ENABLE = FALSE
+SUBREDDIT =

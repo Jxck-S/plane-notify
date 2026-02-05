@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>plane-notify</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="/static/js/dashboard.js"></script>
+</head>
+
+<body>
+    <h1>plane-notify</h1>
+
+    <div class="card">
+        <h2>System Status</h2>
+        <div class="stat">Status: <span id="hb-status" class="status-ok">Initializing...</span></div>
+        <div class="stat">Uptime: <span id="uptime">Loading...</span></div>
+        <div class="stat">Planes Configured: <span id="plane-count">Loading...</span></div>
+    </div>
+
+    <div class="card">
+        <h2>Actions</h2>
+        <p>Reload all configuration files from disk without restarting the service.</p>
+        <button id="reload-btn">Reload Config</button>
+
+        <div id="result-container" style="margin-top: 20px;"></div>
+
+        <div id="action-status" class="status-line">Ready</div>
+    </div>
+</body>
+
+</html>

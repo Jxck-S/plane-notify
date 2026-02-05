@@ -1,0 +1,70 @@
+"""src/calculate_headings.py: Mathematical utilities for bearing, cardinal direction, and tracking changes."""
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+def calculate_from_bearing(frm: tuple[float, float], to: tuple[float, float]) -> float:
+    """
+    Calculate initial bearing from one coordinate to next.
+
+    :param frm: Tuple of (lat, lng) in degrees.
+    :param to: Tuple of (lat, lng) in degrees.
+    :return: Single bearing in degrees.
+    """
+    # https://gis.stackexchange.com/questions/228656/finding-compass-direction-between-two-distant-gps-points
+    from math import atan2, cos, degrees, radians, sin
+
+    frm = (radians(frm[0]), radians(frm[1]))
+    to = (radians(to[0]), radians(to[1]))
+    y = sin(to[1] - frm[1]) * cos(to[0])
+    x = cos(frm[0]) * sin(to[0]) - sin(frm[0]) * cos(to[0]) * cos(to[1] - frm[1])
+    from_bearing = degrees(atan2(y, x))
+    if from_bearing < 0:
+        from_bearing += 360
+    return from_bearing
+
+
+def calculate_cardinal(d: float) -> str:
+    """Find cardinal direction from bearing degree."""
+    dirs = [
+        "N",
+        "NNE",
+        "NE",
+        "ENE",
+        "E",
+        "ESE",
+        "SE",
+        "SSE",
+        "S",
+        "SSW",
+        "SW",
+        "WSW",
+        "W",
+        "WNW",
+        "NW",
+        "NNW",
+    ]
+    ix = round(d / (360.0 / len(dirs)))
+    return dirs[ix % len(dirs)]
+
+
+def calculate_deg_change(new_heading: float | None, original_heading: float) -> float:
+    """Calculate change between two headings, returns negative degree if change is left, positive if right."""
+    if new_heading is None:
+        logger.debug("Track heading missing. No change")
+        return 0
+    normal = abs(original_heading - new_heading)
+    across_inital = 360 - abs(original_heading - new_heading)
+    if across_inital < normal:
+        direction = "left" if original_heading < new_heading else "right"
+        track_change = across_inital
+    else:
+        direction = "right" if original_heading < new_heading else "left"
+        track_change = normal
+    if direction == "left":
+        track_change *= -1
+    track_change = round(track_change, 2)
+    logger.debug("Track change of %s° which is %s", track_change, direction)
+    return track_change

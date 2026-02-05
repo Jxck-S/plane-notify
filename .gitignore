@@ -1,14 +1,17 @@
 configs/*.ini
-
-# PyCharm
 .idea
-.vscode/settings.json
-pythonenv3.8/
+.vscode/
 __pycache__
 dependencies
 testing
 lookup_route.py
-icao_url_gen.py
 install.sh
-coul_icao_gen.py
 test.py
+logs
+testing
+stats
+flight_static_maps
+tools
+
+#Ignore vscode AI rules
+.github/instructions/codacy.instructions.md

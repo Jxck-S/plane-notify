@@ -1,17 +1,22 @@
+> [!IMPORTANT]
+> **Major Refactor and Cleanup**
+> This commit marks the beginning of a major refactor and cleanup of the codebase.
+
+
 # plane-notify
 
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/c4e1d839eec3468cadfe351d64dc1ac4)](https://app.codacy.com/manual/Jxck-S/plane-notify?utm_source=github.com&utm_medium=referral&utm_content=Jxck-S/plane-notify&utm_campaign=Badge_Grade_Settings)
 [![GPLv3 License](https://img.shields.io/badge/License-GPL%20v3-yellow.svg)](https://opensource.org/licenses/)
 
-Notify if configured planes have taken off or landed using Python with <a href="https://opensky-network.org/">OpenSky</a>(free) or <a href="https://www.adsbexchange.com/">ADSBExchange</a> Data(paid, declining data, and run by clowns), outputs location of takeoff location of landing and takeoff by reverse lookup of coordinates.
+Notify if configured planes have taken off or landed using Python with ADS-B data, outputs location of takeoff location of landing and takeoff by reverse lookup of coordinates.
 
 ### Discord Output Example
 
-![Discord Output Example](./ExImages/DiscordEX2.png?raw=true)
+![Discord Output Example](docs/images/DiscordEX2.png?raw=true)
 
-#### More examples are in  the ExImages folder
+#### More examples are in the images folder
 
-[ExImages](./ExImages)
+[Images](docs/images/)
 
 ### Background
 
@@ -21,7 +26,7 @@ I made this program so I could track Elon Musk's Jet and share his whereabouts w
 
 I'm open to any help or suggestions, I realize there are many better ways to improve this program and better ways to get this program to work properly, I'm only a noob. I'll accept pull requests. If you'd like to discuss join <https://grndcntrl.net/discord>
 
-### [Algorithm](PseudoCode.md)
+### [Algorithm](docs/algorithm.md)
 
 ## Setup / Install
 - Install using the following steps or use Docker, scroll down to the Docker section.
@@ -41,26 +46,6 @@ pip install pipenv
 pipenv install
 ```
 
-### Install Selenium / ChromeDriver or setup Google Static Maps
-
-Selenium/ChromeDriver is used to take a screenshot of the plane on globe.theairtraffic.com. Or use Google Static Maps, which can cost money if overused(No tutorial use <https://developers.google.com/maps/documentation/maps-static/get-api-key> to get to a key).
-
-#### Chrome 
-- This is assuming linux/debian
-```bash
-curl -sSL https://dl-ssl.google.com/linux/linux_signing_key.pub  | apt-key add 
-echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google.list
-apt update
-apt install google-chrome-stable
-```
-These output methods once installed can be configured in the planes config you create, using the example plane1.ini
-
-### Install Screen to run in the background
-
-```bash
-apt install screen
-```
-
 ### Download / Clone
 
 ```bash
@@ -73,13 +58,7 @@ cd plane-notify
 
 -   Copy `mainconf.ini.example` to `mainconf.ini` andCopy `plane1.ini.example` to `plane1.ini`. `plane1.ini` can change names as long as it ends with the ini extension
 -   Edit them with nano or vi on the running machine or on your pc and transfer the config to where you will be running the bot
--   Pick between OpenSky and ADS-B Exchange
--   The OpenSky API is free for everyone but the data is not as good as ADS-B Exchange. The ADS-B Exchange API is not free and this program will not work for the Rapid API from ADS-B Exchange. It only works with the API that they give when you have a partnership with ADS-B Exchange. It is not cheap to get the ADS-B Exchange full API, Don't contact them unless you are ready to pay. 
--   If you'd like to add support for ADS-B Exchanges RapidAPI feel free to work on it and submit a merge request. 
--   If you've set up multiple planes and want to use ADSB Exchange as your source you must have /all endpoint access to their API or it won't work.
--   Pick the correct API version for ADS-B Exchange.
--   Proxy is if your running multiple programs that use the ADSB Exchange, setup the proxy from lemonodor so you don't abuse the ADSB Exchange API, otherwise leave enable false.
--   When using OpenSky there are more bugs because I mainly use ADS-B Exchange and work less on the OpenSky Implementation. 
+
 
 
 ### Configure individual planes
@@ -96,7 +75,7 @@ screen -R <name screen whatever you want>
 ### Start Program
 
 ```bash
-pipenv run python __main__.py
+pipenv run python src/__main__.py
 ```
 
 ## Using with Docker
@@ -148,4 +127,4 @@ Getting a group ID
 -   Add proper logging and service to run the program and remove excessive printing.
 -   Better single config YAML, or DB maybe
 
-### [More References/Documentation](References.md)
+### [More References/Documentation](docs/References.md)

@@ -1,0 +1,110 @@
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f4f4f9;
+}
+
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+h1 {
+    color: #333;
+}
+
+.stat {
+    font-size: 1.2em;
+    margin: 10px 0;
+}
+
+button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+#reload-result {
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 4px;
+    display: none;
+}
+
+.status-ok {
+    color: green;
+    font-weight: bold;
+}
+
+.status-warning {
+    color: #f0ad4e;
+    font-weight: bold;
+}
+
+.status-error {
+    color: red;
+    font-weight: bold;
+}
+
+/* .log-window removed */
+
+.status-line {
+    margin-top: 15px;
+    font-weight: 500;
+    color: #555;
+    font-size: 1.1em;
+    min-height: 1.5em;
+}
+
+.badge {
+    display: inline-block;
+    padding: 6px 10px;
+
+    /* Larger touch target */
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: 600;
+    margin-right: 8px;
+    margin-bottom: 8px;
+
+    /* Mobile spacing */
+    color: white;
+}
+
+.badge-modified {
+    background-color: #f0ad4e;
+}
+
+.badge-added {
+    background-color: #28a745;
+}
+
+.badge-removed {
+    background-color: #dc3545;
+}
+
+.badge-unchanged {
+    background-color: #6c757d;
+}
+
+.result-summary {
+    margin-bottom: 20px;
+}

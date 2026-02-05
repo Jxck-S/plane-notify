@@ -1,0 +1,31 @@
+# Formatting settings (match Black)
+line-length = 88
+indent-width = 4
+
+# Exclude only project-specific or non-standard directories
+exclude = [
+    "stats/templates",
+    "web/static",
+    "web/templates",
+    "Pipfile.lock",
+]
+
+# ULTIMATE STRICTNESS: Enable every available rule
+select = ["ALL"]
+
+# Only ignore rules that directly conflict or are not recommended with the formatter
+ignore = [
+    "D203",   # Conflicts with D211 (one-blank-line-before-class)
+    "D212",   # Conflicts with D213 (multi-line-summary-first-line)
+    "COM812", # Recommended to disable when using ruff format
+    "ISC001", # Recommended to disable when using ruff format
+]
+
+# Allow fix for all enabled rules
+fixable = ["ALL"]
+
+[format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

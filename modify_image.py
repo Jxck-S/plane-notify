@@ -53,12 +53,12 @@ def append_airport(filename, airport, text_credit=None):
 	#Full name
 	(x, y) = (330, 783)
 	MAX_WIDTH = 325
-	if font.getsize(airport['name'])[0] <= MAX_WIDTH:
+	if font.getlength(airport['name']) <= MAX_WIDTH:
 		text = airport['name']
 	else:
 		text = ""
 		for char in airport['name']:
-			if font.getsize(text)[0] >= (MAX_WIDTH - 10):
+			if font.getlength(text) >= (MAX_WIDTH - 10):
 				text += "..."
 				break
 			else:

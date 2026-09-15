@@ -14,19 +14,16 @@ pillow = "*"
 tweepy = "*"
 discord-webhook = "*"
 selenium = "*"
-opensky-api = {editable = true, git = "https://github.com/openskynetwork/opensky-api.git", subdirectory = "python"}
+opensky-api = {editable = true, git = "https://github.com/openskynetwork/opensky-api.git", ref = "3d01d1a774da0dbd4a65a3bb615fd2063d0320c9", subdirectory = "python"}
 webdriver-manager = "*"
 shapely = "*"
 pycairo = "*"
-geog = "*"
 py-staticmaps = "*"
 pyproj = "*"
-pandas = "*"
 lxml = "*"
 beautifulsoup4 = "*"
 python-telegram-bot = "*"
-configparser = "*"
 "mastodon.py" = "*"
 
 [requires]
-python_version = "3.9"
+python_version = "3.14"

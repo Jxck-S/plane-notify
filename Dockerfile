@@ -1,4 +1,4 @@
-FROM python:3
+FROM python:3.14
 
 WORKDIR /plane-notify
 
@@ -6,8 +6,8 @@ WORKDIR /plane-notify
 RUN mkdir /home/plane-notify
 
 # Set the Chrome repo.
-RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
-    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list
+RUN wget -q -O /usr/share/keyrings/google-chrome.asc https://dl-ssl.google.com/linux/linux_signing_key.pub \
+    && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.asc] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
 
 # Install Chrome.
 RUN apt-get update && apt-get -y install --no-install-recommends \
@@ -21,7 +21,7 @@ RUN pip install pipenv
 
 # Install dependencies
 COPY Pipfile* .
-RUN pipenv install
+RUN pipenv install --deploy
 
 COPY . .
 CMD pipenv run python /plane-notify/__main__.py

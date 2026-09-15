@@ -1,7 +1,6 @@
 import json
 import requests
 def get_avg_fuel_price():
-	import pandas as pd
 	from bs4 import BeautifulSoup
 	try:
 		response = requests.get("https://www.airnav.com/fuel/report.html")

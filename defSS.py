@@ -17,7 +17,7 @@ def get_adsbx_screenshot(file_path, url_params, enable_labels=False, enable_trac
     import os
     import platform
     chrome_options = webdriver.ChromeOptions()
-    chrome_options.headless = True
+    chrome_options.add_argument('--headless=new')
     chrome_options.add_argument('window-size=800,800')
     chrome_options.add_argument('ignore-certificate-errors')
     chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])

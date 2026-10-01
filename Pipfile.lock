@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "0bd9f04675c4625d0778bf063e9c60631276dbf04742b3a62660266169a7e9ad"
+            "sha256": "d59eba3619fd617df303b0ff426f792b01963e370b12519a75bd3ba581392232"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -581,11 +581,12 @@
         },
         "oauthlib": {
             "hashes": [
-                "sha256:0f0f8aa759826a193cf66c12ea1af1637f87b9b4622d46e866952bb022e538c9",
-                "sha256:88119c938d2b8fb88561af5f6ee0eec8cc8d552b7bb1f712743136eb7523b7a1"
+                "sha256:624c28c13a0a59cabf9747dfa52af63be3e512a7f2714df16e91b5b3a145e6cd",
+                "sha256:efb274799819440f95b4ab3b818869f1ce9ae26c5beacba0201d1a1b76b54f86"
             ],
-            "markers": "python_version >= '3.8'",
-            "version": "==3.3.1"
+            "index": "pypi",
+            "markers": "python_version >= '3.9'",
+            "version": "==4.0.0"
         },
         "opensky-api": {
             "editable": true,
